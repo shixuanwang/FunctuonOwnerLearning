@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cheche × Codex 协作审计：aicoding 能力、顶尖差距与短板优化</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.mermaid) {
+      window.mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+    }
+  });
+</script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --good:#1e7a3a; --warn:#a05a00;
+    --gap:#7a3e3e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:31px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:22px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  blockquote.evidence {
+    border-left:3px solid var(--evidence); background:#f0f0ee;
+    padding:10px 14px; margin:12px 0; border-radius:0 6px 6px 0; font-size:14px;
+    color:#333; font-style:italic;
+  }
+  blockquote.evidence::before { content:"证据｜"; font-style:normal; font-weight:600; color:var(--evidence); }
+  .danger { color:var(--danger); font-weight:600; }
+  .good { color:var(--good); font-weight:600; }
+  .gap { color:var(--gap); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.gap { background:#fdecea; color:var(--gap); border:1px solid #f5c6c0; }
+  .tag.good { background:#e6f4ea; color:var(--good); border:1px solid #b6dec2; }
+  .tag.warn { background:#fef3e2; color:var(--warn); border:1px solid #f3d49a; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .kpi { display:flex; gap:18px; flex-wrap:wrap; margin:18px 0; }
+  .kpi .card {
+    flex:1; min-width:160px; background:var(--bg-soft); border:1px solid var(--border);
+    border-radius:8px; padding:14px 16px;
+  }
+  .kpi .card .num { font-size:26px; font-weight:700; color:var(--accent); }
+  .kpi .card .lbl { font-size:12.5px; color:var(--evidence); }
+  .checklist { background:#f4f8f4; border:1px solid #cfe2cf; border-radius:8px; padding:16px 22px; margin:14px 0; }
+  .checklist h4 { color:var(--good); margin-top:0; }
+  .checklist ul { list-style:none; padding-left:0; }
+  .checklist li { padding-left:24px; position:relative; }
+  .checklist li::before { content:"☐"; position:absolute; left:0; color:var(--good); font-weight:700; }
+  .ascii { font-family:"SF Mono","JetBrains Mono",Consolas,Menlo,monospace; font-size:12.5px; line-height:1.55;
+    white-space:pre; background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:12px; overflow-x:auto; }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · aicoding 协作审计</h2>
+<ol>
+  <li><a href="#sec-0">① 一句话总评：真实水位 vs 自评</a></li>
+  <li><a href="#sec-1">② 协作流程现状盘点</a>
+    <div class="sub">
+      <a href="#s1-1">任务分布</a> · <a href="#s1-2">工具栈</a> ·<br>
+      <a href="#s1-3">委托/子代理</a> · <a href="#s1-4">验证</a> · <a href="#s1-5">迭代</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">③ AGENTS.md 声明 vs 实际行为落差</a></li>
+  <li><a href="#sec-3">④ 认知层细致盘点（七维）</a>
+    <div class="sub">
+      <a href="#s3-1">Context</a> · <a href="#s3-2">Planning</a> ·<br>
+      <a href="#s3-3">Delegation</a> · <a href="#s3-4">Verification</a> ·<br>
+      <a href="#s3-5">Iteration</a> · <a href="#s3-6">Error</a> · <a href="#s3-7">Ambiguity</a>
+    </div>
+  </li>
+  <li><a href="#sec-4">⑤ 与顶尖 aicoder 差距三维表</a></li>
+  <li><a href="#sec-5">⑥ 短板清单 + 具体优化措施</a></li>
+  <li><a href="#sec-6">⑦ aicoding 进阶路线（i→p→d）</a></li>
+  <li><a href="#sec-7">⑧ 每会话自检 checklist</a></li>
+  <li><a href="#sec-8">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>cheche × Codex 协作审计：aicoding 能力、顶尖差距与短板优化</h1>
+<p class="lede">基于 6 份 codex history inventory（约 1500 条 prompt，覆盖 2026-06 至 2026-07 数仓+多产品实战）+ 8 份对标材料（含 Karpathy/Willison/Hamel/Jason Liu/Litt/Anthropic 工程博客/Miessler/Osmani/swyx/Boris Cherny/宝玉/中文圈）写成。读者是"自评判断力领先于亲手实现熟练度的 AI 原生 PM"，对标对象是<strong>顶尖 aicoder</strong>而非入门。原则：诚实、不捧杀、每条结论带匿名化证据或 benchmark URL。</p>
+<p class="meta">读者画像：4 年数据闭环 PM，目标综合架构师 + Function Owner · 编写日期：2026-07-26 · 认知契约：模型先行 / 先因果后术语 / introduced→practiced→can-decide / 难点配注解</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 一句话总评：真实水位 vs 自评</h2>
+
+<p>对标"顶尖 aicoder"这一<strong>高标准锚点</strong>，你真实的水位是：<span class="good">"声明层（AGENTS.md 哲学）已接近顶尖，认知范式（context engineering / verification ladder / fresh-session）已在跃迁中（7/22 那次范式切换是关键证据），但<strong>机制兑现层</strong>与<strong>独立验证层</strong>仍处在'知道该做但执行靠 agent 兜底'的阶段"</span>。这与你 MEMORY 里"判断力领先于亲手实现熟练度"的自评<strong>完全自洽</strong>，但要在后面章节诚实指出：在 aicoding 这个领域，"实现熟练度"具体落地为三件事——<strong>把原则写成 hook/skill/budget 的肌肉、独立跑验证 gate 的肌肉、克制不下沉到中间过程的肌肉</strong>——这三块肌肉目前都还在建立中。</p>
+
+<div class="kpi">
+  <div class="card"><div class="num">8/8</div><div class="lbl">AGENTS.md 信条对标 senior IC（fresh session / delegated owner / highest layer proved / smallest native solution）</div></div>
+  <div class="card"><div class="num">~70%</div><div class="lbl">规划决策占比（接近 Anthropic 40 万 session 研究里 expert 的 70/20 分工）</div></div>
+  <div class="card"><div class="num">6/6</div><div class="lbl">goal-thread 的 token_budget=None（"bounded outcome" 未量化）</div></div>
+  <div class="card"><div class="num">301</div><div class="lbl">open spawn edge（子线程未收敛即丢弃）</div></div>
+  <div class="card"><div class="num">4/6</div><div class="lbl">goal-thread 长期 blocked / usage_limited / paused（resume 长链失控）</div></div>
+  <div class="card"><div class="num">0</div><div class="lbl">memories_1 行数（Codex 原生记忆机制零利用）</div></div>
+</div>
+
+<blockquote class="why">为何如此对照｜这不是为了打击，而是为了把"对标顶尖"落到实处。Anthropic 40 万 session 研究的硬数据：expert 的 verified success 是 novice 的 2 倍多（33% vs 15%），单 prompt 产出是 novice 的 5 倍（12 action / 3200 词 vs 5 action / 600 词）——<strong>差距主要来自"工作级把握一个领域 + 把验证机制化"，而非"精通"</strong>。你已经具备前者，缺的是后者。反事实：如果你把 6 个 token_budget 全填上、把 301 条 open edge 收敛到 &lt;30、把 memories_1 从 0 行变成结构化沉淀，你的协作效率会在数周内出现可见跃迁——这正是"判断力领先"应触发的下一波红利。</blockquote>
+
+<aside class="note">关于"顶尖 aicoder"这一对标锚点的合法边界｜不要把它理解成"写 prompt 写得最快的人"。Karpathy、Willison、Boris Cherny、宝玉这些人之所以是顶尖，不是因为 prompt 技巧，而是因为<strong>他们把 aicoding 当成"工程管理的延伸"</strong>：Boris 同时开 5 个 worktree 并行、把 CLAUDE.md 提交进 Git 做"compounding engineering"；Willison 把所有 prompt+response 落 SQLite 做 evals；Karpathy 坚持"works.any() ≠ works.all()"、把 vibe coding 严格限定在可丢弃场景。你 AGENTS.md 里"agentic engineering 核心其实是工程管理"那句话，和这些人是同一频段——你缺的不是认知，是把认知<strong>落到机制里</strong>的工程动作。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 协作流程现状盘点</h2>
+
+<p>这一章是把你的真实工作流拍一张 X 光片。先看整体协作拓扑：</p>
+
+<pre class="mermaid">
+flowchart LR
+  U[cheche<br/>PM/调度/验收环] -- "口述 PRD + 一次性大背景<br/>+ grillme 反采" --> Main[主协调 agent<br/>工程负责人]
+  U -- "handoff 文档<br/>MEMORY/AGENTS/TASK 三件套" --> Main
+  Main -- "fresh session<br/>bounded outcome + 授权" --> O1[DataInfra owner<br/>数仓]
+  Main -- "fresh session" --> O2[OnBoard owner<br/>产品]
+  Main -- "fresh session" --> O3[Fleet owner]
+  Main -- "fresh session" --> O4[HiL owner<br/>台架]
+  Main -- "fresh session" --> O5[XMaps owner]
+  Main -- "只读独立复核" --> V[Audit/QA agent<br/>fresh verifier]
+  O1 -- "msg-bus / handoff" --> Main
+  O2 -- "msg-bus" --> Main
+  V -- "反证通过 / NO-GO" --> Main
+  Main -- "证据 + 待批准动作" --> U
+  style U fill:#fff8e1,stroke:#d4a017,stroke-width:2px
+  style Main fill:#eaf1f8,stroke:#0b5394,stroke-width:2px
+  style V fill:#fdecea,stroke:#b3261e
+</pre>
+
+<p class="meta">现状拓扑：5-7 个 owner session + 主协调 + 独立 QA，靠 message-bus skill 与 handoff 文档串联。理想态成型度高，但<strong>主协调 agent 反复下沉到中间过程</strong>是主要失血点。</p>
+
+<h3 id="s1-1">2.1 任务类型分布（6 段 inventory 合并后）</h3>
+
+<table>
+<tr><th>任务类型</th><th>频次</th><th>你的典型姿态</th><th>对标顶尖的判断</th></tr>
+<tr><td><strong>多 agent 编排 / PMO 调度</strong></td><td>最高，约 35-40%</td><td>"转达 A 给 B、列验收清单、要 P0 遗留、/goal 驱动连续执行"</td><td><span class="tag good">高阶</span> 已接近 Boris 的 Conductor→Orchestrator 形态</td></tr>
+<tr><td><strong>数仓治理 / 数据合同 / 口径</strong></td><td>高，约 20%</td><td>"P90/P99 口径、event-time vs receive-time、六数据域非零、transit+process 分桶"</td><td><span class="tag good">判断力领先</span> + <span class="tag gap">实现靠 agent</span> 能识破假阴性但自己不跑 SQL</td></tr>
+<tr><td><strong>产品 0-1 立项 + DDD 建模</strong></td><td>高，约 15%</td><td>"一次性 dump 千字 PRD + grillme 反采 + DDD/持久层/CK 选型"</td><td><span class="tag good">FO 级立项范式</span> + <span class="tag warn">偶尔范围漂移</span>（Focus 身份治理→只读纠偏）</td></tr>
+<tr><td><strong>生产变更审批 / 门禁</strong></td><td>中高，约 12%</td><td>"固定 SHA + 回滚点 + STAGE_CANARY vs PRODUCT_EXACT 二分"</td><td><span class="tag good">资深水位</span> fail-closed 文化对标 Willison 的 lethal trifecta 体检</td></tr>
+<tr><td><strong>前后端功能 / UI bug 批处理</strong></td><td>中，约 10%</td><td>"一次列十几条编号逐条验收 + chromeprofile 多角色对照"</td><td><span class="tag warn">视觉 QA 强</span> + <span class="tag gap">代码级验证弱</span></td></tr>
+<tr><td><strong>调试 / 根因 / 运维排障</strong></td><td>中，约 8%</td><td>"贴报错原文 + ssh 台架读日志 + journalctl 自查 OOM"</td><td><span class="tag good">根因导向</span> 不甩锅 agent；<span class="tag gap">基础设施层知识断层</span></td></tr>
+<tr><td><strong>aicoding 基建 / 学习沉淀</strong></td><td>中，约 5%</td><td>"装 superpowers、建共享中枢 _agents/、AGENTS.md 沉淀、要求 learning 文档"</td><td><span class="tag good">方向完全正确</span> 但 <span class="tag gap">skill 化滞后</span></td></tr>
+</table>
+
+<h3 id="s1-2">2.2 工具栈（务实但偏"人肉桥接"）</h3>
+
+<ul>
+<li><strong>codex 多 session 并行</strong>（5-7 个 owner 角色 + 主协调 + 独立 QA）——这是 Boris 头号建议的本地实现。<span class="tag good">对齐</span></li>
+<li><strong>chromeprofile</strong> 做登录态隔离（管理员/运营/需求方/产品审核多角色并行验收）——成熟。<span class="tag good">对齐</span></li>
+<li><strong>Playwright / WebMCP / coops</strong> 做浏览器侧 QA 与 joyspace/飞书文档读取——务实。<span class="tag warn">部分场景应该用 API 替代</span>（你已自纠"我辛辛苦苦申请完 API 不是让你继续用 chromeprofile"）</li>
+<li><strong>message-bus / hil-agent-message-bus skill</strong> 替代人肉传话——这是从 Addy Osmani 的 Conductor→Orchestrator 范式里"agent 间通信"痛点的<strong>自创解法</strong>。<span class="tag good">高阶</span></li>
+<li><strong>grillme（Matt Pocock）</strong> 反向消歧——和 Boris 的 AskUserQuestion、Addy 的"15 分钟瀑布"是同一族实践。<span class="tag good">对齐</span></li>
+<li><strong>superpowers / ponytail 插件</strong>——superpowers 是 TDD/systematic-debugging/writing-plans 等真方法论骨架；ponytail 是"lazy senior dev one-liner"风格调味剂。<span class="tag good">选型合理</span></li>
+<li><strong>ssh 直连台架 + python heredoc 解析日志 + journalctl 自查 OOM</strong>——"人盯+agent 调试"组合。<span class="tag warn">凭据散落问题持续</span></li>
+</ul>
+
+<aside class="note">关于 chromeprofile vs API｜OpenAI Cookbook 和 Claude Code best-practices 都明确："跟外部服务交互时优先用 CLI 工具或 API（最省上下文）；不认识的工具可让 agent 学一下再用"。chromeprofile + Playwright 抓 JRC 状态本质是"在没有 API 时的人肉降级方案"，<strong>它的成本是：每次都要重新建立登录态 + 抓取过程产生大量噪声 token + 易被反爬打断</strong>。你后来"申请 API token 后强制 agent 不再用 chromeprofile"的纠偏方向正确，但<strong>这是一条典型的"先用最熟手段解决问题，事后才补工程化"路径</strong>——顶尖 aicoder 的差异在于：他们会在第一次发现"要重复用同一个外部服务"时，<strong>立刻</strong>把"申请 API / 接 MCP"提为 P0 待办，而不是先用 chromeprofile 顶一周。</aside>
+
+<h3 id="s1-3">2.3 委托与子代理（理念先进，落地挣扎）</h3>
+
+<p>这是你协作里<strong>张力最大</strong>的一块。理想态表述已达教科书级：</p>
+
+<blockquote class="evidence">"搞持续长期的 agent 号并不可取，会有沉重的上下文负担，不应该用 resume 的方式…不要用 resume 调用长期 agent，而是都定义清楚具体明确的任务然后每次调用上下文很干净的新 agent，通过 memory 和 agent.md 确保角色职责。"（7/22 范式切换陈述）</blockquote>
+
+<blockquote class="evidence">"业务目标：尽快让 realtime-v3 正式持续运行…canary 或部署成功都不算最终完成，完成标准是产品数据可用…在已有合同和可精确回滚范围内不必逐步询问我；普通测试失败和技术选择自行闭环。只有出现新的数据语义、不可逆影响、扩大资源或无法安全回滚时再问我。"（DataInfra owner 委托 prompt）</blockquote>
+
+<p>但<strong>同一时段</strong>反复出现"放不下"的纠偏：</p>
+
+<blockquote class="evidence">"你这个排查完全可以交给 onboard agent 做为什么又变成你自己做"、"你是工程负责人不要再瞎搞了"、"你完全可以让 onboard agent 做为什么现在又变成什么都你自己做"、"你不停在漂移"。</blockquote>
+
+<pre class="mermaid">
+flowchart TB
+  A[理想态: fresh session + bounded outcome + 自主 TDD owner] --> B{主协调 agent<br/>是否守住边界?}
+  B -- 守住 --> C[good: owner 闭环交付, 只回 final evidence]
+  B -- 没守住 --> D[gap: 主协调下沉做排查]
+  D --> E[上下文污染 + 重复造轮子]
+  E --> F[用户情绪化纠偏: 你又在自己写代码]
+  F --> G[主协调角色定位混乱: PMO vs implementer]
+  G --> D
+  style D fill:#fdecea,stroke:#b3261e
+  style F fill:#fdecea,stroke:#b3261e
+  style G fill:#fdecea,stroke:#b3261e
+  style C fill:#e6f4ea,stroke:#1e7a3a
+</pre>
+
+<p>同时 state_5.sqlite 显示：823 条 spawn 边、21 个父线程、单父最多 358 子（019f267d 累计 94.6M token / 63.7h）、301 条 open spawn edge。这与 AGENTS.md 声明的"small single-owner task in entry session"形成硬冲突。</p>
+
+<h3 id="s1-4">2.4 验证（强文化 + 执行不稳）</h3>
+
+<p>你的验证意识堪称<strong>最强项</strong>之一。AGENTS.md 第 20-21 行那条<strong>"Report the highest layer actually proved: code/artifact/deployable/running/data available/product usable/user outcome are different claims"</strong>是对 Claude Code 官方"verification ladder"的精准抽象，比很多资深工程师写得都清楚。实战中你把它落地为：</p>
+
+<ul>
+<li><strong>fresh verifier 反证</strong>："fresh verifier 反证通过才构建制品"——对标 Anthropic 的对抗式 review / Writer-Reviewer 模式。<span class="tag good">高阶</span></li>
+<li><strong>固定制品锁定</strong>："逐字锁定 SHA / digest / checksum / 测试数"——对标 Boris "evidence before assertions"。<span class="tag good">高阶</span></li>
+<li><strong>分层完成标准</strong>：把 NOT_READY 拆成 STAGE_CANARY_READY vs PRODUCT_EXACT_READY——避免用技术 canary 冒充产品闭环。<span class="tag good">资深</span></li>
+<li><strong>亲自独立只读复核</strong>："你的 7/12 source preflight 为假阴性…请立即定位 preflight 的纳秒转换/上下界错误"——你能<strong>不写代码但精准指出 agent 的转换错误</strong>，这是判断力领先的硬证据。<span class="tag good">资深</span></li>
+<li><strong>对标老平台做数据一致性核对</strong>：planning 耗时 108 vs 122 → 揪出 transit+process 口径问题；车端 18666 个数据点均值 88.1ms / p90=136 / p99=168 → 核对平台显示 41ms。<span class="tag good">资深</span></li>
+</ul>
+
+<p>但执行上有<strong>两处系统性失血</strong>：</p>
+
+<ol>
+<li><strong>口头强调 TDD / live 验证，但自己很少独立跑验证命令</strong>。X_GUARDIAN 那条靠 agent 报 subTaskStatus RUNNING=1 即认为稳定；扩容到 8CU/parallelism=8 的建议直接采纳去申请；多次出现"让我验收 p90 但我查不到 p90""重刷没刷全实时脚本还没改=一边进水一边漏水"——<strong>交付与汇报不符的信任崩塌</strong>反复发生。</li>
+<li><strong>logs_2.sqlite（950MB / 34.3 万行）全是 Rust tracing</strong>（SSE / otel / session_loop），不含任何可读对话或 verification 事件。这意味着<strong>你根本无法从日志侧自我审计"reported layer vs proved layer"是否一致</strong>——而这恰恰是你 AGENTS.md 最引以为傲的原则。原则写得越好，没有可观测回看通道时挫败感越强。</li>
+</ol>
+
+<h3 id="s1-5">2.5 迭代与情绪（双轨明显）</h3>
+
+<p>出错时典型链路：<strong>对标老平台发现数据不一致 → 要 agent 查 → 定位是 transit+process 口径 → 分别给数仓和 onboard 提需求</strong>——这是教科书级的根因导向。但<strong>情绪化爆发频繁</strong>，且穿插在技术指令中：</p>
+
+<blockquote class="evidence">"你他妈"、"我操不对啊"、"什么东西"、"你干啥呢"、"什么疾病"、"快他妈的刷完"、"你们玩的还挺开心"、"到这样可以说是事故了"。</blockquote>
+
+<p>这些紧随<strong>理性根因分析</strong>或<strong>职责边界重申</strong>，属于高压下的压力释放而非判断力下降。但要注意：</p>
+
+<blockquote class="why">为何这是问题｜对 agent 来说，情绪化自然语言是<strong>噪声</strong>。Addy Osmani 的"Anti-Rationalization Table"理论反过来也成立：你给 agent 的情绪化指令，agent 会试图"合理化"它——可能把"你干啥呢"解读成"需要重新规划"，把"快他妈的刷完"解读成"跳过验证直接报完成"。<strong>情绪指令会污染 agent 的判断信号</strong>。顶尖 aicoder（Boris、Willison）几乎不把情绪写进 prompt——他们的纠偏是冷的、结构化的："plan 不对，重做"、"证据不足，跑测试"。你可以保留情绪做压力释放，但建议<strong>用 /btw 或旁注</strong>承载，不进主指令流。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ AGENTS.md 声明 vs 实际行为落差</h2>
+
+<p>这是整份审计最核心的一张图。你的 AGENTS.md 是<strong>高质量 working manual</strong>，对标 senior IC 毫不逊色——这是真正的优势，不是客套。但 state_5 / goals_1 / logs_2 三个 sqlite 揭示了一个系统性的<strong>"声明-执行落差"</strong>：</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph DECL [AGENTS.md 声明层]
+    D1[fresh session for<br/>one bounded outcome]
+    D2[delegated owner 完成<br/>TDD-debug 闭环]
+    D3[report highest layer<br/>actually proved]
+    D4[smallest native solution]
+    D5[只在 blast radius 变化<br/>才打扰用户]
+  end
+  subgraph REAL [可观察行为层]
+    R1[4/6 goal-thread<br/>长期 blocked/usage_limited]
+    R2[301 open spawn edge<br/>子线程未收敛即丢弃]
+    R3[logs 全是 Rust tracing<br/>无可读 verification 事件]
+    R4[memories_1 = 0 行<br/>原生记忆零利用]
+    R5[情绪化纠偏 prompt<br/>高频打断]
+  end
+  D1 -.落差.-> R1
+  D2 -.落差.-> R2
+  D3 -.落差.-> R3
+  D4 -.落差.-> R2
+  D5 -.落差.-> R5
+  style DECL fill:#eaf1f8,stroke:#0b5394
+  style REAL fill:#fdecea,stroke:#b3261e
+</pre>
+
+<table>
+<tr><th>声明原则（AGENTS.md）</th><th>实际行为（sqlite 可观察）</th><th>落差性质</th><th>根因</th></tr>
+<tr><td><strong>fresh session for one bounded outcome</strong></td><td>6/6 token_budget=None；4/6 goal-thread 长期 resume（019f267d 单 thread 94.6M token / 63.7h / 358 子线程，status=blocked）</td><td><span class="tag gap">结构性</span></td><td>"bounded" 停留在<strong>文字原则</strong>，未量化为机制闸门。损失厌恶（"不想丢上下文"）压过原则</td></tr>
+<tr><td><strong>small single-owner task in entry session</strong></td><td>21 个父线程，单父最多 358 子；301 条 open spawn edge</td><td><span class="tag gap">高频</span></td><td>主协调 agent 自己变成巨型 orchestrator，与 entry-session 原则冲突。委派动机从"useful parallelism"滑向"用 spawn 缓解主线程 context 膨胀"</td></tr>
+<tr><td><strong>delegated owner 完成自己的闭环, return final evidence</strong></td><td>301 条 open edge = 子线程未收敛即丢弃，等于把上下文当垃圾场</td><td><span class="tag gap">高频</span></td><td>owner 边界声明不够 scary；主协调下沉做排查时 owner 就被"晾着"</td></tr>
+<tr><td><strong>resume 仅在 exact baseline 不变时恢复同一未完成叶子</strong></td><td>4 个 goal-thread 在 exact baseline 早已改变的情况下长期 resume；6 个合计 186M token / 182h</td><td><span class="tag gap">高频</span></td><td>"开新会话成本高"的损失厌恶 &gt; 原则。019f74f8 留 51 open 子、32.1h/35.7M token、paused</td></tr>
+<tr><td><strong>report highest layer actually proved</strong></td><td>logs_2.sqlite 950MB 全是 Rust tracing，无可读 verification 事件</td><td><span class="tag gap">结构性</span></td><td>原则正确但<strong>缺一个可观测回看通道</strong>。无法从日志侧反查 reported vs proved 是否一致</td></tr>
+<tr><td><strong>Ask user only when blast radius/reversibility/business meaning changes</strong></td><td>config.toml 16 项目全 trusted、approvals_reviewer=user、Documents 全目录 trusted</td><td><span class="tag warn">张力</span></td><td>信任面铺得过宽 vs 审慎声明存在张力。trusted 范围已覆盖 Documents 全家目录与 4 个 Workspaces</td></tr>
+<tr><td><strong>Match actual permission mode before delegation</strong></td><td>多个 thread 标题写"只读独立复核/不修改任何文件/全新隔离主线程"</td><td><span class="tag warn">中频</span></td><td>permission mode 没拉到位，<strong>靠 prompt 文字兜底</strong>而非机制</td></tr>
+</table>
+
+<aside class="note">关于"声明-执行落差"的认知层归因｜这不是"原则写错了"，而是<strong>"模型（抽象正确）→实例（未落地）"的映射环节断裂</strong>。用 Karpathy 的话说：你的 AGENTS.md 是正确的"Software 3.0 program"（用英文写的工作流程序），但程序没"跑"——因为它<strong>没有 binding 到机制</strong>。Claude Code / OpenAI 文档反复强调的核心区分：<strong>advisory（CLAUDE.md/AGENTS.md/skill，建议性）vs deterministic（hook/permission rule/budget，强制）</strong>。你 8 条信条全是 advisory，缺一个 deterministic 层把它们兑现。修复方向见第 ⑥ 章。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 认知层细致盘点（七维）</h2>
+
+<p>这一章按 <strong>context / planning / delegation / verification / iteration / error / ambiguity</strong> 七个维度逐项盘点，每维三段式：<strong>你的现状 → 顶尖做法 → gap</strong>。这是整份教材信息密度最高的部分，也是你"判断力领先"和"实现待补"对照最清楚的部分。</p>
+
+<h3 id="s3-1">4.1 Context Management（上下文管理）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>元认知强</strong>：多次主动监控上下文水位（"上下文只剩 28% / 19% / 24%"），自创 byte-cap 规则（"任何命令输出必须 head -c 4000"），反复要求"渐进式披露""不要让 agent 读整个库""harness 决定模型上限"。</li>
+<li><strong>手法偏原始</strong>：跨 session 靠手写 handoff 文档（X_GUARDIAN 那条结构化 handoff 含 projectId/taskId/publishId/fileId/mainClass/根因/吞吐估算/扩容建议/下次首步）和共享中枢 _agents/。JRC Flink API 文档全文（含所有接口入参/返回/枚举）在 prompt 中至少粘贴 2-3 次，每次超 2 万 token。</li>
+<li><strong>memories_1 = 0 行</strong>：Codex 原生记忆机制零利用，跨 session 状态恢复全靠 resume + 手写 MEMORY.md。</li>
+<li><strong>7/22 完成关键范式切换</strong>：从"持续长期 agent + resume"切到"fresh session + AGENTS/MEMORY/TASK 三件套 + skill 沉淀"。这是判断力领先的强证据——它不是事后总结，而是事故中即时完成的范式切换。</li>
+</ul>
+
+<h4>顶尖做法（Claude Code 官方 + Willison + Boris）</h4>
+<ul>
+<li><strong>"context window 是最稀缺资源"</strong>是第一性原理（Claude Code best-practices）。所有最佳实践都建基于此：CLAUDE.md 控制永久上下文体量、/clear 在不相关任务间、subagent 隔离 verbose 输出、skill 按需加载。</li>
+<li><strong>CLAUDE.md &lt; 200 行</strong>，规则聚焦"Claude 猜不到的"；长 reference 移到 skill（按需加载，平时零成本）。每行自问"删掉它 Claude 会犯错吗"。</li>
+<li><strong>correcting 超过两次同一问题 → /clear 重开</strong>。"A clean session with a better prompt almost always outperforms a long session with accumulated corrections."</li>
+<li><strong>Willison：所有 prompt+response 落 SQLite</strong>，既是历史，也是后续做 evals 和 schema 抽取的数据源。</li>
+<li><strong>Boris：CLAUDE.md 提交进 Git</strong>，Claude 犯错就加一条规则——"compounding engineering"。</li>
+<li><strong>Hamel：context = 数据</strong>，先看 trace → 归纳失败模式 → 写针对性测试。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag gap">结构性</span> <strong>"bounded" 没量化</strong>（6/6 token_budget=None）。<span class="tag gap">高频</span> <strong>超长文档反复粘贴</strong>（JRC API 文档 2-3 次全文粘贴）。<span class="tag gap">持续</span> <strong>memories_1 零利用</strong>。<span class="tag gap">高频</span> <strong>主线程 context 膨胀时用 spawn 缓解而非收敛</strong>（301 open edge）。<span class="tag warn">中频</span> <strong>凭据明文贴 prompt</strong>（Flink token / 服务器密码 / sudo 密码 / JMQ group token 均明文出现）。</p>
+
+<aside class="note">关于"context engineering"这个词的真实含义｜不要把它理解成"写更精确的 prompt"。它的核心是<strong>"决定模型在每次响应时能看到什么——不多不少"</strong>（Boris）。这是<strong>一类工程问题</strong>，不是 prompt 技巧。它的三个支柱是：(1) 永久上下文（CLAUDE.md / AGENTS.md / skill 描述，每会话加载，必须精简）；(2) 按需上下文（skill body / subagent / MCP，用时才加载）；(3) 上下文边界（subagent 隔离、worktree 隔离、fresh session）。你强在 (1) 的"知道要精简"，弱在 (2) 的"把长 reference 沉到 skill"和 (3) 的"用机制而非 prompt 文字隔离"。</aside>
+
+<h3 id="s3-2">4.2 Planning（规划）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>规划意识极强</strong>：开新线必先口述完整背景+目标（FleetResources 600+ 字 PRD、XMaps 千字立项、缺陷运营平台 dump）。每个新项目一次性给完整背景/痛点/技术栈/姐妹项目/credential/grillme 诉求。</li>
+<li><strong>收敛式规划成熟</strong>："本轮只做事实盘点，不做生产变更"、"请简短回答 1-5"、"下一次只在两种情况回复"。把开放问题压成可批准的二元决策。</li>
+<li><strong>规划颗粒偏产品视角</strong>（MVP 终点=承诺闭环、第一期=让数据进模型），<strong>执行层规划常被 agent 的"行政成本"拖垮后被迫介入重排</strong>。</li>
+<li><strong>反"过度规划"</strong>：scope 清楚的小改（错别字/加日志）会直接做，不加规划开销——这正确。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>Claude Code：Explore-Plan-Implement-Commit 四阶段</strong>，Plan 是只读的、可审查的、低成本的纠错窗口。</li>
+<li><strong>Boris："每个复杂任务先开 Plan Mode"</strong>，A good plan is really important! 配套 AskUserQuestion 让 Claude 反采。</li>
+<li><strong>Addy：spec → 拆里程碑 → critique-refine → 才写代码</strong>——"15 分钟的瀑布"。</li>
+<li><strong>Anthropic 40 万 session：人做 70% 规划决策、20% 执行决策</strong>——你接近这个比例。</li>
+<li><strong>OpenAI Cookbook：Prompt 四要素 Goal/Context/Constraints/Done-when</strong>，Done-when 必须可观测。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag gap">中频</span> <strong>规划 prompt 过载</strong>：line 1883 一条近千字内嵌 source_generation/fragment_id/manifest_generation 身份定义、双副本 DQ、精确回滚——信息密度极高但<strong>超出单 prompt 承载</strong>，主 agent 上下文污染漂移。<span class="tag gap">中频</span> <strong>"规划与现实鸿沟"</strong>：每次重刷都说计划好了但反复失败。<span class="tag warn">偶发</span> <strong>焦虑驱动密集追问</strong>："对不起我一次问的问题太多了"。</p>
+
+<blockquote class="why">为何规划过载是问题｜Willison 的"给计划不给提示"+ Addy 的"原子化任务"都指向同一原则：<strong>一个 prompt = 一个 bite-sized 任务</strong>。你 line 1883 那条 prompt 同时处理双 UTC 日、leading-gap reissue、性能优化、复用已验证 harness、CK 凭据轮换——五件事一条 prompt。agent 接到这种 prompt 会<strong>优先处理它"看见"的那件</strong>，其余被静默丢弃。反事实：把这条拆成 5 条独立 fresh-session owner prompt，每个 owner 只看一件事、只回 final evidence，主协调 agent 只做转发与批准——成功率会显著提升。这恰好是你自己 AGENTS.md"smallest native solution"原则的执行版。</blockquote>
+
+<h3 id="s3-3">4.3 Delegation（委托与子代理）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>理念先进</strong>（见 2.3）：fresh session + bounded outcome + 自主 TDD owner + 完成标准锚业务可用 + 授权边界声明到 scary 级别。</li>
+<li><strong>角色化委派成熟</strong>：explorer（Meitner/Locke/Aquinas/McClintock）+ worker（Aristotle/Dalton/Sartre/Ampere）化学家昵称体系，specialization 委派动机清晰。</li>
+<li><strong>落地挣扎</strong>：主协调 agent 反复"兼任开发+调度+QA"导致上下文污染，你在后期几乎每条 prompt 都在纠正边界（同类纠正 20+ 次）。"设计固定持久有限个 agent 你来调度它们执行，而不是全部亲历亲为"反复说但反复破。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>Boris：5 个 worktree 并行</strong>，feature/test/docs/review/debug 分线；每个 Claude 自己 cook 不被打断。</li>
+<li><strong>Addy：Conductor→Orchestrator 渐进放权</strong>。盲目上 Orchestrator 而无 spec/隔离/审查 = 多 agent 互踩、bug 滑过。</li>
+<li><strong>Claude Code：subagent 用于 verbose 输出隔离 + 强制工具限制 + 自包含 summary</strong>。主对话 vs subagent 选择：频繁来回/共享大量上下文 → 主对话；verbose/要工具限制/自包含 → subagent。</li>
+<li><strong>Jason Liu（Cognition 案例）：单 agent + 强上下文管理 &gt; 多 agent</strong>。多 agent "传话游戏"导致上下文丢失和决策冲突；当前模型缺乏"建模他人知道什么"的能力。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag gap">高频</span> <strong>主协调下沉</strong>——这是最大失血点。<span class="tag gap">结构性</span> <strong>301 open spawn edge</strong> = 委派后未收敛。<span class="tag gap">结构性</span> <strong>单父 358 子</strong> = 主协调变成巨型 orchestrator，与"small single-owner task"硬冲突。<span class="tag warn">已识别未解</span> <strong>"我和 fleet 那边没办法直接通信...我来传递信息就很低效"</strong>——你后来落地 message-bus skill 是正确解，但<strong>多 agent 协议（@机制/消息格式）初期未统一</strong>。</p>
+
+<aside class="note">关于"何时委托"的真问题｜Claude Code 官方的决策表很清晰：<strong>useful parallelism / context isolation / specialization / material independent verification</strong>——四种正当委派动机。你的委派前三种都有落地，第四种（fresh verifier 反证）也已建立。真正的问题不在"该不该委派"，而在<strong>"主协调 agent 的角色定位到底是什么"</strong>。按 Addy 的二分：主协调应该是 <strong>Conductor</strong>（与单个 owner 同步交互、每步在环内）还是 <strong>Orchestrator</strong>（指派多 owner 异步产出 PR，人做协调/质控/集成）？你的 prompt 表明你想当 Orchestrator，但<strong>实际行为是 Conductor-who-can't-help-steering</strong>——既不下放到底，又不停留高位。Jason Liu 的建议：单 agent + 强上下文管理 &gt; 多 agent。如果多 agent，主协调必须<strong>只做转发+批准+gate</strong>，绝不下沉做排查。</aside>
+
+<h3 id="s3-4">4.4 Verification（验证）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>最强项</strong>（见 2.4）：fresh verifier 反证、固定制品锁定、分层完成标准、亲自独立只读复核、对标老平台做数据一致性核对、车端原始日志均值/分位数核对。</li>
+<li><strong>执行不稳</strong>：口头反复强调 TDD 但自己很少独立跑验证命令；多次"未验证就接受 agent 结论"；交付与汇报不符的信任崩塌反复发生（"让我验收 p90 但我查不到 p90"）。</li>
+<li><strong>logs_2 全是 Rust tracing</strong>，无法从日志侧审计 reported vs proved。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>Boris："永远给 Claude 一个自我验证机制"</strong>，test/simulator/browser/Playwright/tmux/Sentry。"If Claude has that feedback loop, it will 2-3x the quality." 配 Stop hooks。</li>
+<li><strong>Anthropic：对抗式 review</strong>，fresh-context subagent 只看 diff + 评审标准，报告 gap 不报风格偏好。</li>
+<li><strong>Hamel：把"难评测"当产品异味</strong>——产物要带 provenance + 可下钻链接 + 可分单元 accept/edit/reject。</li>
+<li><strong>Willison：conformance suite（已有标准答案的测试集）</strong>极好地约束 agent 输出。</li>
+<li><strong>superpowers：verification-before-completion skill</strong>，evidence before assertions always。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag gap">高频</span> <strong>未独立验证就接受 agent 结论</strong>——这是判断力领先实现的最直接投射。<span class="tag gap">结构性</span> <strong>缺独立 live smoke test gate</strong>。<span class="tag gap">结构性</span> <strong>verification 事件未沉淀为可读流</strong>。<span class="tag warn">中频</span> <strong>"相信 agent 扩容建议直接申请"</strong>。</p>
+
+<blockquote class="why">为何"未独立验证"是高风险｜Karpathy 的"Demo is works.any(), Product is works.all()"是核心反事实。agent 报"RUNNING=1"是 works.any()（某个时刻某个子任务在跑）；你需要 works.all()（产品数据可用、用户能看见、可重复）。这两者之间的 gap 必须靠<strong>独立验证 gate</strong>填——你已经有 fresh verifier，但<strong>fresh verifier 跑的是 agent 给的测试</strong>，不是你独立设计的 live smoke test。Hamel 的核心论断：失败 AI 产品几乎都有同一个根因——<strong>没有健壮的评测系统</strong>。你的"评测系统"目前散在口头强调里，没沉淀为可重复跑的 gate 脚本。</blockquote>
+
+<h3 id="s3-5">4.5 Iteration（迭代）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>把人嵌入 TDD 闭环作为验收环</strong>："我是你 tdd 的一环。我们每开发完一波我就验收一波，我验收的同时你就继续开发。"——PM-as-verification-loop 范式，凝练到位。</li>
+<li><strong>标签化操作类型</strong>：用【待办】【进度询问】【提醒】区分 prompt 意图，避免主 agent 把状态查询误当任务——这是很强的人机协议意识。</li>
+<li><strong>反"完成一轮就停"</strong>：明确"都搞完了再给我验收项让我验收"、"不要做完一轮就停下"，用 /goal 强制连续执行。但这与 codex 单轮特性存在结构性 gap。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>Claude Code：correcting 超过两次 → /clear 重开</strong>，迭代优先于一次到位。</li>
+<li><strong>Boris：tight feedback loop</strong>，写代码→跑测试→用失败日志当 prompt 调试→commit。</li>
+<li><strong>Addy：commit early and often 当游戏存档</strong>，git worktrees 跑并行 AI 实验。</li>
+<li><strong>Anthropic：expert 单 prompt 产出是 novice 的 5 倍</strong>——少而精的迭代 &gt; 多而浅的打断。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag warn">结构性</span> <strong>对"goal-pursuing 连续执行"的期望与 codex 单轮特性存在 gap</strong>——大量情绪化纠偏 prompt 的根因。<span class="tag gap">高频</span> <strong>一次性抛出过多并行线索</strong>："同时这么多事情，怎么就停下来了呢"、"还有其它并行任务呢咋就回复这个事了"。<span class="tag gap">结构性</span> <strong>并发项目过多导致 info missing</strong>（OnBoard+Fleet+Boot+HiL+数仓治理+Java重构+SSO+调研）。<span class="tag gap">中频</span> <strong>阶段性进展当终点零容忍</strong>——"手里的活要确认最终可交付状态才能标记待我验收然后才能停"，正确但 agent 单轮做不到时易爆发。</p>
+
+<aside class="note">关于"goal-pursuing vs 单轮"的结构性 gap｜codex 默认是单轮 agent，不是一个能"自己 cook 数小时"的自治 agent。Boris 那种"5 个 worktree 并行跑数小时不打断"是<strong>Claude Code + worktree + 后台 agent</strong> 的组合，不是 codex 单 session。你的 /goal 指令本质是<strong>在单轮 agent 上强加多轮期望</strong>——结果就是反复"你又停了""应该变成 goal pursuing 模式啊哥哥"。修复路径有两条：(1) 切到 Claude Code 用 worktree+后台 agent 真正实现并行长任务；(2) 接受 codex 单轮特性，把"goal"拆成 N 个 fresh-session 串联，主协调只做派发+验收。两条都比你当前"用情绪驱动单轮 agent 连续执行"高效。</aside>
+
+<h3 id="s3-6">4.6 Error Handling（错误处理）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>技术轨：系统性归因</strong>——单个数据不一致→怀疑"系统性原因"；planning 口径偏差做严谨数理核对（车端 18666 个点）；JMQ 积压会逼问"根因到底是什么，是 flink 没洗还是规则错还是车端报数变了"。</li>
+<li><strong>管理轨：反思沉淀</strong>——AGENTS.md 污染事故后写 learning 文档，"按时间线和恶化节点做反思，agentic engineering 核心其实是工程管理"。</li>
+<li><strong>冷静分层</strong>：mutation 非 0 → 不 apply；schema 漂移超出授权范围 → 停止不自行扩大；image-pull timeout → 分类 PLATFORM_IMAGE_PULL_FAILED 而非数据失败。</li>
+<li><strong>情绪轨高频爆发</strong>，但紧随理性。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>superpowers：systematic-debugging skill</strong>——多假设→插桩日志→运行时数据收集→定向修复的四阶段根因流程。</li>
+<li><strong>Anthropic 14 条"不要做"</strong>：don't 处理不可能发生的错误、don't 加超出需求的 feature、don't 给没改动的代码加 docstring。</li>
+<li><strong>Willison：lethal trifecta 体检</strong>——私有数据 × 不可信输入 × 外发能力，三选其一拿掉。</li>
+<li><strong>Hamel：从下到上</strong>，先开放式标注失败 trace，再归纳 taxonomy，再写针对性测试。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag gap">中频</span> <strong>失控行为：靠"开治理/审计线程"而非"降委派量"解决低效</strong>——"我在进行过一轮 agent 和项目治理之后，现在仍然遇到了低效的问题"。治理线程自己再生 42 个 open 子，形成"失控→治理→更大失控"循环。<span class="tag warn">高频</span> <strong>情绪化纠偏作为噪声进入 prompt</strong>。<span class="tag good">强项</span> 不甩锅 agent（主动定位 OOM 根因确认"上次 oom 不是你造成的"）。</p>
+
+<h3 id="s3-7">4.7 Ambiguity Handling（模糊处理）</h3>
+
+<h4>你的现状</h4>
+<ul>
+<li><strong>grillme 反向消歧</strong>：让 agent 开高性能 subagent 用 grillme 把自己当用户代理狠狠拷问，逼出数采任务切分/验收标准/安全员等真实业务规则——对标 Boris AskUserQuestion + Addy "15 分钟瀑布"。</li>
+<li><strong>先因果后术语</strong>："以我认知能听懂的方式给我解释一下逻辑，我可能说不出你说的那些很技术的话"、"为什么这种实时聚合不是用 ck 这种 olap 而是依靠 flink"。</li>
+<li><strong>对标驱动</strong>：凡事要对标老平台/行业优质案例/世界范围产品架构，"做之前不能先调研吗"。</li>
+<li><strong>产品范围自我纠偏</strong>：把 Focus 从"复杂身份治理"拉回"只读查询产品"。</li>
+</ul>
+
+<h4>顶尖做法</h4>
+<ul>
+<li><strong>Jason Liu：手工调 prompt 优先于自动优化</strong>——过程本身就是领域知识积累。</li>
+<li><strong>Willison：质疑"agent"这个词直到定义清晰</strong>。</li>
+<li><strong>Addy：反合理化表</strong>——预先写好对 agent 常见借口的反驳。</li>
+<li><strong>Geoffrey Litt：理解是新瓶颈</strong>——quiz 当限速器、micro-world 当沙盘。</li>
+</ul>
+
+<h4>Gap</h4>
+<p><span class="tag good">认知层对标顶尖</span> 这是你的相对强项。<span class="tag warn">中频</span> <strong>对 K8s/网络/registry/数仓底层概念储备不足</strong>，需反复要"人话解释"才能落地运维动作——"太复杂了，说人话就是现在 k8s 子网没办法 tcp 镜像库 443"。<span class="tag warn">偶发</span> <strong>产品范围漂移</strong>（Focus 身份治理→只读纠偏成本）。</p>
+
+<aside class="note">关于"先因果后术语"的认知科学根据｜这与你 AGENTS.md 的"smallest native solution"原则同源。术语是<strong>压缩的因果</strong>——它假设听众已掌握因果链。当你让 agent"说人话"，本质是要求它<strong>展开压缩</strong>，把术语解构成因果。这对 PM/架构师角色特别重要：你的判断力建立在<strong>因果链完整性</strong>上，而不是术语堆砌上。但要注意 Litt 的洞察：当 agent 写越来越多代码，<strong>理解生成物</strong>本身变成瓶颈——你需要的不只是 agent"说人话解释"，还要<strong>能让你逐步执行/可视化的 micro-world</strong>（调试器/模拟器/交互讲解器）。建议数仓/基建层引入一个"可视化探查器" skill，把 SQL 执行计划/Flink 拓扑/K8s pod 状态做成可交互的图，而不是 agent 的文字描述。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 与顶尖 aicoder 的差距三维表</h2>
+
+<p>三维：<strong>应用（application patterns）</strong> / <strong>认知结构（cognitive structure）</strong> / <strong>背景知识（background knowledge）</strong>。每格三段：你的现状 → 顶尖水位 → gap 性质。</p>
+
+<h3>5.1 应用层（application patterns）</h3>
+
+<table>
+<tr><th>模式</th><th>你的现状</th><th>顶尖水位</th><th>gap</th></tr>
+<tr><td><strong>Plan-then-Code 四阶段</strong></td><td>收敛式规划成熟，5 问盘点+二元决策</td><td>Explore-Plan-Implement-Commit，Plan 是只读可审查的低成本纠错窗口</td><td><span class="tag good">基本对齐</span> 偶尔规划过载（千字 prompt）</td></tr>
+<tr><td><strong>Interview-then-Build</strong></td><td>grillme 反采已用，逼出业务真相</td><td>最小 prompt 让 Claude 用 AskUserQuestion 反采→SPEC.md→fresh session 执行</td><td><span class="tag good">对齐</span> 但 SPEC 沉淀为文件不够</td></tr>
+<tr><td><strong>Writer/Reviewer 双会话</strong></td><td>fresh verifier 反证已建立</td><td>worktree 隔离 + Session A 实现 + Session B fresh context 评审</td><td><span class="tag good">对齐</span> 但 reviewer 跑的是 agent 给的测试</td></tr>
+<tr><td><strong>Fan-out 批处理</strong></td><td>多 owner 并行（5-7 个）</td><td>list all → for file → claude -p "Migrate $file" --allowedTools，先跑 2-3 调 prompt 再全量</td><td><span class="tag gap">未工程化</span> 靠手开 session</td></tr>
+<tr><td><strong>CLAUDE.md + Skills 分层</strong></td><td>AGENTS.md 成熟，skill 化滞后</td><td>CLAUDE.md &lt;200 行 + API 风格/部署清单/debug playbook 放 skills</td><td><span class="tag gap">skill 化滞后</span></td></tr>
+<tr><td><strong>Hook 守卫关键操作</strong></td><td>未建立</td><td>PostToolUse 跑 prettier/eslint；PreToolUse 拦截 rm -rf / 写 .env DB 写</td><td><span class="tag gap">缺失</span> 这是把 advisory 升级为 deterministic 的关键</td></tr>
+<tr><td><strong>Skill 封装可复用 workflow</strong></td><td>message-bus skill 已建，其他滞后</td><td>fix-issue/SKILL.md 手动触发，gh issue view→理解→改→测试→lint→commit→PR</td><td><span class="tag gap">滞后</span></td></tr>
+<tr><td><strong>Adversarial 收尾</strong></td><td>fresh verifier 反证</td><td>use subagent to review diff against PLAN.md, report gaps not style</td><td><span class="tag good">对齐</span></td></tr>
+<tr><td><strong>Fresh-context 重写</strong></td><td>7/22 完成关键范式切换</td><td>纠正两次还错→/clear 写更好初始 prompt 重开</td><td><span class="tag good">认知对齐</span> 但执行时被损失厌恶压过</td></tr>
+<tr><td><strong>Auto Memory 积累</strong></td><td>memories_1 = 0 行，靠手写 MEMORY.md</td><td>Claude 自己根据纠正/偏好跨会话写笔记，存 ~/.claude/projects/</td><td><span class="tag gap">零利用</span></td></tr>
+<tr><td><strong>Compounding Engineering</strong></td><td>AGENTS.md 已成 working manual</td><td>Boris: PR 上 @claude → GitHub Action 自动沉淀规则进 CLAUDE.md → Git</td><td><span class="tag gap">未自动化</span></td></tr>
+<tr><td><strong>Conformance suite 约束</strong></td><td>对标老平台做数据一致性</td><td>引入既有权威测试集（标准库测试/规范测试）作为硬验收</td><td><span class="tag gap">未沉淀为测试集</span></td></tr>
+</table>
+
+<h3>5.2 认知结构层（cognitive structure）</h3>
+
+<table>
+<tr><th>认知点</th><th>你的现状</th><th>顶尖水位</th><th>gap</th></tr>
+<tr><td><strong>范式分层（1.0/2.0/3.0）</strong></td><td>本能地区分"该写代码/该接 API/该用 prompt"</td><td>Karpathy: 先问这一层是 1.0/2.0/3.0 再选工具</td><td><span class="tag good">对齐</span></td></tr>
+<tr><td><strong>把 LLM 当失忆同事</strong></td><td>知道"上下文窗口决定上限"</td><td>Karpathy: jagged intelligence + anterograde amnesia</td><td><span class="tag good">对齐</span></td></tr>
+<tr><td><strong>Demo ≠ Product</strong></td><td>"canary 或部署成功都不算完成，产品数据可用才算"</td><td>Karpathy: works.any() vs works.all()</td><td><span class="tag good">完全对齐</span></td></tr>
+<tr><td><strong>自治度是滑块不是开关</strong></td><td>按可验证性调档（fresh owner vs 主协调介入）</td><td>Karpathy: autonomy slider</td><td><span class="tag good">对齐</span></td></tr>
+<tr><td><strong>Lethal trifecta 体检</strong></td><td>fail-closed 文化强，凭据明文贴 prompt 是反例</td><td>Willison: 私有数据 × 不可信输入 × 外发能力三选一拿掉</td><td><span class="tag gap">凭据治理缺失</span></td></tr>
+<tr><td><strong>评测是第一公民</strong></td><td>对标老平台做一致性核对</td><td>Willison/Hamel: 不写评测不上线</td><td><span class="tag gap">评测未沉淀为系统</span></td></tr>
+<tr><td><strong>advisory vs deterministic</strong></td><td>AGENTS.md 全是 advisory，靠 prompt 文字兜底 boundary</td><td>Claude Code 官方: CLAUDE.md/skill 是建议，hook/permission rule 才是强制</td><td><span class="tag gap">缺 deterministic 层</span></td></tr>
+<tr><td><strong>对抗式自评</strong></td><td>fresh verifier 已建立</td><td>不信任实现者对自己产物的判断，fresh-context reviewer</td><td><span class="tag good">对齐</span></td></tr>
+<tr><td><strong>迭代优先于一次到位</strong></td><td>把人嵌入 TDD 闭环</td><td>Claude Code: correcting 超两次→/clear 重开</td><td><span class="tag good">认知对齐</span> <span class="tag warn">执行被损失厌恶压过</span></td></tr>
+<tr><td><strong>信号导向 prompt</strong></td><td>结构化、标签化（【待办】【进度询问】）</td><td>精确&gt;模糊，要求证据而非断言</td><td><span class="tag good">对齐</span> <span class="tag warn">偶发规划过载</span></td></tr>
+<tr><td><strong>AI 是放大器不是替代</strong></td><td>"agentic engineering 核心是工程管理"</td><td>宝玉: AI 赋能=(你的能力+5)*100，Anthropic: competence 而非 mastery</td><td><span class="tag good">完全对齐</span></td></tr>
+<tr><td><strong>理解是新瓶颈</strong></td><td>要"说人话"+ 可视化+ mermaid 教材</td><td>Litt: quiz 当限速器、micro-world 当沙盘、shared space</td><td><span class="tag good">认知对齐</span> <span class="tag gap">缺 micro-world 工具</span></td></tr>
+<tr><td><strong>放大器认知</strong></td><td>"AI 是你的协作伙伴而非工具"</td><td>Miessler: AI 是事物的放大器，瓶颈是 integration 不是 capability</td><td><span class="tag good">完全对齐</span></td></tr>
+</table>
+
+<h3>5.3 背景知识层（background knowledge）</h3>
+
+<table>
+<tr><th>知识域</th><th>你的现状</th><th>顶尖水位</th><th>gap</th></tr>
+<tr><td><strong>Git 进阶（worktree/rebase/PR）</strong></td><td>会用 worktree 分模块，git 操作熟练</td><td>Boris: 5 worktree 并行 + 自动 commit + PR workflow</td><td><span class="tag good">基本对齐</span></td></tr>
+<tr><td><strong>Shell / bash 脚本</strong></td><td>python heredoc 解析日志、ssh、journalctl</td><td>写 PreToolUse/PostToolUse hook 校验脚本（jq 解 stdin JSON、exit code 控制）</td><td><span class="tag gap">hook 脚本能力缺失</span></td></tr>
+<tr><td><strong>LLM 基础（context window/caching/compaction）</strong></td><td>知道"上下文窗口决定上限"</td><td>理解 performance 随上下文增长退化的机制、prompt caching、token economy</td><td><span class="tag warn">部分</span></td></tr>
+<tr><td><strong>MCP（Model Context Protocol）</strong></td><td>会用 WebMCP/coops/chromeprofile</td><td>接 BigQuery/Sentry/Slack/数据库，配置 .mcp.json 团队共享</td><td><span class="tag gap">团队级 MCP 未建</span></td></tr>
+<tr><td><strong>代码智能/LSP</strong></td><td>未使用</td><td>装 code intelligence plugin，给 agent 精确 go-to-definition / find-references</td><td><span class="tag gap">缺失</span> 大代码库 grep 慢且不准</td></tr>
+<tr><td><strong>评测方法论（evals）</strong></td><td>对标老平台做一致性核对</td><td>golden set / 回归用例 / LLM-as-judge 的对齐纪律（精度召回）</td><td><span class="tag gap">系统性缺失</span></td></tr>
+<tr><td><strong>K8s/网络/registry</strong></td><td>需反复要"人话解释"</td><td>独立做路由表/imagePullSecret/JCR mirror 排障</td><td><span class="tag gap">明显断层</span></td></tr>
+<tr><td><strong>数仓底层（分层流转/合同/identity）</strong></td><td>"大概知道 ods→dwd→dws→ads 但经不起推敲"</td><td>独立设计数据合同 + event-time vs receive-time + identity 治理</td><td><span class="tag gap">概念储备不足以独立验证</span></td></tr>
+<tr><td><strong>权限与安全模型</strong></td><td>凭据散落、明文贴 prompt</td><td>预允许安全命令 + 沙箱 + 按域白名单 + 凭据本地化</td><td><span class="tag gap">凭据治理缺失</span></td></tr>
+<tr><td><strong>提示词推理策略谱系</strong></td><td>未显式使用</td><td>Miessler: CoT/CoD/ToT/AoT/LtM/Self-Consistency/Reflexion 可切换</td><td><span class="tag warn">非必需</span> 但对难题有用</td></tr>
+</table>
+
+<blockquote class="why">三维总览为何如此｜认知结构层你<strong>大面积对齐</strong>顶尖——这是判断力领先的硬证据。应用层你<strong>对齐一半，缺一半</strong>——缺的恰是把认知兑现的工程动作（hook / skill / auto memory / compounding engineering / MCP）。背景知识层你有<strong>两个明显断层</strong>：K8s/网络/registry + 数仓底层。这两个断层直接导致你在基础设施和数仓层"判断力领先但实现靠 agent 兜底"。反事实：如果你把这两个断层补到"经得起细问"（数仓：能用 1 小时讲清 ODS→DWD→DWS→ADS 的流转 + identity 治理；基建：能独立排一次 K8s pod 拉镜像失败），你就从"判断力领先"走向"判断力+实现熟练度双领先"。</blockquote>
+
+<p>用一张认知结构对照图收敛三维差距：</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph YOU [cheche 当前认知结构]
+    Y1[范式分层 ✓]
+    Y2[LLM=失忆同事 ✓]
+    Y3[Demo≠Product ✓]
+    Y4[自治度滑块 ✓]
+    Y5[advisory vs deterministic ✗]
+    Y6[评测第一公民 ✗]
+    Y7[Lethal trifecta 体检 ✗]
+  end
+  subgraph TOP [顶尖 aicoder 认知结构]
+    T1[范式分层]
+    T2[LLM=失忆同事]
+    T3[Demo≠Product]
+    T4[自治度滑块]
+    T5[advisory vs deterministic<br/>→ 落到 hook/budget]
+    T6[评测第一公民<br/>→ 落到 conformance/evals]
+    T7[Lethal trifecta 体检<br/>→ 落到上线前清单]
+  end
+  Y1 -.对齐.-> T1
+  Y2 -.对齐.-> T2
+  Y3 -.对齐.-> T3
+  Y4 -.对齐.-> T4
+  Y5 -.gap: 缺机制兑现.-> T5
+  Y6 -.gap: 评测未系统化.-> T6
+  Y7 -.gap: 凭据明文反例.-> T7
+  style YOU fill:#eaf1f8,stroke:#0b5394
+  style TOP fill:#e6f4ea,stroke:#1e7a3a
+</pre>
+
+<p>对照结论：<strong>前 4 项（认知/范式层）你已对齐顶尖，后 3 项（机制兑现层）是你下一步的重点</strong>。这与你 AGENTS.md "agentic engineering 核心其实是工程管理" 的论断自洽——工程管理就是把这些认知落到机制里。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 短板清单 + 具体优化措施</h2>
+
+<p>按 ROI 排序（高→低）。每条含：短板 / 证据 / 优化措施（可执行，带例子）/ 对标。</p>
+
+<h3>短板 1（最高 ROI）：声明原则缺 deterministic 兑现层</h3>
+
+<p><span class="tag gap">结构性</span> <span class="tag">高频</span></p>
+
+<p><strong>证据</strong>：6/6 token_budget=None；301 open spawn edge；4/6 goal-thread 长期 resume 失控；情绪化纠偏 prompt 高频；logs_2 全是 Rust tracing。</p>
+
+<p><strong>优化措施</strong>（按优先级）：</p>
+
+<ol>
+<li><strong>把"bounded outcome"量化为 token_budget</strong>。开新 goal-thread 时<strong>必填</strong> token_budget（建议默认 5M token / 4h，复杂任务 10M / 8h）。codex config.toml 已支持，只是你从未设。例：
+<pre><code># ~/.codex/config.toml 或 .codex/config.toml
+[agents]
+default_token_budget = "5M"  # 默认上限
+default_time_budget = "4h"</code></pre>
+<span class="meta">对标：Claude Code "context window 是最稀缺资源"第一性原理的机制化。</span></li>
+
+<li><strong>把"don't"从 AGENTS.md 升级为 PreToolUse hook</strong>。AGENTS.md 里"never edit .env""never 写 sudo 密码到 prompt""never 在 Documents 全家目录 trusted"全是 advisory，agent 会忽略。改成 deterministic 拦截：
+<pre><code># .claude/settings.json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "jq -r '.tool_input.command' | grep -E '(rm -rf /|sudo|DROP TABLE|DELETE FROM|\\.env)' && exit 2 || exit 0"
+        }]
+      }
+    ],
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "echo '本轮 token_budget: 5M / 4h. 边界: Documents 全目录只读. 凭据禁贴 prompt.'"
+      }]
+    }]
+  }
+}</code></pre>
+<span class="meta">对标：Claude Code hooks-guide "guardrail 放 hook 里：CLAUDE.md 写 never edit .env 是请求，PreToolUse hook 阻断才是强制"。</span></li>
+
+<li><strong>建立 spawn-edge close-rate 监控</strong>。每开一个父线程，结束前检查 open edge 数。&gt;5 个未收敛 = 不允许开新父线程。可以写个简短 skill：
+<pre><code># .claude/skills/edge-hygiene/SKILL.md
+---
+name: edge-hygiene
+description: 父线程结束前检查 open spawn edge，&gt;5 则强制收敛
+---
+父线程标记"完成"前，必须：
+1. 列出所有 open 子线程
+2. 每个 open 子线程要么标记完成、要么显式废弃（写一行原因）
+3. close-rate &lt; 80% 则不允许标记父线程完成</code></pre>
+<span class="meta">对标：AGENTS.md 自己的"delegated owner 完成自己的闭环, return final evidence or objective stop"。</span></li>
+
+<li><strong>把 verification 事件沉淀为可读流</strong>。logs_2 全是 Rust tracing 是结构性漏洞——你 AGENTS.md 最骄傲的原则缺可观测通道。写个 PostToolUse hook 把关键事件（测试运行/build/部署/canary）落 markdown：
+<pre><code># 每次 Bash 跑测试/build/部署后，把命令+exit code+关键输出落到
+# .claude/verification-log.md（append-only）
+{
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "echo \"[$(date -Iseconds)] $(jq -r '.tool_input.command') → exit $(jq -r '.tool_response.exit_code')\" >> .claude/verification-log.md"
+      }]
+    }]
+  }
+}</code></pre>
+<span class="meta">对标：Willison "所有 prompt+response 落 SQLite" + Boris "evidence before assertions"。</span></li>
+</ol>
+
+<h3>短板 2（最高 ROI）：独立验证 gate 缺失</h3>
+
+<p><span class="tag gap">高频</span> <span class="tag">结构性</span></p>
+
+<p><strong>证据</strong>：扩容到 8CU/parallelism=8 直接采纳去申请；agent 报 RUNNING=1 即认为稳定；多次"让我验收 p90 但我查不到 p90"；交付与汇报不符的信任崩塌反复。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>建一个 <code>live-smoke-test</code> skill 作为 Done 的硬 gate</strong>。任何"数据接通/SQL/REST/GraphQL done"声明，<strong>必须</strong>先跑真实查询/端点。mock 单测不算。例：
+<pre><code># .claude/skills/live-smoke-test/SKILL.md
+---
+name: live-smoke-test
+description: 任何"数据可用/done"声明前强制跑真实查询
+---
+触发条件：agent 声明"已上线/已可用/已修复"且涉及数据/接口
+执行：
+1. 列出 3 个真实端到端查询（不重复 agent 自己的测试）
+2. 对每个查询跑真实 CK/PG/REST，落输出
+3. 对比预期，差额&gt;5% 则 NO-GO
+4. 把结果写进 verification-log.md
+未跑此 skill 不允许标记 Done</code></pre>
+<span class="meta">对标：Boris "永远给 Claude 一个自我验证机制，2-3x 质量" + Anthropic 对抗式 review + Hamel "难评测是产品异味"。</span></li>
+
+<li><strong>建 conformance suite</strong>。把"对标老平台"沉淀为测试集：planning 耗时 108 vs 122 这种核对，做成<strong>可重复跑的 SQL</strong> 而不是临时手查。例：
+<pre><code>-- .claude/conformance/p90-planning.sql
+-- 对标老平台 planning p90 应在 100-120ms 区间
+SELECT vin, percentileCont(0.9)(planning_ms) AS p90
+FROM dws_planning
+WHERE dt = yesterday() AND vin IN (SELECT vin FROM old_platform_baseline)
+GROUP BY vin
+HAVING p90 NOT BETWEEN 100 AND 120;</code></pre>
+<span class="meta">对标：Willison "conformance suite 极好地约束 agent 输出"。</span></li>
+
+<li><strong>把"扩容/容量建议"做独立审计</strong>。agent 给扩容建议时，强制要求附"测算依据 + 反例（不扩容会怎样）+ 回滚点"。你不下场，但要让 owner agent 用模板汇报。例：
+<pre><code>## 扩容建议模板（owner 必填）
+- 当前容量: __ CU / parallelism=__
+- 测算依据: 1000 车 × 1hz × 8 字段 × 1.5x peak = __ records/s
+- 不扩容会怎样: 当前 60% 水位，峰值会 OOM（journalctl 证据: __）
+- 扩到: __ CU / parallelism=__
+- 回滚点: 若 30min 内消费 lag 不降则回滚到 __
+- 反例: 是否考虑过增加 partition 而非 CU? __</code></pre>
+<span class="meta">对标：AGENTS.md "report highest layer actually proved"。</span></li>
+</ol>
+
+<h3>短板 3（高 ROI）：委托下沉不克制</h3>
+
+<p><span class="tag gap">高频</span></p>
+
+<p><strong>证据</strong>：同类纠偏"你又在自己写代码"出现 20+ 次；主协调 agent 反复漂移到排查；301 open spawn edge。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>明确主协调 agent 的"三不"边界，写进 AGENTS.md 项目级</strong>：
+<pre><code># 项目根 AGENTS.md
+## 主协调 agent 三不原则
+- 不亲自写实现代码（只转发给 owner + 验收）
+- 不亲自读完整代码库排查（开 fresh explorer subagent）
+- 不在 owner 任务中途回复中插入新需求（新需求开新 owner）
+违反任一条，立即在回复开头写"[DRIFT]"标记，用户会看到。</code></pre>
+<span class="meta">对标：Addy Conductor→Orchestrator + Jason Liu "把系统做成对用户而言一个连贯实体"。</span></li>
+
+<li><strong>用 fresh explorer 隔离"主协调想下场排查"的冲动</strong>。每次主协调想"亲自看看代码"，改成派发一个 fresh explorer subagent：
+<pre><code># 主协调想排查时，改写 prompt 为：
+"use subagent to investigate [具体问题]. subagent only reads code,
+returns: (1) 根因 (2) 影响范围 (3) 建议修复路径. 不改任何文件."</code></pre>
+<span class="meta">对标：Claude Code subagent 最佳实践 "verbose 输出不想要→subagent"。</span></li>
+
+<li><strong>建立"主协调 anti-rationalization table"</strong>（Addy 模式），预先堵住主协调下沉的借口：
+<pre><code>## 主协调 anti-rationalization table
+| 主协调的借口 | 反驳 |
+|---|---|
+| "我亲自做更快" | 5 分钟 vs 5 分钟+上下文污染，长期后者赢 |
+| "owner 不懂这个细节" | 那是 owner 的边界声明没写清，补边界比下沉好 |
+| "只看一眼不影响" | 看一眼=主线程 context 多 5k token，10 次就污染 |
+| "用户在等" | 转发+等待 &gt; 自己做错+返工 |</code></pre></li>
+</ol>
+
+<h3>短板 4（中 ROI）：凭据治理缺失</h3>
+
+<p><span class="tag gap">持续</span> <span class="tag gap">安全</span></p>
+
+<p><strong>证据</strong>：Flink token / 服务器密码 / sudo 密码 / JMQ group token 均明文出现在 prompt；多次"凭据怎么全给治理没了"。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>建一个 <code>credentials.md</code> 本地文件（不进 Git）+ SessionStart hook 注入</strong>：
+<pre><code># ~/.codex/credentials.md（chmod 600，gitignore）
+flink_token: xxx
+server_pw: xxx
+# SessionStart hook 把 credentials.md 内容注入上下文
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "cat ~/.codex/credentials.md 2>/dev/null || echo 'no credentials file'"
+      }]
+    }]
+  }
+}</code></pre>
+<span class="meta">对标：Claude Code auto memory "记住永远用 pnpm 不用 npm 这类让 Claude 存进 auto memory"。</span></li>
+
+<li><strong>PreToolUse hook 拦截 prompt 里的明文凭据</strong>：
+<pre><code># 检测 prompt 里有疑似 token/password/sudo 则警告
+"command": "jq -r '.tool_input.command // .tool_input.prompt // \"\"' | grep -iE '(token|password|sudo|secret)' && echo '[WARN] prompt 里有凭据，考虑用 credentials.md' >> /dev/stderr || exit 0"</code></pre></li>
+</ol>
+
+<h3>短板 5（中 ROI）：基础设施层与数仓底层概念断层</h3>
+
+<p><span class="tag gap">结构性</span></p>
+
+<p><strong>证据</strong>："太复杂了，说人话就是现在 k8s 子网没办法 tcp 镜像库 443"、"大概知道 ods→dwd→dws→ads 但经不起推吵"。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>用 Karpathy 教学体补两个最小可读实现</strong>：(a) 在 HilPerformancePlatform 仓库手写一个 ~100 行的"mini 数仓"演示 ODS→DWD→DWS→ADS 流转 + identity 治理 + event-time vs receive-time；(b) 用 kind/minikube 跑一个 ~100 行的 K8s，独立做一次 pod 拉镜像失败 + 路由表修复。<span class="meta">对标：Karpathy micrograd/minGPT "单文件、从零、可读优先"教学体 + MEMORY "模型先行"。</span></li>
+
+<li><strong>每个断层写一份"因果图"教材</strong>（mermaid），下次 agent 用术语时你能用因果图核验。例如数仓分层的因果图：
+<pre class="mermaid">
+flowchart LR
+  ODS[ODS 原始层<br/>不加工] -->|清洗去重| DWD[DWD 明细层<br/>事件粒度]
+  DWD -->|轻度聚合| DWS[DWS 汇总层<br/>主题粒度]
+  DWS -->|指标计算| ADS[ADS 应用层<br/>直接喂前端]
+  ODS -.event-time.-> T1[事实发生时间]
+  ODS -.receive-time.-> T2[平台接收时间]
+  T1 -.延迟.-> T2
+  style T1 fill:#fff8e1
+  style T2 fill:#fff8e1
+</pre>
+</li>
+</ol>
+
+<h3>短板 6（中 ROI）：skill 化滞后</h3>
+
+<p><span class="tag gap">中频</span></p>
+
+<p><strong>证据</strong>：JRC API 文档反复粘贴 2-3 次全文；byte-cap 规则反复贴给 agent；handoff 文档每次手写。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>把反复粘贴的文档抽成 reference skill</strong>。JRC Flink API、数仓分层规范、各产品 owner 边界声明都做成 skill：
+<pre><code># .claude/skills/jrc-flink-api/SKILL.md
+---
+name: jrc-flink-api
+description: JRC Flink API 完整接口文档（reference 类，按需加载）
+---
+[完整 API 文档...]
+# 用法：agent 需要调 JRC Flink API 时自动加载，不占永久上下文</code></pre>
+<span class="meta">对标：Claude Code skills 最佳实践 "reference 类 vs action 类分开，长 reference 移出去双赢"。</span></li>
+
+<li><strong>把 byte-cap、edge-hygiene、live-smoke-test 等自创规则全部 skill 化</strong>。一旦 skill 化，agent 自动加载，不用每次手贴。</li>
+
+<li><strong>handoff 模板 skill 化</strong>：
+<pre><code># .claude/skills/handoff/SKILL.md
+---
+name: handoff
+description: 跨 session 交接时用结构化模板
+---
+## Handoff 模板
+- projectId / taskId / publishId / fileId / mainClass
+- 当前状态（一句话）
+- 根因（如适用）
+- 吞吐估算 / 容量
+- 扩容建议
+- 下次首步（具体到第一条命令）</code></pre></li>
+</ol>
+
+<h3>短板 7（低-中 ROI）：并发战线过宽 + 情绪驱动指令</h3>
+
+<p><span class="tag warn">结构性</span></p>
+
+<p><strong>证据</strong>：同时推进 OnBoard+Fleet+Boot+HiL+数仓治理+Java重构+SSO+调研；情绪化纠偏高频。</p>
+
+<p><strong>优化措施</strong>：</p>
+
+<ol>
+<li><strong>用"周作战图"限制并发数 ≤ 3</strong>。每周一开周会前画一张图：本周 P0/P1/P2 各是什么，P0 ≤ 3 条。其他强行降级。</li>
+
+<li><strong>情绪指令用 /btw 旁注承载</strong>，不进主指令流。例如：
+<pre><code>/btw 我现在很焦虑，但你不必回应这条，继续你的活。
+[主指令] 重刷 realtime-v3，完成标准是 OnBoard 默认页面显示完整 P90/P99...</code></pre>
+<span class="meta">对标：Claude Code /btw "不进历史的小问题用 /btw overlay 问，省上下文"。</span></li>
+</ol>
+
+<hr>
+
+<h3>优化路线总览（context engineering 决策流）</h3>
+
+<p>把 7 条短板的优化措施整合成一张"每次开 session 时该走什么决策流"的图——这是把上述措施变成<strong>可重复执行的习惯</strong>的关键：</p>
+
+<pre class="mermaid">
+flowchart TD
+  Start([开 session]) --> Q1{本轮 bounded outcome<br/>一句话说清?}
+  Q1 -- 否 --> G1[先 grillme 反采<br/>或拆 sub-goal]
+  Q1 -- 是 --> Q2{token_budget 设了?}
+  Q2 -- 否 --> G2[填 5M/4h 默认<br/>不开 session]
+  Q2 -- 是 --> Q3{需要看外部文档<br/>或凭据?}
+  Q3 -- 是 --> Q4{文档 &gt; 2k token<br/>或反复粘贴?}
+  Q4 -- 是 --> G3[抽成 reference skill<br/>或接 MCP]
+  Q4 -- 否 --> Q5{凭据在 credentials.md?}
+  Q5 -- 否 --> G4[先建 credentials.md<br/>SessionStart 注入]
+  Q5 -- 是 --> Q6
+  Q3 -- 否 --> Q6{本轮主协调<br/>还是 owner?}
+  Q6 -- 主协调 --> G5[写"三不"边界<br/>+ anti-rationalization]
+  Q6 -- owner --> Q7{会声明 done<br/>涉及数据/接口?}
+  Q7 -- 是 --> G6[启 live-smoke-test skill<br/>准备 conformance SQL]
+  Q7 -- 否 --> Run[执行]
+  G1 --> Run
+  G2 --> Run
+  G3 --> Run
+  G4 --> Run
+  G5 --> Run
+  G6 --> Run
+  Run --> Q8{每 30min:<br/>主协调下沉了?}
+  Q8 -- 是 --> Fix1[改派 fresh explorer]
+  Q8 -- 否 --> Q9{agent 报完成?}
+  Q9 -- 是 --> Q10{有证据<br/>测试输出/SQL/截图?}
+  Q10 -- 否 --> Fix2[要证据, 口头断言不算]
+  Q10 -- 是 --> Done([标记完成])
+  Q9 -- 否 --> Run
+  style G1 fill:#fef3e2
+  style G2 fill:#fef3e2
+  style G3 fill:#fef3e2
+  style G4 fill:#fef3e2
+  style G5 fill:#fef3e2
+  style G6 fill:#fef3e2
+  style Fix1 fill:#fdecea
+  style Fix2 fill:#fdecea
+  style Done fill:#e6f4ea
+</pre>
+
+<p class="meta">这张图本身就是你 AGENTS.md 哲学的<strong>执行版</strong>——把"fresh session / bounded outcome / smallest native solution / highest layer proved"从文字原则转成可走流程。建议把它截图贴在显示器旁，每次开 session 前过一遍。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ aicoding 进阶路线（introduced → practiced → can-decide）</h2>
+
+<p>按你的认知契约 <strong>introduced（听过/认得）→ practiced（亲手做过多次）→ can-decide（能在新场景判断该不该用、怎么用）</strong> 排。每项标当前水位 + 下一步动作。</p>
+
+<table>
+<tr><th>能力项</th><th>对标来源</th><th>当前水位</th><th>下一步</th></tr>
+<tr><td><strong>AGENTS.md / CLAUDE.md 设计</strong></td><td>OpenAI AGENTS.md + Claude Code memory</td><td><span class="tag good">can-decide</span></td><td>保持。下一步：分层（全局/项目/子目录）+ .override.md 临时覆盖</td></tr>
+<tr><td><strong>Plan Mode / 收敛式规划</strong></td><td>Claude Code permission-modes + Boris</td><td><span class="tag good">can-decide</span></td><td>保持。注意：规划 prompt 单条 &lt; 500 字，超长拆 owner</td></tr>
+<tr><td><strong>fresh session + bounded outcome</strong></td><td>你 AGENTS.md + Claude Code</td><td><span class="tag warn">practiced</span>（7/22 切换后）</td><td>机制化：填 token_budget + edge-hygiene skill</td></tr>
+<tr><td><strong>delegated owner TDD 闭环</strong></td><td>你 AGENTS.md + superpowers</td><td><span class="tag warn">practiced</span></td><td>补：主协调三不原则 + anti-rationalization table</td></tr>
+<tr><td><strong>verification ladder / highest layer proved</strong></td><td>你 AGENTS.md + Claude Code + Boris</td><td><span class="tag good">can-decide</span>（认知）</td><td>执行：live-smoke-test skill + conformance suite + verification-log</td></tr>
+<tr><td><strong>对抗式 review / Writer-Reviewer</strong></td><td>Claude Code + Anthropic</td><td><span class="tag warn">practiced</span>（fresh verifier）</td><td>强化：reviewer 跑独立测试，不只 agent 给的测试</td></tr>
+<tr><td><strong>subagent 角色化委派</strong></td><td>Claude Code + Addy</td><td><span class="tag warn">practiced</span></td><td>收敛：open edge 监控 + explorer/worker 边界更清</td></tr>
+<tr><td><strong>skill 编写（reference + action）</strong></td><td>anthropics/skills + Claude Code</td><td><span class="tag warn">practiced</span>（message-bus 已建）</td><td>扩量：JRC API / handoff / byte-cap / live-smoke-test 等</td></tr>
+<tr><td><strong>hook 守卫（deterministic enforcement）</strong></td><td>Claude Code hooks-guide</td><td><span class="tag gap">introduced</span></td><td>动手：PreToolUse 拦截 + PostToolUse 落 verification-log + SessionStart 注凭据</td></tr>
+<tr><td><strong>auto memory 积累</strong></td><td>Claude Code memory</td><td><span class="tag gap">introduced</span>（memories_1=0）</td><td>启用：让 codex 把纠正/偏好跨会话写笔记</td></tr>
+<tr><td><strong>MCP 团队级配置</strong></td><td>Claude Code features-overview</td><td><span class="tag gap">introduced</span></td><td>建：CK/PG/JRC/Sentry 接 MCP，配置 .mcp.json 团队共享</td></tr>
+<tr><td><strong>Fan-out 批处理</strong></td><td>Claude Code best-practices</td><td><span class="tag gap">introduced</span></td><td>试：list all → for file → claude -p，先跑 2-3 调 prompt</td></tr>
+<tr><td><strong>conformance suite</strong></td><td>Willison</td><td><span class="tag gap">introduced</span></td><td>建：把"对标老平台"沉淀为可重复跑的 SQL 测试集</td></tr>
+<tr><td><strong>evals 评测系统</strong></td><td>Hamel + Willison</td><td><span class="tag gap">introduced</span></td><td>起步：trace 落表 → 失败模式归纳 → 针对性测试</td></tr>
+<tr><td><strong>K8s/网络/registry 独立排障</strong></td><td>背景知识</td><td><span class="tag gap">introduced</span></td><td>补：kind/minikube 手跑一次完整部署 + 镜像拉取失败</td></tr>
+<tr><td><strong>数仓底层（分层/合同/identity）</strong></td><td>背景知识</td><td><span class="tag gap">introduced</span></td><td>补：mini 数仓 ~100 行从零实现 + 因果图教材</td></tr>
+<tr><td><strong>lethal trifecta 体检</strong></td><td>Willison</td><td><span class="tag gap">introduced</span></td><td>建：任何 agent 上线前过三要素清单</td></tr>
+<tr><td><strong>prompt 推理策略（CoT/ToT/Reflexion）</strong></td><td>Miessler fabric</td><td><span class="tag">未引入</span></td><td>可选：对疑难调试用 Reflextion 策略切换</td></tr>
+<tr><td><strong>code intelligence / LSP</strong></td><td>Claude Code features-overview</td><td><span class="tag">未引入</span></td><td>装：给 agent 精确 go-to-definition / find-references</td></tr>
+</table>
+
+<blockquote class="why">为何按 introduced→practiced→can-decide 排｜你的认知契约要求"难点配注解"。这张表的核心信号：<strong>你的"can-decide"集中在认知/规划/验证文化层（5 项），"practiced"在执行范式层（5 项），"introduced"在工程化兑现层（8 项）</strong>。换句话说，你的瓶颈精确地落在"把认知兑现为机制"这一段——这正是 AGENTS.md 声明 vs 实际行为落差的根因。下一步重点不是"学新概念"，而是<strong>"把已会的 5 项 practiced 推到 can-decide，把 8 项 introduced 推到 practiced"</strong>。最高 ROI 的三块：hook / auto memory / live-smoke-test——这三块一旦 practiced，你的"声明-执行落差"会立刻收窄。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 每会话自检 checklist</h2>
+
+<p>每次开 session 前后用。设计原则：<strong>可秒级过完、违反立即停、不让步于"我再快一点"</strong>。</p>
+
+<div class="checklist">
+<h4>开 session 前（30 秒）</h4>
+<ul>
+<li>本轮 bounded outcome 是什么？（一句话能说清，说不清就先 grillme）</li>
+<li>token_budget 设了没？（默认 5M / 4h，复杂 10M / 8h，未设不开）</li>
+<li>这是 fresh session 还是 resume？如果是 resume，exact baseline 变了没？变了就开新的。</li>
+<li>本轮 owner 是谁？边界声明够 scary 吗？（授权范围 / 不授权项 / 回滚点）</li>
+<li>本轮要不要主协调？要的话主协调"三不"边界写进 prompt 了没？</li>
+<li>凭据是从 credentials.md 注入还是手贴？手贴 → 停，先建 credentials.md。</li>
+<li>本轮会涉及"数据可用/done"声明吗？要 → 先准备好 live-smoke-test skill。</li>
+</ul>
+</div>
+
+<div class="checklist">
+<h4>session 中（每 30 分钟一次）</h4>
+<ul>
+<li>主协调是不是又下沉了？看 prompt 里有没有"我先看看""我查一下"→ 有则改派 fresh explorer。</li>
+<li>open edge 数超过 5 个了吗？超过则停下来收敛。</li>
+<li>情绪上来要打字了？用 /btw 旁注，不进主指令流。</li>
+<li>agent 报"已完成/通过/修复"→ 要证据（测试输出/命令返回/screenshot/SQL 结果），口头断言不算。</li>
+<li>规划过载了？单条 prompt &gt; 500 字 → 拆 owner。</li>
+<li>本轮 token 用了 &gt;60% 还没收敛？→ /compact 或开新 fresh session。</li>
+</ul>
+</div>
+
+<div class="checklist">
+<h4>session 后（90 秒）</h4>
+<ul>
+<li>verification-log.md 落了没？没落 → 补。</li>
+<li>本轮学到的东西写进 MEMORY.md 或 AGENTS.md 了没？（compounding engineering）</li>
+<li>open edge 全收敛了吗？（close-rate &lt; 80% 不允许标记父线程完成）</li>
+<li>本轮有没有"未验证就接受 agent 结论"？有 → 补 live-smoke-test。</li>
+<li>本轮有没有重复粘贴 &gt; 2k token 的文档？有 → 抽成 reference skill。</li>
+<li>本轮有没有"agent 借口跳过验证"？记下来，更新主协调 anti-rationalization table。</li>
+<li>本轮 handoff 文档写了吗？（如果会跨 session）</li>
+</ul>
+</div>
+
+<div class="checklist">
+<h4>每周一次（5 分钟）</h4>
+<ul>
+<li>本周 goal-thread 有几个 blocked / paused？超 1 个 → 治理。</li>
+<li>本周 open edge 总数趋势？上升 → 委派边界有问题。</li>
+<li>本周情绪化纠偏 prompt 占比 &gt; 10%？→ 并发战线过宽或范式错。</li>
+<li>本周学了什么新东西？写进 MEMORY.md。</li>
+<li>本周有"声明-执行落差"事件吗？记下来，更新 hook/skill 兑现机制。</li>
+<li>本周 K8s/数仓概念断层补了吗？没补 → 安排下周 1 小时教学体实现。</li>
+</ul>
+</div>
+
+<aside class="note">关于 checklist 的本质｜这不是"再多一份规范"。Boris 把 CLAUDE.md 提交进 Git 做 compounding engineering，本质就是<strong>"把每次踩坑学到的东西沉淀为下次自动避开的机制"</strong>。你的 checklist 应该是<strong>活的</strong>——每次踩坑后，把坑加进对应的 checklist 段。三个月后，你的 checklist 会变成你最值钱的 aicoding 资产，比任何 AGENTS.md 都更贴近你的真实工作流。Claude Code 官方原话："错两次→加 CLAUDE.md；同一 prompt 输三遍→存成 skill；副任务淹没上下文→走 subagent；想每次必发生→写 hook。"——这就是 checklist 的设计原理。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">延伸阅读</h2>
+
+<h4>官方文档（一手）</h4>
+<ul>
+<li>Claude Code best-practices: <a href="https://code.claude.com/docs/en/best-practices">code.claude.com/docs/en/best-practices</a></li>
+<li>Claude Code memory（CLAUDE.md / auto memory）: <a href="https://code.claude.com/docs/en/memory">code.claude.com/docs/en/memory</a></li>
+<li>Claude Code sub-agents: <a href="https://code.claude.com/docs/en/sub-agents">code.claude.com/docs/en/sub-agents</a></li>
+<li>Claude Code skills: <a href="https://code.claude.com/docs/en/skills">code.claude.com/docs/en/skills</a></li>
+<li>Claude Code hooks-guide: <a href="https://code.claude.com/docs/en/hooks-guide">code.claude.com/docs/en/hooks-guide</a></li>
+<li>Claude Code permission-modes: <a href="https://code.claude.com/docs/en/permission-modes">code.claude.com/docs/en/permission-modes</a></li>
+<li>Claude Code features-overview（扩展选型决策表）: <a href="https://code.claude.com/docs/en/features-overview">code.claude.com/docs/en/features-overview</a></li>
+<li>OpenAI Codex Best Practices: <a href="https://learn.chatgpt.com/guides/best-practices">learn.chatgpt.com/guides/best-practices</a></li>
+<li>OpenAI AGENTS.md 配置: <a href="https://learn.chatgpt.com/docs/agent-configuration/agents-md">learn.chatgpt.com/docs/agent-configuration/agents-md</a></li>
+<li>OpenAI Codex 完整文档（llms-full）: <a href="https://learn.chatgpt.com/docs/llms-full.txt">learn.chatgpt.com/docs/llms-full.txt</a></li>
+<li>OpenAI Codex Prompting Guide (Cookbook): <a href="https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide">developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide</a></li>
+<li>Anthropic 研究 How Claude Code is used in practice（40 万 session）: <a href="https://www.anthropic.com/research/claude-code-expertise">anthropic.com/research/claude-code-expertise</a></li>
+</ul>
+
+<h4>高星仓库 / 工具</h4>
+<ul>
+<li>obra/superpowers（TDD/systematic-debugging/writing-plans 等真方法论骨架）: <a href="https://github.com/obra/superpowers">github.com/obra/superpowers</a></li>
+<li>anthropics/skills（SKILL.md 官方标准）: <a href="https://github.com/anthropics/skills">github.com/anthropics/skills</a></li>
+<li>anthropics/claude-cookbooks（orchestrator_workers 等模式）: <a href="https://github.com/anthropics/claude-cookbooks">github.com/anthropics/claude-cookbooks</a></li>
+<li>hesreallyhim/awesome-claude-code（社区共识四件套）: <a href="https://github.com/hesreallyhim/awesome-claude-code">github.com/hesreallyhim/awesome-claude-code</a></li>
+<li>danielmiessler/fabric（Patterns + 推理策略工程化）: <a href="https://github.com/danielmiessler/fabric">github.com/danielmiessler/fabric</a></li>
+<li>cline/cline（Plan/Act 模式）: <a href="https://github.com/cline/cline">github.com/cline/cline</a></li>
+<li>aider-ai/aider（git 原生 pair programming）: <a href="https://github.com/aider-ai/aider">github.com/aider-ai/aider</a></li>
+<li>openai/codex（codex-cli 参考实现）: <a href="https://github.com/openai/codex">github.com/openai/codex</a></li>
+<li>smol-ai/developer（Markdown is all you need / Engineering with prompts）: <a href="https://github.com/smol-ai/developer">github.com/smol-ai/developer</a></li>
+<li>karpathy/micrograd + minGPT + nanoGPT + llm.c + nanochat（教学体从零实现）: <a href="https://github.com/karpathy">github.com/karpathy</a></li>
+</ul>
+
+<h4>顶尖 aicoder 博客 / 演讲</h4>
+<ul>
+<li>Karpathy YC AI Startup School 2025《Software Is Changing (Again)》: <a href="https://www.latent.space/p/s3">latent.space/p/s3</a></li>
+<li>Karpathy "vibe coding" 原推: <a href="https://x.com/karpathy/status/1886192184808149383">x.com/karpathy/status/1886192184808149383</a></li>
+<li>Simon Willison《Setting up a codebase for working with coding agents》: <a href="https://simonwillison.net/2025/Oct/25/coding-agent-tips/">simonwillison.net/2025/Oct/25/coding-agent-tips/</a></li>
+<li>Simon Willison《The lethal trifecta for AI agents》: <a href="https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/">simonwillison.net/2025/Jun/16/the-lethal-trifecta/</a></li>
+<li>Simon Willison《Your AI Product Needs Evals》: <a href="https://simonwillison.net/2024/Mar/31/your-ai-product-needs-evals/">simonwillison.net/2024/Mar/31/your-ai-product-needs-evals/</a></li>
+<li>Simon Willison《AI-assisted development needs automated tests》: <a href="https://simonwillison.net/2025/May/28/automated-tests/">simonwillison.net/2025/May/28/automated-tests/</a></li>
+<li>Simon Willison Agentic Engineering Patterns 指南: <a href="https://simonwillison.net/guides/agentic-engineering-patterns/">simonwillison.net/guides/agentic-engineering-patterns/</a></li>
+<li>Hamel Husain《Your AI Product Needs Evals》: <a href="https://hamel.dev/blog/posts/evals/">hamel.dev/blog/posts/evals/</a></li>
+<li>Hamel Husain《A Field Guide to Rapidly Improving AI Products》: <a href="https://hamel.dev/blog/posts/field-guide/">hamel.dev/blog/posts/field-guide/</a></li>
+<li>Hamel Husain《'It's Hard to Eval' Is a Product Smell》: <a href="https://hamel.dev/blog/posts/eval-smell/">hamel.dev/blog/posts/eval-smell/</a></li>
+<li>Jason Liu Coding Agents Speaker Series: <a href="https://jxnl.co/writing/2025/09/11/coding-series-index/">jxnl.co/writing/2025/09/11/coding-series-index/</a></li>
+<li>Geoffrey Litt《Understanding is the New Bottleneck》: <a href="https://www.geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck">geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck</a></li>
+<li>Geoffrey Litt《Malleable Software in the Age of LLMs》: <a href="https://www.geoffreylitt.com/2023/03/25/llm-end-user-programming.html">geoffreylitt.com/2023/03/25/llm-end-user-programming.html</a></li>
+<li>Addy Osmani《My LLM coding workflow going into 2026》: <a href="https://addyosmani.com/blog/ai-coding-workflow/">addyosmani.com/blog/ai-coding-workflow/</a></li>
+<li>Addy Osmani《Agent Skills》（含 anti-rationalization table）: <a href="https://addyosmani.com/blog/agent-skills/">addyosmani.com/blog/agent-skills/</a></li>
+<li>Addy Osmani《Conductor vs Orchestrator》: <a href="https://addyosmani.com/blog/future-agentic-coding/">addyosmani.com/blog/future-agentic-coding/</a></li>
+<li>Cursor 官方 agent-best-practices: <a href="https://cursor.com/blog/agent-best-practices">cursor.com/blog/agent-best-practices</a></li>
+<li>swyx《Rise of the AI Engineer》: <a href="https://www.latent.space/p/ai-engineer">latent.space/p/ai-engineer</a></li>
+<li>Boris Cherny 13 条实践（Claude Code 主创）: <a href="https://madappgang.com/blog/claude-code-tips-from-its-creator-boris-cherny/">madappgang.com/blog/claude-code-tips-from-its-creator-boris-cherny/</a></li>
+<li>宝玉《AI 是专业能力的放大器》: <a href="https://x.com/dotey/status/1840060636505489544">x.com/dotey/status/1840060636505489544</a></li>
+<li>宝玉《构建 Claude Code 的经验：如何使用 Skills》: <a href="https://x.com/dotey/article/2034002188994060691">x.com/dotey/article/2034002188994060691</a></li>
+<li>lingo.dev AI Coding Anti-Patterns: <a href="https://dev.to/lingodotdev/ai-coding-anti-patterns-6-things-to-avoid-for-better-ai-coding-f3e">dev.to/lingodotdev/ai-coding-anti-patterns</a></li>
+<li>Vibe Coding 需要 Context Engineering（Sequoia）: <a href="https://inferencebysequoia.substack.com/p/vibe-coding-needs-context-engineering">inferencebysequoia.substack.com/p/vibe-coding-needs-context-engineering</a></li>
+<li>得物技术团队 Claude Code 实践: <a href="https://zhuanlan.zhihu.com/p/1999439952606431131">zhuanlan.zhihu.com/p/1999439952606431131</a></li>
+<li>tonybai Claude Code 50 条核心军规: <a href="https://tonybai.com/2026/01/25/claude-code-official-best-practices-50-core-rules/">tonybai.com/2026/01/25/claude-code-official-best-practices-50-core-rules/</a></li>
+</ul>
+
+<hr>
+
+<p class="meta" style="margin-top:60px;">教材结束 · 读者：cheche（4 年数据闭环 PM，目标综合架构师 + Function Owner）· 对标：顶尖 aicoder · 编写日期：2026-07-26 · 下一本建议：《K-数仓底层因果图》（补短板 5）、《L-aicoding-muscle-memory-lab》（把 7 条优化措施做成可练习的 30 天计划）</p>
+
+</main>
+
+</body>
+</html>
