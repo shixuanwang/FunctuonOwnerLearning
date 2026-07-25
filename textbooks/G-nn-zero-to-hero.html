@@ -549,11 +549,11 @@ flowchart LR
 <p>语言模型只懂整数索引，不认字。BPE 因果链：(1) 初始词表 = 256 字节（永不 OOV）；(2) 反复找语料里出现最频繁的相邻 token 对，合并成新 token 加进词表；(3) 合并 N 次后词表 = 256 + N（GPT-2 是 256+50000+1 特殊符 = 50257）。每合并一次记一条 merge rule（按顺序优先匹配）。</p>
 <pre class="mermaid">
 flowchart LR
-  subgraph 训练["独立训练"]
+  subgraph Train["独立训练"]
     TXT["原始 UTF-8 文本"] --> BPE["BPE 合并训练"]
     BPE --> VOCAB["词表 50257 + merges 规则"]
   end
-  subgraph 推理["模型推理"]
+  subgraph Infer["模型推理"]
     IN["字符串输入"] --> ENC["tokenizer.encode"]
     VOCAB -.规则.-> ENC
     ENC --> IDS["token id 序列"]

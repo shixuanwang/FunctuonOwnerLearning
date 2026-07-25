@@ -247,7 +247,7 @@ flowchart LR
 <aside class="note"><strong>难点：flow-matching 是什么</strong>。Flow matching 是 diffusion 的近亲：把"从噪声到动作"建模成一条连续流（ODE），训练时学速度场 v(x,t)，推理时从纯噪声积分到动作。相比 diffusion：(1) 路径更直，去噪步数少（K=4 即可）；(2) 数学更简洁（无 score function）。π0 用 flow matching 在 4090 上跑 50Hz 灵巧任务，是 B 派的工业级标杆。<strong>类比 AD</strong>：AD 里的轨迹 diffusion planner（MDP/Ego-Planner）是同一族方法，只是 action space 是轨迹点列而非末端位姿。</aside>
 
 <h3>1.4 Action Chunking：对抗 compounding error 的关键技巧</h3>
-<p>ACT（Action Chunking with Transformers，ALOHA 配套算法，RSS 2023）提出：policy 一次预测一段 action（chunk），而非单步。<strong>原因</strong>：IL 单步预测会让误差累积（compounding error）—— 小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ReActing 机制（每步重新观测但只在 chunk 边界重预测）缓解。<strong>这条被 Pi0/Pi0.5（H=50）、GR00T N1（H=16）、CogACT（H=16）、RDT 几乎所有现代 VLA 复用</strong>。</p>
+<p>ACT（Action Chunking with Transformers，ALOHA 配套算法，RSS 2023）提出：policy 一次预测一段 action（chunk），而非单步。<strong>原因</strong>：IL 单步预测会让误差累积（compounding error）—— 小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ACT 原论文（Zhao et al., RSS 2023, arXiv:2304.13705）提出的 <strong>receding horizon control + temporal ensemble</strong> 机制缓解——每次只执行 chunk 的前 k 步就重新观测并重预测（滑动窗口，而非把整段 chunk 执行到底），并用 temporal ensemble 对多次重叠的 chunk 预测做加权平均，兼顾平滑性与对最新观测的响应性。<strong>这条被 Pi0/Pi0.5（H=50）、GR00T N1（H=16）、CogACT（H=16）、RDT 几乎所有现代 VLA 复用</strong>。<em>术语纠偏</em>：原稿写作"ReActing 机制"系笔误——ReAct（Yao et al., 2210.03629, 2022）是 LLM 的"Reasoning + Acting"范式，与机器人控制无关，不可张冠李戴。</p>
 
 <blockquote class="why">action chunking 是理解现代 VLA 的最关键单一概念。它对应 AD 里的"轨迹预测"（一次出 N 个未来轨迹点 vs 一次出 1 个）。AD PM 已有"多步预测 vs 单步预测"的权衡直觉（多步稳但延迟高、误差传播模式不同），可零成本迁移。差别只在具身的 chunk 跨控制周期（毫秒级），AD 的轨迹跨秒级。</blockquote>
 
@@ -895,7 +895,7 @@ flowchart LR
 
 <h3>5.5 Action Chunking 是 VLA 默认范式（理解具身 policy 的最关键单一概念）</h3>
 <p>ACT（ALOHA 配套）一次预测一段 action（而非单步）以对抗 compounding error，<strong>被 Pi0/π0、GR00T、SmolVLA、CogACT 等几乎所有现代 VLA 复用</strong>。对应 AD 里的"轨迹预测"（一次出 N 个未来轨迹点 vs 一次出 1 个）。</p>
-<aside class="note"><strong>难点：compounding error 是什么</strong>。IL 单步预测会让误差累积：小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ReActing 机制（每步重新观测但只在 chunk 边界重预测）缓解。<strong>AD PM 已有"多步预测 vs 单步预测"的权衡直觉（多步稳但延迟高、误差传播模式不同），可零成本迁移</strong>。差别只在具身的 chunk 跨控制周期（毫秒级），AD 的轨迹跨秒级。</aside>
+<aside class="note"><strong>难点：compounding error 是什么</strong>。IL 单步预测会让误差累积：小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ACT 原论文的 <strong>receding horizon control + temporal ensemble</strong>（滑动窗口：只执行 chunk 前 k 步就重新观测重预测 + 对重叠预测做时序加权平均）缓解，而非"ReActing 机制"（ReAct 是 LLM 范式，与机器人控制无关，系术语误用）。<strong>AD PM 已有"多步预测 vs 单步预测"的权衡直觉（多步稳但延迟高、误差传播模式不同），可零成本迁移</strong>。差别只在具身的 chunk 跨控制周期（毫秒级），AD 的轨迹跨秒级。</aside>
 
 <h3>5.6 跨具身体泛化是新圣杯（对应 AD 多车型泛化）</h3>
 <p>Open X（22 形态）+ RoboMIND（6 形态）+ AgiBot World（多平台）都在攻"一份 policy 多机器人"。<strong>对应 AD 里"多车型/多传感器配置泛化"</strong>。各家做法：Open X 用统一 7 维 EE delta/abs/velocity；π0 用 18 维 configuration vector；Cosmos 覆盖 10/20/29/9/57D 多 action 空间；RoboBrain-X0 用 GRVQ+UAV+SE(3) 任务空间。</p>

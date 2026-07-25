@@ -281,7 +281,7 @@ flowchart TB
     C1["GSM8K question"] -->|render_for_completion| C2["prompt + assistant_start 点火"]
     C2 -->|engine.generate_batch ×16| C3["16 条采样 + mask"]
     C3 -->|gsm8k.reward| C4["rewards → advantages=r-mean"]
-    C3 --> C5["targets: prompt 段 & tool-output 段 = -1"]
+    C3 --> C5["targets: prompt 段 &amp; tool-output 段 = -1"]
     C5 --> C6["loss = -sum(logp × advantage)"]
   end
 </pre>

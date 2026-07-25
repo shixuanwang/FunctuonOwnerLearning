@@ -632,8 +632,8 @@ flowchart LR
     EMB1["10亿帧合成预训练<br/>GraspVLA"] --> EMB2["少样本微调"]
     EMB2 --> EMB3["零样本 Sim2Real"]
   end
-  AD -.|"重审：合成数据<br/>能替代多少真实里程?"|.-> Q["路线分歧点"]
-  EMB -.|"挑战：'真实为王'<br/>是不是过度保守?"|.-> Q
+  AD -.->|"重审：合成数据<br/>能替代多少真实里程?"| Q["路线分歧点"]
+  EMB -.->|"挑战：'真实为王'<br/>是不是过度保守?"| Q
   classDef ad fill:#eaf1f8,stroke:#0b5394
   classDef emb fill:#fff8e1,stroke:#d4a017
   classDef q fill:#fce4ec,stroke:#880e4f

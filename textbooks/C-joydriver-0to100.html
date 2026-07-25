@@ -674,6 +674,12 @@ flowchart TB
 <b>为什么需要 RDMA-NCCL-InfiniBand：</b>训练时 8 卡要 all-reduce 梯度（每卡 ~1GB 梯度），如果走普通以太网 + TCP，每 iter 通信要几百 ms，训练吞吐崩塌；走 RDMA，CPU 不参与拷贝，延迟降到 μs 级。这就是为什么 <code>det.yaml</code> 要显式挂载 <code>uverbs</code> 设备 —— 没有它 NCCL 退化成 TCP，训练慢 10 倍。
 </aside>
 
+<aside class="note">
+<b>DDP 梯度平均的「隐式 /world_size」与 loss scaling 陷阱（必读）：</b>PyTorch DDP <b>默认 <code>ReduceOp=SUM</code></b>，但它的反向钩子在 all-reduce 之后<b>自动把梯度除以 <code>world_size</code></b>，等价于 AVG —— 也就是说「梯度平均」这一步<b>已经在 DDP 内部替你做了</b>。JoyDriver 的 <code>train_one_epoch</code>（<code>run.py:681</code> 起）<b>没有显式 <code>loss = loss / world_size</code></b>，正是依赖这个默认行为。<br>
+<b>8 卡最常见 loss scale bug：</b>如果读者误以为 DDP 只做 SUM、自己又在外面加了一层 <code>loss = loss / world_size</code>（或 <code>loss = loss / 8</code>），那么 backward 后梯度会被<b>除两次</b>（一次手动的、一次 DDP 默认的），实际梯度变成 <code>真梯度 / 64</code>（8×8），学习率等效缩了 64 倍 —— 表象是「loss 几乎不下降、怎么调 lr 都不动」，新人极易误判为「模型架构有问题」或「数据没学好」。反过来，若用 <code>gradient_as_bucket_view</code>/<code>static_graph</code> 等自定义钩子关掉了默认的 /world_size，又必须手动除，否则梯度被放大 8 倍导致发散。<br>
+<b>判定口诀：</b>只要 loss 是「<code>compute_loss(out, batch)</code> 后直接 <code>scaler.scale(loss).backward()</code>」且走默认 <code>DistributedDataParallel</code> wrap，就<b>什么都别再除</b>；想确认是否被多除了一次，可以单卡（<code>world_size=1</code>）和 8 卡各跑 100 iter 比对 <code>grad_norm</code>，若 8 卡 <code>grad_norm</code> ≈ 单卡 / 8 → DDP 默认在除（正常）；若 ≈ 单卡 / 64 → 被双重除法了。
+</aside>
+
 <h3>4.3 AMP + GradScaler：混合精度训练的数值稳定</h3>
 <p><code>run.py</code> 用 <b>AMP（Automatic Mixed Precision）</b>训练：<code>use_amp=True</code> 时，前向用 <code>fp16</code>（省显存、快），反向算梯度时 <code>GradScaler</code> 动态放大 loss 防止小梯度下溢。<code>train_one_epoch</code>（<code>run.py:681</code> 起）的核心循环大致是：</p>
 
@@ -744,7 +750,7 @@ flowchart TD
   LOOP -->|"完成"| VAL["validate()<br/>(ADE/FDE 内联)"]
   VAL --> BM["benchmark.py<br/>(18 场景 metric)"]
   BM --> CKPT["落地 checkpoint"]
-  SCHED -.|"节点故障"| RESTART["max_restarts<br/>从 checkpoint 恢复"]
+  SCHED -. "节点故障" .-> RESTART["max_restarts<br/>从 checkpoint 恢复"]
   RESTART --> INIT
 </pre>
 

@@ -234,12 +234,12 @@ flowchart LR
 
 <pre class="mermaid">
 flowchart TB
-  A[理想态: fresh session + bounded outcome + 自主 TDD owner] --> B{主协调 agent<br/>是否守住边界?}
-  B -- 守住 --> C[good: owner 闭环交付, 只回 final evidence]
-  B -- 没守住 --> D[gap: 主协调下沉做排查]
+  A["理想态: fresh session + bounded outcome + 自主 TDD owner"] --> B{主协调 agent<br/>是否守住边界?}
+  B -- 守住 --> C["good: owner 闭环交付, 只回 final evidence"]
+  B -- 没守住 --> D["gap: 主协调下沉做排查"]
   D --> E[上下文污染 + 重复造轮子]
-  E --> F[用户情绪化纠偏: 你又在自己写代码]
-  F --> G[主协调角色定位混乱: PMO vs implementer]
+  E --> F["用户情绪化纠偏: 你又在自己写代码"]
+  F --> G["主协调角色定位混乱: PMO vs implementer"]
   G --> D
   style D fill:#fdecea,stroke:#b3261e
   style F fill:#fdecea,stroke:#b3261e
@@ -872,11 +872,11 @@ flowchart TD
   G4 --> Run
   G5 --> Run
   G6 --> Run
-  Run --> Q8{每 30min:<br/>主协调下沉了?}
+  Run --> Q8{"每 30min:<br/>主协调下沉了?"}
   Q8 -- 是 --> Fix1[改派 fresh explorer]
   Q8 -- 否 --> Q9{agent 报完成?}
   Q9 -- 是 --> Q10{有证据<br/>测试输出/SQL/截图?}
-  Q10 -- 否 --> Fix2[要证据, 口头断言不算]
+  Q10 -- 否 --> Fix2["要证据, 口头断言不算"]
   Q10 -- 是 --> Done([标记完成])
   Q9 -- 否 --> Run
   style G1 fill:#fef3e2
