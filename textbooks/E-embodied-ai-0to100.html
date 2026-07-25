@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从 0 到 100 吃透具身智能开源龙头（VLA / 数据闭环 / 仿真基建）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre { background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content; }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid { background:#fff; border:1px solid var(--border); padding:18px; text-align:center; max-width:100%; }
+  aside.note { display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500; }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why { border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px; }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  blockquote.migrate { border-left:3px solid #2e7d32; background:#eaf5ea;
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px; }
+  blockquote.migrate::before { content:"迁移判断｜"; font-weight:600; color:#2e7d32; }
+  blockquote.warn { border-left:3px solid var(--danger); background:#fdecea;
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px; }
+  blockquote.warn::before { content:"纠偏/避坑｜"; font-weight:600; color:var(--danger); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag { display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle; }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.green { background:#2e7d32; } .tag.red { background:var(--danger); } .tag.amber { background:#d4a017; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · 0→100 路线</h2>
+<ol>
+  <li><a href="#sec-0">① 全景与生态地图：机构/范式/数据规模</a></li>
+  <li><a href="#sec-1">② VLA 范式本质：为什么 VLA、IL/RL、token vs continuous、flow-matching</a></li>
+  <li><a href="#sec-2">③ 龙头开源深度盘点（分机构）</a>
+    <div class="sub">
+      <a href="#s2-thu">清华系</a> · <a href="#s2-baai">智源+上海AI Lab+SJTU+PKU</a> ·<br>
+      <a href="#s2-ali">阿里+地平线</a> · <a href="#s2-nv">NVIDIA+西方高星</a> ·<br>
+      <a href="#s2-data">数据集+遥操作+框架</a> · <a href="#s2-sim">仿真引擎+训练基建</a>
+    </div>
+  </li>
+  <li><a href="#sec-3">④ 系统架构与模型架构横评表</a></li>
+  <li><a href="#sec-4">⑤ 数据架构：遥操作/示教/仿真/Open X/LeRobot 格式</a></li>
+  <li><a href="#sec-5">⑥ 训练基建：算力/分布式/sim</a></li>
+  <li><a href="#sec-6">⑦ 具身 vs AD：可迁移 vs 不可迁移</a></li>
+  <li><a href="#sec-7">⑧ 转战补习：VLA 底层 + 数据闭环差异 + sim-to-real + 硬件 + 学习路线 + 行动清单</a></li>
+  <li><a href="#sec-8">⑨ 延伸阅读（paper / repo）</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>从 0 到 100 吃透具身智能开源龙头（VLA / 数据闭环 / 仿真基建）</h1>
+<p class="lede">一份写给"4 年自动驾驶数据闭环 PM、想转具身智能 + 数据基建 Function Owner"读者的单文件教材。覆盖 6 facet 调研：清华系 / 智源+上海AI Lab+SJTU+PKU / 阿里+地平线 / NVIDIA+西方高星 / 数据集+遥操作+框架 / 仿真引擎+训练基建。每个 repo 给 URL + 关键数字 + 架构 + 数据 + 算力 + 创新点 + 可复现度。</p>
+<p class="meta">编写日期：2026-07-26 · 面向：判断力领先、目标 Function Owner 的 AD PM 读者 · 认知契约：模型先行 / 先因果后术语 / 两遍法 / introduced-practiced-can-decide / 难点配 &lt;aside class="note"&gt;</p>
+
+<h2 id="sec-0">① 全景与生态地图：机构 / 范式 / 数据规模</h2>
+
+<p>具身智能（Embodied AI）= <strong>"感知 → 决策 → 动作"</strong>在物理世界的闭环。和自动驾驶（AD）相比，最大差别是：<strong>AD 是单 embodiment（车）+ 高频闭环评测（接管率/碰撞率）+ 海量车队日志红利；具身是多 embodiment（机械臂/双臂/人形/底盘，DOF 7/14/29/57）+ 评测碎片化（CALVIN/LIBERO/RoboTwin/EmbodiedScan/OpenEQA 各管一摊）+ 数据靠遥操作/合成/示教硬采</strong>。这两个差别决定了 PM 的转战卡位：你的 AD 数据闭环肌肉记忆可直接迁移，但要补"硬件 teleop + sim-to-real + 跨本体统一表征"这三块 AD 几乎不涉及的能力。</p>
+
+<blockquote class="why">具身 2024-2025 的范式已收敛到 <strong>VLA = VLM backbone + action head</strong>：把图像/语言送进视觉-语言模型提语义表征，再接一个动作头生成连续或离散的动作输出。这一范式在 AD 端到端里其实是同构的（感知 → 意图 → steering/throttle/brake），差别只在 action space（轨迹 vs 末端执行器位姿）和 embodiment 维度。所以判断力可迁移，术语和工程细节要重学。</blockquote>
+
+<h3>0.1 具身系统栈总图（自顶向下 7 层）</h3>
+<p>理解任何一篇具身论文/repo，先定位它在 7 层栈的哪一层。AD PM 的"感知-预测-规划-控制"分层直觉在这里完全适用，只是层名换了。</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph L7["7 · Agent 编排层"]
+    HA["HoloAgent / RoboOS / RCP<br/>LLM 任务分解 + 3D空间记忆 + 技能调度"]
+  end
+  subgraph L6["6 · 大脑 VLA 模型"]
+    RB["RoboBrain / RynnBrain / GR00T / Pi0<br/>VLM backbone + action head"]
+  end
+  subgraph L5["5 · 小脑技能层"]
+    HM["HoloMotion / HoST / OpenHomie<br/>RL 全身控制 + 步态 + 跌倒恢复"]
+  end
+  subgraph L4["4 · 感知基座"]
+    P3D["BIP3D / PointLLM / EmbodiedScan<br/>3D 检测 / 点云 LLM / ego-centric 感知"]
+  end
+  subgraph L3["3 · 世界模型"]
+    WM["Cosmos / Emu3 / VPP / EmbodiedGen<br/>前向/逆向动力学 + 生成式 3D 世界"]
+  end
+  subgraph L2["2 · 数据闭环"]
+    DC["遥操作 ALOHA/UMI/TeleVision/AirExo<br/>+ Open X-Embodiment / LeRobot / AgiBot World<br/>+ Isaac Sim 合成 + RoboMIND-Sim"]
+  end
+  subgraph L1["1 · 仿真与训练基建"]
+    SIM["Isaac Lab / ManiSkill3 / Genesis / MJX<br/>+ LeRobot 训练框架 / OpenVLA 微调"]
+  end
+  subgraph L0["0 · 硬件本体"]
+    HW["SO-100 / Koch / Franka / Unitree G1/H1<br/>+ teleop 硬件 GELLO/Bunny-VisionPro"]
+  end
+  L0 --> L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7
+</pre>
+
+<h3>0.2 机构生态地图（谁押注哪条路线）</h3>
+<table>
+<thead><tr><th>机构</th><th>主路线</th><th>代表 repo</th><th>独特资产</th></tr></thead>
+<tbody>
+<tr><td><strong>清华系（IIIS + ByteDance）</strong></td><td>视频生成预训练 → policy 微调（world model 驱动）</td><td>GR-1 / VPP / RoboFlamingo / GR-MG</td><td>video diffusion 内部表征当物理先验</td></tr>
+<tr><td><strong>清华 thu-ml</strong></td><td>diffusion action head（bimanual 专用）</td><td>RDT-1B / CogACT</td><td>1.2B 双臂 diffusion 基座</td></tr>
+<tr><td><strong>智源 BAAI</strong></td><td>具身大脑统一模型 + 跨本体 + OS</td><td>RoboBrain / RoboBrain2.5 / X0 / RoboOS / Emu3</td><td>ShareRobot 5.1万 episodes 多维标注 + 国产摩尔线程双轨训</td></tr>
+<tr><td><strong>上海 AI Lab（InternRobotics/OpenRobotLab）</strong></td><td>VLA 一体化 + 3D 感知 + 人形遥操</td><td>InternVLA-A / PointLLM / EmbodiedScan / OpenHomie / HoST</td><td>1.1M episodes SpatialVLA + 64×A100 训</td></tr>
+<tr><td><strong>SJTU（卢策吾组/Noematrix）</strong></td><td>低成本外骨骼遥操作 + 力觉数据</td><td>AirExo / AirExo-2 / RH20T</td><td>"人示教→伪机器人数据"跨域转换</td></tr>
+<tr><td><strong>北大 PKU-EPIC</strong></td><td>视频导航 VLA</td><td>NaVid / Uni-NaVid</td><td>纯 RGB 视频→端到端低层动作</td></tr>
+<tr><td><strong>阿里（达摩院/湖畔）</strong></td><td>稀疏 MoE 具身大脑 + RCP 协议</td><td>RynnBrain 2B/9B/122B-A10B</td><td>122B-A10B MoE + 时空记忆 + RCP</td></tr>
+<tr><td><strong>阿里高德 CV Lab</strong></td><td>地图空间智能外溢具身</td><td>ABot-ER / ABot-Claw / ABot-PhysWorld</td><td>3DGS 导航评测 + 物理一致视频世界模型</td></tr>
+<tr><td><strong>地平线 Horizon</strong></td><td>车端 sparse query 范式外溢 + 小脑</td><td>HoloMotion / HoloAgent / EmbodiedGen / BIP3D / Sparse4D</td><td>BPU 车端基因 + HoloSMPL 统一动捕 + 3000 FPS retarget</td></tr>
+<tr><td><strong>NVIDIA</strong></td><td>Physical AI 全家桶（最完整工业栈）</td><td>Isaac Sim/Lab / GR00T N1 / Cosmos</td><td>50000 H100-h 训 GR00T + 数据金字塔</td></tr>
+<tr><td><strong>Physical Intelligence（PI）</strong></td><td>flow-matching action head</td><td>openpi（Pi0/Pi0.5）</td><td>10kh 真机数据 + 7 种机器人 cross-embodiment 共训</td></tr>
+<tr><td><strong>Stanford/Berkeley/TRI/Google</strong></td><td>VLA 概念发源 + 开源基线</td><td>OpenVLA / Octo / ALOHA+Mobile ALOHA / UMI / DROID</td><td>Prismatic VLM 事实标准 + Open X-Embodiment 数据基座</td></tr>
+<tr><td><strong>UCSD（Xiaolong Wang 组）</strong></td><td>跨平台 teleop + 灵巧操作</td><td>ACE / ACE-F</td><td>跨硬件遥操作数据采集</td></tr>
+<tr><td><strong>Meta AI</strong></td><td>家居导航 + 人机协作仿真</td><td>Habitat 3.0</td><td>人在环 + 人形 avatar + 社会导航</td></tr>
+<tr><td><strong>Google DeepMind</strong></td><td>VLA 概念正式提出 + 物理引擎</td><td>RT-1 / RT-2 / Open X-Embodiment / MuJoCo</td><td>VLA 范式奠基 + MJX GPU 加速可微物理</td></tr>
+<tr><td><strong>UMass Embodied-AGI</strong></td><td>3D-aware VLA + 生成式世界模型</td><td>3D-VLA</td><td>goal image/point cloud 双 diffusion</td></tr>
+<tr><td><strong>HuggingFace</strong></td><td>平民化训练框架 + 数据 Hub</td><td>LeRobot</td><td>26.1k stars / SO-100 200美元起手</td></tr>
+</tbody>
+</table>
+
+<blockquote class="warn"><strong>机构归属纠偏（原 prompt 中的常见错误）</strong>：RoboMamba=北大（Jiaming Liu@PKU）；SpatialVLA=上海AI Lab+复旦+上交+浙大+TeleAI；3D-VLA=UMass Embodied-AGI；HumanGaussian=CUHK+PKU+腾讯；ACE/ACE-F=UCSD（Xiaolong Wang 组）；Closed-Loop-VLA 系（World-VLA-Loop）=Show Lab/NUS；HumanPlus=Stanford（MarkFzp/humanplus）；见微 Brainμ/Emu 系=智源 BAAI（不是复旦）；复旦 CIRAM 2025/3 才揭牌，开源产出尚少。机构系谱判断不准，networking/招聘/选 offer 会错位。</blockquote>
+
+<h3>0.3 数据规模对照（具身 vs AD 的根本差异）</h3>
+<table>
+<thead><tr><th>数据集</th><th>规模</th><th>具身体数</th><th>对应 AD 概念</th></tr></thead>
+<tbody>
+<tr><td>Open X-Embodiment (OXE)</td><td>1M+ 真机轨迹 / 527 技能 / 160K 任务</td><td>22</td><td>≈ nuScenes/Waymo 的开源驾驶数据</td></tr>
+<tr><td>DROID</td><td>76k 轨迹 / 350h / 564 场景 / 1.7TB</td><td>1（Franka）</td><td>≈ 单车型 in-the-wild 路测集</td></tr>
+<tr><td>AgiBot World（Colosseo）</td><td><strong>1,003,672 轨迹 / 43.8TB</strong> / 100 台并行 / 217 任务</td><td>多平台</td><td>≈ 100 台车队的量产采集流水线</td></tr>
+<tr><td>RoboMIND 2.0</td><td>310k+ 双臂移动轨迹 / 6 形态 / 含力觉触觉</td><td>6</td><td>≈ 多车型 + 多传感器配置</td></tr>
+<tr><td>ShareRobot</td><td>51,403 episodes × 3 维标注（planning+affordance+trajectory）</td><td>—</td><td>≈ 多任务对齐标注规范</td></tr>
+<tr><td>ALOHA/Mobile ALOHA</td><td>50~100 条 demo 即可上手</td><td>1（双臂）</td><td>≈ 单场景小样本回归集</td></tr>
+<tr><td>GR00T N1 数据金字塔</td><td>78万 Isaac Sim 轨迹 + 827h 视频生成 neural trajectory + 88h 真机 + 人视频</td><td>人形为主</td><td>≈ AD 仿真注入 + 影子模式</td></tr>
+<tr><td>π0 训练数据</td><td>10,000h / 903M timestep（含 9.1% OXE）</td><td>7 自家 + 22 OXE</td><td>≈ 端到端 AD 大模型训练集</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>具身数据的根本差异：没有车队红利</strong>。AD 靠几百台车 24h 跑出 TB 级日志，边际成本极低；具身必须靠<strong>遥操作 teleop（人控机器人）+ 仿真合成 + 人视频迁移</strong>三路并进，单条真机 demo 成本以分钟计（DROID 50 人采 350h）。这意味着 AD PM 的"里程数=数据量"直觉在具身完全不适用——π0 用 10kh 但只 9.1% 开放数据，质量 + embodiment 多样性 + 任务覆盖三位一体才是核心。<strong>这条决定了"具身数据闭环 PM"是比"卷模型"更高 ROI 的转战锚点</strong>。</aside>
+
+<h3>0.4 范式分化的两条主干</h3>
+<p>VLA 在 action head 上分化为两条主干，2024-2025 明显从 (A) 迁向 (B)：</p>
+<ul>
+  <li><span class="tag red">A 派</span><strong>离散 action token 自回归</strong>（RT-1 → RT-2 → OpenVLA）：把 7 维动作 256-bin 离散化成 7 个 token，自回归一个一个吐。优点：复用 LLM 训练栈、可 CoT；缺点：难兼顾高频（2-10Hz）和多模态动作分布。</li>
+  <li><span class="tag green">B 派</span><strong>连续动作生成（diffusion / flow-matching）</strong>（π0 / RDT / CogACT / GR00T System-1）：用去噪扩散或 flow matching 一次出一段 action chunk（H=16~50），可达 50-120Hz。优点：高频灵巧 + 多模态；缺点：训练贵、推理需去噪步数。</li>
+</ul>
+<blockquote class="migrate"><strong>迁移判断（强）</strong>：AD 端到端模型本质就是 VLA（图像 + 意图 → steering/throttle/brake）。RT-1 的 FiLM EfficientNet + Tokenizer + Transformer + 256-bin 几乎就是早期端到端 AD 驾驶网络的同构；π0 的 flow-matching action head 与 AD 里轨迹 diffusion planner（MDP/Ego-Planner）同源。AD PM 对"感知→动作映射"的产品理解可直接平移，只需把 action space 从"轨迹"换成"末端执行器位姿"。</blockquote>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② VLA 范式本质：为什么是 VLA、IL/RL、token vs continuous、flow-matching</h2>
+
+<h3>1.1 什么是 VLA（Vision-Language-Action）</h3>
+<p>VLA = 一个端到端神经网络，输入<strong>图像观测（+语言指令 +机器人状态）</strong>，输出<strong>机器人动作</strong>。它把 AD 里的"感知 → 预测 → 规划 → 控制"四段式折叠成一个 token 序列到 token 序列（或图像表征到动作 chunk）的映射。<strong>本质：把大模型语义能力（识别物体、理解指令、推理常识）迁移到连续控制</strong>。</p>
+
+<p>VLA 概念正式提出是 <strong>Google RT-2（2023.07）</strong>——co-fine-tune 已有 VLM（PaLM-E 12B / PaLI-X 55B），把动作表达成文本 token（如 <code>1 128 91 241 5 101 127 217</code>），推理时 de-tokenize 回动作。这条路线被 OpenVLA（7B，开源事实标准）继承。</p>
+
+<blockquote class="why">为什么 VLA 必要？前 VLA 时代（RT-1 35M 2022.12）已证明"高效 Transformer + 离散 action token + 大规模真机数据"能做到 97%（见过的任务）/76%（未见）成功率，但<strong>语义能力靠视觉分类硬学，无法 web-scale 迁移</strong>。RT-2 的突破是证明 web 语义知识（符号理解、推理、人识图）能直接迁移到机器人动作，emergent 能力比基线提升 3×。这把 VLA 从"感知映射"升格为"通用智能体"，是范式分水岭。</blockquote>
+
+<h3>1.2 IL（模仿学习）vs RL（强化学习）：两条训练范式</h3>
+<table>
+<thead><tr><th>维度</th><th>IL 模仿学习</th><th>RL 强化学习</th></tr></thead>
+<tbody>
+<tr><td>数据</td><td>人类示教轨迹（teleop 采集）</td><td>奖励信号 + 自探索</td></tr>
+<tr><td>代表</td><td>ACT / Diffusion Policy / BC / VLA（OpenVLA/Pi0/GR00T）</td><td>PPO（HoST/OpenHomie legged_gym）/ HIL-SERL / TDMPC</td></tr>
+<tr><td>优点</td><td>样本高效、稳定、可复现</td><td>能超越人类示教上限（高动态任务如跑酷）</td></tr>
+<tr><td>痛点</td><td>compounding error、上限锁在示教质量</td><td>sim-to-real gap、奖励设计难、on-policy 数据贵</td></tr>
+<tr><td>AD 对应</td><td>≈ 影子模式 + 专家轨迹</td><td>≈ 闭环 RL fine-tune（极少，因安全）</td></tr>
+</tbody>
+</table>
+<p><strong>具身 2024-2025 的共识：IL 是主流（VLA 几乎全是 IL），RL 集中在"全身运动控制"（步态/跌倒恢复/灵巧手高速接触）这种 IL 示教难采集的任务</strong>。HoST/OpenHomie 用 PPO + Isaac Gym 训练人形起身、步态，是 RL 在具身的主战场。</p>
+
+<h3>1.3 Action Token 化 vs 连续动作生成：本节最核心的范式判断</h3>
+
+<p>这是 PM 转战具身时<strong>必须吃透</strong>的最重要概念。AD 端到端是 per-frame 单步回归（轨迹/控制量），具身主流是"去噪扩散 + 一次输出 action 段"。两者架构、训练、部署完全不同。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph A["A 派：离散 action token 自回归"]
+    direction TB
+    A1["图像 + 语言"] --> A2["VLM backbone<br/>(Prismatic/DINOv2+SigLIP+Llama2)"]
+    A2 --> A3["每维 256-bin 离散化<br/>7维动作→7个token"]
+    A3 --> A4["自回归一个一个吐<br/>(像 LLM 生成文本)"]
+    A4 --> A5["1 action/次<br/>~6Hz (OpenVLA)"]
+  end
+  subgraph B["B 派：连续动作 diffusion/flow-matching"]
+    direction TB
+    B1["图像 + 语言"] --> B2["VLM backbone<br/>(PaliGemma 3B / Eagle-2)"]
+    B2 --> B3["专用 action expert<br/>(独立 ~300M)"]
+    B3 --> B4["flow matching 一次出 chunk<br/>H=50 (Pi0) / H=16 (GR00T)"]
+    B4 --> B5["~50Hz 灵巧 (Pi0)<br/>120Hz (GR00T System-1)"]
+  end
+</pre>
+
+<aside class="note"><strong>难点：action token 化到底是什么</strong>。RT-1/OpenVLA 把连续动作的每一维按 1st-99th 分位数切成 256 个 bin，每个 bin 对应一个 token id（像词表）。7 维动作（x/y/z/roll/pitch/yaw/gripper）→ 7 个离散 token，自回归生成。本质是把连续回归问题<strong>改造</strong>成分类问题，从而复用 LLM 的 next-token prediction 训练栈。代价：(1) 量化误差（256-bin 精度有限）；(2) 必须逐 token 生成，无法并行，导致高频任务（如灵巧手 50Hz）做不到；(3) 单峰输出，难表达"多种合理动作"的多模态分布。<strong>这就是 B 派出现的根本原因</strong>。</aside>
+
+<aside class="note"><strong>难点：flow-matching 是什么</strong>。Flow matching 是 diffusion 的近亲：把"从噪声到动作"建模成一条连续流（ODE），训练时学速度场 v(x,t)，推理时从纯噪声积分到动作。相比 diffusion：(1) 路径更直，去噪步数少（K=4 即可）；(2) 数学更简洁（无 score function）。π0 用 flow matching 在 4090 上跑 50Hz 灵巧任务，是 B 派的工业级标杆。<strong>类比 AD</strong>：AD 里的轨迹 diffusion planner（MDP/Ego-Planner）是同一族方法，只是 action space 是轨迹点列而非末端位姿。</aside>
+
+<h3>1.4 Action Chunking：对抗 compounding error 的关键技巧</h3>
+<p>ACT（Action Chunking with Transformers，ALOHA 配套算法，RSS 2023）提出：policy 一次预测一段 action（chunk），而非单步。<strong>原因</strong>：IL 单步预测会让误差累积（compounding error）—— 小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ReActing 机制（每步重新观测但只在 chunk 边界重预测）缓解。<strong>这条被 Pi0/Pi0.5（H=50）、GR00T N1（H=16）、CogACT（H=16）、RDT 几乎所有现代 VLA 复用</strong>。</p>
+
+<blockquote class="why">action chunking 是理解现代 VLA 的最关键单一概念。它对应 AD 里的"轨迹预测"（一次出 N 个未来轨迹点 vs 一次出 1 个）。AD PM 已有"多步预测 vs 单步预测"的权衡直觉（多步稳但延迟高、误差传播模式不同），可零成本迁移。差别只在具身的 chunk 跨控制周期（毫秒级），AD 的轨迹跨秒级。</blockquote>
+
+<h3>1.5 VLA 训练范式：Pre-train → Post-train 两段式（从 LLM 平移）</h3>
+<p>π0、GR00T N1、RT-2 都明确采用"大规模预训练 + 任务/机器人特定后训练（含 LoRA 微调）"范式。这把 VLA 从"每个任务训一遍"升级为"基座 + 微调"，是工业化的关键信号。</p>
+<ul>
+  <li><strong>Pre-train</strong>：吃跨 embodiment 大数据（OXE 1M / OpenVLA 970K / GR00T 数据金字塔 6500h / π0 10kh）训通用 policy。</li>
+  <li><strong>Post-train</strong>：在特定机器人/任务上 LoRA 或全参微调。OpenVLA LoRA 单 A100 10-15h 可跑（1.4% 参数追平全参），是中小团队主力路径。</li>
+</ul>
+<blockquote class="migrate"><strong>迁移判断（强）</strong>：AD PM 已掌握"基座模型 + 任务微调"的判断力（如 BEVFormer/Nuscenes 预训练 → 下游微调）。VLA 的 pre-train→post-train 是同一思想，可直接迁移成"VLA 选型 + 微调"的产品决策能力。具体决策树：先定任务（操作/导航/bimanual）→ 选规模（小 Octo 93M / 中 RDT 1.2B / 大 OpenVLA 7B / 旗舰 π0 3.3B / GR00T 2.2B）→ 选 action head（离散 token / diffusion / flow matching）→ 选数据（OXE 开放 / 自采 teleop / Isaac Sim 合成）。</blockquote>
+
+<h3>1.6 跨 embodiment 统一：具身界的"多传感器统一表征"问题</h3>
+<p>AD 是单一 embodiment（车），但具身是 cross-embodiment（单臂 DOF 7 / 双臂 14 / 人形 29 / 底盘 57...）。各家做法：</p>
+<ul>
+  <li><strong>Open X-Embodiment</strong>：用统一 7 维 end-effector delta/abs/velocity 动作空间，22 种形态机器人的数据能互相增益，RT-X 在很多下游形态上超过各单形态训练。</li>
+  <li><strong>π0</strong>：用 18 维 configuration vector 统一不同机器人。</li>
+  <li><strong>Cosmos</strong>：覆盖 single-arm(10D)/dual-arm(20D)/humanoid(29D)/AV(9D)/camera-motion(9D)/egocentric(57D) 多 action 空间。</li>
+  <li><strong>RoboBrain-X0（智源）</strong>：Grouped Residual Quantizer (GRVQ) 把不同机械结构映射到共享 Unified Action Vocabulary (UAV)，用 SE(3) 任务空间末端位姿做跨本体统一。直接对标 Physical Intelligence。</li>
+</ul>
+<aside class="note"><strong>类比锚点</strong>：cross-embodiment 统一 ≈ AD 的"多车型/多传感器配置泛化"。AD PM 做"多车型 BEV 统一表征"的肌肉记忆（不同相机数/不同分辨率/不同 LiDAR 线数归一化）可直接迁移成"多机器人 action space 统一"的判断力。差别：AD 是感知层归一化，具身是<strong>动作层</strong>归一化（更难，因为物理 DOF 不同）。</aside>
+
+<h3>1.7 评测范式：碎片化与"自报 vs 公开榜"的判断力</h3>
+<table>
+<thead><tr><th>评测体系</th><th>谁搞的</th><th>覆盖</th><th>可信度</th></tr></thead>
+<tbody>
+<tr><td>CALVIN</td><td>开源 long-horizon manipulation</td><td>34 任务 / ABCD split</td><td>★ 学术标杆，几乎所有清华系 VLA 都用</td></tr>
+<tr><td>LIBERO</td><td>UC Berkeley</td><td>manipulation 任务族</td><td>★ 公开榜可比</td></tr>
+<tr><td>RoboTwin 2.0</td><td>上海 AI Lab</td><td>双臂仿真</td><td>★ 公开，InternVLA-A 主用</td></tr>
+<tr><td>EmbodiedScan</td><td>上海 AI Lab</td><td>室内 3D 感知（5000 scans / 100万 ego 视图）</td><td>★ 公开</td></tr>
+<tr><td>OpenEQA / RoboVQA</td><td>具身视觉问答</td><td>EQA 任务</td><td>★ 公开</td></tr>
+<tr><td>RoboMIND-Sim</td><td>上海AI Lab+智元</td><td>多具身体 benchmark</td><td>★ 公开</td></tr>
+<tr><td>具身高考</td><td>智源 BAAI</td><td>42 仿真 + 18 真机 / 30 策略同台</td><td>○ 半公开</td></tr>
+<tr><td>RynnBrain-Bench</td><td>阿里</td><td>object/spatial/grounding/pointing</td><td>○ 自报，需对标公开榜</td></tr>
+<tr><td>Embodied Arena</td><td>阿里高德</td><td>2D-EQA Total 65.14 自报 #1</td><td>○ 自报</td></tr>
+<tr><td>EmbodiedGen 21.7%→75.0%</td><td>地平线</td><td>自家生成世界训策略</td><td>○ 自报</td></tr>
+</tbody>
+</table>
+<blockquote class="warn"><strong>避坑</strong>：具身评测比 AD 碎片化得多，且大量"我家 #1"是自家 benchmark 自报。AD PM 必须建立"哪些榜可对标、哪些是自报"的判断力——优先看 CALVIN/LIBERO/EmbodiedScan/OpenEQA 这类公开榜，警惕 RynnBrain-Bench/Embodied Arena/EmbodiedGen 这种自家数字。<strong>这跟 AD 里"自家车队 KPI vs nuScenes/Waymo/OpenScene 公开榜"的同构判断力完全一致</strong>。</blockquote>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 龙头开源深度盘点（分机构）</h2>
+
+<p>每个 repo 按<strong>架构 / 训练 / 数据 / 创新点 / 可复现度</strong>五维度拆解，附 URL + 关键数字。可复现度排序见 §4 横评表。</p>
+
+<h3 id="s2-thu">3.1 清华系（IIIS + ByteDance + thu-ml）：视频生成预训练路线主旋律</h3>
+
+<h4>3.1.1 GR-1 — 视频生成预训练驱动机器人操作的开山作</h4>
+<p><span class="tag">ICLR 2024</span> <span class="tag soft">清华 IIIS + ByteDance</span> <a href="https://github.com/bytedance/GR-1">github.com/bytedance/GR-1</a> · 约 310 stars · 通讯/共作者 Tao Kong（清华 IIIS + ByteDance）</p>
+<ul>
+  <li><strong>架构</strong>：GPT-style autoregressive Transformer。输入 = 语言指令 + 图像观测序列 + 机器人状态序列。视觉 backbone = MAE ViT-Base（Facebook 预训练）。统一输出 = 机器人动作（next-token）+ 未来图像（generative）。<strong>本质：把 video generation 与 action prediction 合并进一个 causal LM 目标</strong>，用 action token + image token 拼接。</li>
+  <li><strong>训练</strong>：两阶段。(1) 在大规模互联网视频（Ego4D 类，数千万~亿级 tokens，论文未完全披露）做视频生成预训练；(2) 在 CALVIN benchmark（数千 episodes，ABCD split）做机器人 fine-tune。算力未公开，涉及多卡训练。</li>
+  <li><strong>数据</strong>：预训练 = 大规模无标注互联网视频；Fine-tune = CALVIN（开源 PyRobot / RoboSuite 仿真基准，34 个任务）。<strong>GR-2 后续扩到 38M 视频 + 真机数据</strong>。</li>
+  <li><strong>创新点</strong>：首次系统证明"video generative pre-training"能极大提升机器人 manipulation 泛化能力（零样本未见场景 53.3%→85.4%，CALVIN 88.9%→94.9%）。把 video generation 的 representation 当通用物理先验，再接 action head —— <strong>这是后来 GR-2 / VPP / Pi-0 类"世界模型驱策略"路线的起点</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中-高</span>。代码 + 预训练权重 + 评测脚本（evaluate_calvin.py）都开放（MIT license）。但仓库以评测为主，训练代码非完整流水线（只有 fine-tune 入口）。需自行下载 MAE 权重、CALVIN 数据、GR-1 checkpoint。社区第三方 EDiRobotics/GR1-Training 复现了训练侧。</li>
+</ul>
+
+<h4>3.1.2 VPP（Video Prediction Policy）— 清华系开源质量最高的 VLA</h4>
+<p><span class="tag green">ICML 2025 Spotlight</span> <span class="tag soft">清华 IIIS / Jianyu Chen + UC Berkeley + RobotEra + Shanghai AI Lab</span> <a href="https://github.com/roboterax/video-prediction-policy">github.com/roboterax/video-prediction-policy</a> · 约 408 stars · arXiv:2412.14803</p>
+<ul>
+  <li><strong>架构</strong>：两段式。(1) Video Prediction Model = Stable Video Diffusion (SVD) 微调版，在 latent 空间预测未来视觉表征，CLIP vit-base 文本编码器（冻结）。(2) Action Head = 隐式 Inverse Dynamics Model，用 diffusion transformer policy（基于 MDT）在 SVD 中间表征上回归动作。<strong>不是直接用 SVD 出图，而是抽取 latent representation 作 policy 输入</strong>。</li>
+  <li><strong>训练</strong>：硬件 8× A800/H100。数据 Something-Something-V2（预训练）、Bridge、RT-1、CALVIN ABC（500GB）、RobotEra xhand/x-bot 真机演示。两阶段：先把 SVD 在机器人视频上微调，再训 inverse dynamics policy。提供 accelerate 分布式脚本。</li>
+  <li><strong>数据</strong>：开源预训练模型 HuggingFace: svd-robot, svd-robot-calvin, dp-calvin。混合开源仿真（CALVIN）+ 真机遥操数据集（RobotEra）。真机侧号称单策略解 100+ 真实灵巧操作任务。</li>
+  <li><strong>创新点</strong>：把"video diffusion model 的内部表征"当作机器人 policy 的世界先验，<strong>而不是用生成图作为监督</strong> —— 证明 VDM 内部 hidden state 含足够物理因果信息，反动力学（给定当前态 + 预测未来，反推动作）是高效策略范式。和 GR-1 一脉相承但更彻底（完全不需要生成可见图像）。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。HF 预训练权重 + 训练脚本（仿真+真机部署）+ CALVIN 评测管线完整开源。8 卡可复现。<strong>是清华系 VLA 中开源质量最高的之一，也是推荐的入门 repo</strong>。</li>
+</ul>
+
+<h4>3.1.3 RoboFlamingo — 把 OpenFlamingo 迁到机器人操作的范式奠基</h4>
+<p><span class="tag">arXiv:2311.01378</span> <span class="tag soft">清华 IIIS + ByteDance</span> <a href="https://github.com/RoboFlamingo/RoboFlamingo">github.com/RoboFlamingo/RoboFlamingo</a> · 约 438 stars · 484+ 引用</p>
+<ul>
+  <li><strong>架构</strong>：Backbone = OpenFlamingo 框架（CLM cross-attention），视觉编码 OpenCLIP ViT-L/14，LLM 支持 MPT / RedPajama / LLaMA / OPT / GPT-Neo / GPT-J / Pythia。Action Head = LSTM 解码器（每步输出相对动作），另支持 FC / Diffusion / GPT 解码器。cross_attn 每 N 层插入一次（可配置）。<strong>Per-step relative action 输出</strong>。</li>
+  <li><strong>训练</strong>：数据 CALVIN benchmark（ABCD 与 ABC split）。Window=12 步，batch=6/GPU，8× A100 DDP。可选与 VL 数据集（COCO/VQA）co-training 以防 VLM 能力遗忘。<strong>算力门槛低：单台 GPU server 可跑</strong>。</li>
+  <li><strong>创新点</strong>：首次系统证明"冻结/微调大 VLM（OpenFlamingo）可直接当机器人 policy 用"，在 CALVIN 上以大 margin 刷到 SOTA。<strong>奠定 VLA = 大 VLM + 轻量 action head 这一主流范式</strong>，是 OpenVLA、SpatialVLA、Pi-0 的重要前作。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。MIT license，requirements + bash 脚本（pt_run_gripper_post_ws_12_traj_aug_mpt_dolly_3b.bash）+ HF 权重 + eval_ckpts.py 完整。<strong>是清华系里"从跑通到训完"工程最干净的 repo 之一</strong>。</li>
+</ul>
+
+<h4>3.1.4 GR-MG — 半标注数据利用的工业级范式</h4>
+<p><span class="tag soft">ByteDance Research + 中科院自动化所</span> <a href="https://github.com/bytedance/GR-MG">github.com/bytedance/GR-MG</a></p>
+<ul>
+  <li><strong>架构</strong>：多模态目标条件策略。用 InstructPix2Pix 类模型从"语言 + 部分标注"生成目标图像（goal image），再接 MAE encoder + CLIP，基于动作目标图像回归动作。<strong>可视为 GR-1 的"goal image"增强版</strong>。</li>
+  <li><strong>训练/数据</strong>：预训练 Ego4D 视频；评测 CALVIN。多卡训练。代码 + checkpoint + 训练/评测脚本齐全。</li>
+  <li><strong>创新点（对数据闭环 PM 极有启发）</strong>：把 GR-1 的 video-prediction 先验 + 显式 goal image 生成结合，<strong>处理工业级"半标注"数据</strong> —— 不是所有真机数据都有完整图像-动作对，goal image 合成是一种数据增强/补全范式。这对应 AD 里的"部分标注场景挖掘"。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。ByteDance 系 repo 工程质量稳定。</li>
+</ul>
+
+<h4>3.1.5 RDT-1B + CogACT — 清华 thu-ml 的 diffusion action head 路线</h4>
+<p><strong>RDT-1B</strong> <span class="tag green">ICLR 2025</span> <a href="https://github.com/thu-ml/RoboticsDiffusionTransformer">github.com/thu-ml/RoboticsDiffusionTransformer</a> · 803+ 引用 · 1.2B 参数（最大 diffusion 机器人基座之一）</p>
+<ul>
+  <li><strong>架构</strong>：MMDiT（Multimodal Diffusion Transformer）。把异构机器人动作空间统一编码；bimanual action 空间 128 维（2 臂×64）。BPE action tokenization + 去噪扩散，条件输入：本体感知、noisy action chunk、控制频率、diffusion timestep、图像、语言。</li>
+  <li><strong>训练</strong>：64× A100 预训练 1M+ episode（46 数据集）；ALOHA 双臂 6K+ episode 微调（业内最大之一）。推理 6 action chunk/s（381 action/s）。</li>
+  <li><strong>创新点</strong>："diffusion transformer 做 bimanual 基座"路线代表。1-5 demo 即可 few-shot 迁移。<strong>双臂/dexterous 方向必看基线</strong>。</li>
+</ul>
+<p><strong>CogACT</strong> <a href="https://github.com/microsoft/CogACT">github.com/microsoft/CogACT</a> · 385+ 引用 · 三档 DiT-S/B/L</p>
+<ul>
+  <li><strong>架构</strong>：Prismatic VLM 主干（SigLIP + LLM）+ 独立 Diffusion Transformer action head。<strong>核心：用"单个 cognition token 触发整个动作序列"的 diffusion 生成</strong>，而非 OpenVLA 那样为 7 维动作生成 7 个 token。一次推理输出 16 步 7-DoF 动作。</li>
+  <li><strong>性能</strong>：A6000 bf16 上 CogACT-Base ~181ms/推理（5.5Hz），比 OpenVLA（~307ms，1 action/次）快 ~1.7× 且单次出 16 action。</li>
+  <li><strong>创新点</strong>："认知/动作解耦"的架构主张——VLM 只负责语义，专用 diffusion 动作头承担多模态动作分布。<strong>"OpenVLA 派 vs π0 派"之外的第三条路</strong>。</li>
+</ul>
+
+<blockquote class="why"><strong>清华系路线总结</strong>："视频生成预训练 → 机器人微调"是清华系（ByteDance + THU）路线主旋律——GR-1（生成视频）、VPP（隐式 SVD 表征）、GR-MG（goal image）都把"video generative model 的内部表征"当通用物理先验，再接轻量 action head。这与清华在 world model / video diffusion 上的长期积累一致，<strong>与 OpenVLA（纯 OpenX 监督）是两条不同路线</strong>。Action Head 设计趋同：diffusion / flow-matching 已是事实标准。评测高度集中在 CALVIN，跨论文可比性强，但也暴露"仿真数据闭环"和"真机泛化"gap 是主要矛盾 —— 与 AD sim2real 痛点同构。</blockquote>
+
+
+<h3 id="s2-baai">3.2 智源 BAAI + 上海 AI Lab + SJTU + PKU：国内具身开源生态深度盘点</h3>
+
+<h4>3.2.1 RoboBrain 系列（BAAI）— 国内最早系统性具身大脑统一模型</h4>
+<p><strong>RoboBrain / ShareRobot</strong> <span class="tag green">CVPR 2025</span> <a href="https://github.com/FlagOpen/RoboBrain">github.com/FlagOpen/RoboBrain</a> · 176+ 引用 · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：基于 LLaVA-NeXT 的 MLLM（3B/7B/32B 三档）。<strong>核心是用 LoRA 把三类能力挂到统一基座</strong>：Planning-LoRA（任务分解）、Affordance-LoRA/A-LoRA（可交互物体感知）、Trajectory-LoRA/T-LoRA（末端执行器轨迹预测）。本质是"感知-规划-控制"三段式统一到一个大模型 token 序列里。</li>
+  <li><strong>训练</strong>：多阶段。Stage1 通用预训练 → Stage1.5 直接 SFT → Stage2 resume fine-tuning (si/ov) → Stage3 机器人规划数据训练 → Stage4 用 LoRA 训 affordance+trajectory。每节点 8× A800 GPU。在 ShareRobot 上训练后任务分解 BLEU-4=55.05%，提升 30.2%。</li>
+  <li><strong>数据</strong>：<strong>ShareRobot（HF: BAAI/ShareRobot）—— 51,403 episodes</strong>，每条标注 planning + affordance + end-effector trajectory 三维标签，3 名人工标注员精细化标注，约 2.1GB（不含原始视频帧）。<strong>这是 RoboBrain 的数据基石，也是国内具身多维对齐标注的范例</strong>。</li>
+  <li><strong>创新点</strong>：把"抽象（指令/规划）→ 具体（affordance+轨迹）"端到端塞进一个 MLLM，并用 ShareRobot 多维度对齐标注做监督。<strong>是国内最早系统性提出"具身大脑统一模型"并配套开源大规模细粒度标注数据集的工作之一</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。权重(HF)、训练脚本、推理代码、数据集(HF+GH)、评测 benchmark 全部开源。<strong>8× A800 单节点即可复现，国内具身大脑里复现门槛最友好的之一</strong>。</li>
+</ul>
+
+<p><strong>RoboBrain 2.5（Depth in Sight, Time in Mind）</strong> <a href="https://github.com/FlagOpen/RoboBrain2.5">github.com/FlagOpen/RoboBrain2.5</a> · 2025 悟界系列</p>
+<ul>
+  <li><strong>架构升级</strong>：疑似基于 Qwen3VL。新增两大模块：(1) <strong>精确 3D 空间推理</strong>——从 2D 坐标点升级到带 depth 的 3D 点；从相对空间关系升级到绝对 3D 度量；从单点预测升级到描述完整操作过程的关键点轨迹。(2) <strong>Dense Temporal Value Estimation</strong>，构造 General Reward Model (GRM) 给出密集、步级进度反馈。尺寸：4B / 8B(NV 英伟达集群训, MT 摩尔线程集群训) / 32B(todo)。</li>
+  <li><strong>创新点</strong>：(1) "时空记忆"的具身大脑：把语言 grounding 到物理时空而不只是图像平面；(2) <strong>把 reward model / 进度信号做成 VLA 强化学习的密集反馈源（GRM）</strong>，是把 LLM-RM 思路搬到具身 VLA 训练的关键尝试；(3) <strong>国产算力双轨</strong>：8B 同时在英伟达集群和国产摩尔线程集群上各训一版，国内少有的公开"国产卡 vs 英伟达卡"对照，配套 FlagScale 自研分布式框架。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中-高</span>。4B/8B 权重和推理代码已开源；32B 和训练代码在 todo。国产摩尔线程版本的可复现性是独特卖点。</li>
+</ul>
+
+<p><strong>RoboBrain-X0（Cross-Ontology Foundation Model）</strong> <a href="https://github.com/FlagOpen/RoboBrain-X0">github.com/FlagOpen/RoboBrain-X0</a></p>
+<ul>
+  <li><strong>架构</strong>：RoboBrain 2.0（多模态理解）+ OmniSAT 动作 tokenizer。<strong>核心是 Grouped Residual Quantizer (GRVQ)</strong>：把不同机械结构的连续控制序列映射到一个共享的离散"动作原语"空间（Unified Action Vocabulary, UAV），用 SE(3) 任务空间里的末端执行器位姿做跨本体统一表示。</li>
+  <li><strong>创新点</strong>：<strong>国内首个明确把不同机器人本体统一到一个动作词表的 VLA</strong>。SE(3) 任务空间 + UAV 是方法论核心，直接对标 Physical Intelligence 的跨本体思路。Docker 环境：CUDA 12.4.1 / cuDNN 9.5 / Python 3.12 / PyTorch 2.6，要求共享内存最高 512GB。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中</span>。preview 权重(HF) + 多芯片版 + 训练数据集 + 多平台推理示例（Agilex/Franka/R1-Lite ROS1/ROS2/A2D）已开源；完整训练流程和算力配置不透明。</li>
+</ul>
+
+<p><strong>RoboOS / RoboOS 2.0（具身操作系统）</strong> <a href="https://github.com/FlagOpen/RoboOS">github.com/FlagOpen/RoboOS</a></p>
+<ul>
+  <li><strong>架构</strong>："大脑-小脑"分层三件套：(1) Embodied Cloud Model = MLLM 全局感知+高层决策；(2) Cerebellum Skill Library = 即插即用模块化技能库；(3) Real-Time Shared Memory = <strong>基于 Redis 的时空同步机制</strong>。RoboOS 2.0 升级为 SaaS + MCP 架构，Master-Slaver 多机协同。</li>
+  <li><strong>创新点</strong>：把"具身 OS"从单 agent 抬到多 agent 协作，用 Redis 共享内存做实时状态同步。<strong>MCP（Model Context Protocol）接入是国内具身界较早拥抱 MCP 的信号</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。1.0 主分支（Redis 分布式）+ standalone 分支（单机轻量）都开源，Gradio UI + Master/Slaver 脚本齐全。</li>
+</ul>
+
+<p><strong>Emu3 / Emu3.5（原生多模态世界模型）+ 见微 Brainμ</strong> <a href="https://github.com/baaivision/Emu3.5">github.com/baaivision/Emu3.5</a></p>
+<ul>
+  <li><strong>Emu3 架构</strong>：原生多模态 next-token prediction——视觉和语言统一成 token 序列，无 modality-specific adapter、无独立 task head。含 Vision Tokenizer + Unified Transformer + <strong>DiDA（Discrete Diffusion Adaptation，把顺序解码转双向并行，推理≈20× 加速）</strong>。</li>
+  <li><strong>训练</strong>：预训练 10 trillion+ tokens（视频帧+转录文本）。</li>
+  <li><strong>创新点</strong>：证明了"next-token prediction 一个范式吃下理解+生成+世界建模"可行，是国内对标 GPT-4o 的原生多模态路线代表作。<strong>是 RoboBrain 系列和见微 Brainμ 的底层架构来源</strong>。</li>
+  <li><strong>见微 Brainμ（脑科学多模态基座，BAAI + 清华，Science 2026）</strong>：基于 Emu3 架构，Brainμ Tokenizer 统一编码 EEG / fMRI / 双光子钙成像 / Neuropixels 等多种神经信号为 token。预训练 &gt;100 万单位神经信号。<strong>虽不是严格具身，但"脑信号→统一 token"范式对具身"多模态感知统一"有方法论借鉴</strong>。可复现度低-中（独立 repo 未见）。</li>
+</ul>
+
+<h4>3.2.2 上海 AI Lab（InternRobotics / OpenRobotLab）— VLA 一体化 + 3D 感知 + 人形遥操</h4>
+<p><strong>InternVLA-A1.5</strong> <a href="https://github.com/InternRobotics/InternVLA-A-series">github.com/InternRobotics/InternVLA-A-series</a> · InternRobotics pinned</p>
+<ul>
+  <li><strong>架构</strong>：Qwen3.5-2B VLM 主干 + 轻量统一 action expert（共享 full-attention 接入）。<strong>用 learnable foresight tokens 查询未来动力学</strong>，action 用 flow matching 预测连续 action chunk；modality-specific Gated DeltaNet。</li>
+  <li><strong>训练</strong>：InternData-A1 预训练 → LeRobot V2.1 + RoboTwin 2.0 微调。视频 foresight 分支由<strong>冻结的 WAN2.2-5B 监督</strong>。CUDA 12.8 / PyTorch 2.10。</li>
+  <li><strong>创新点</strong>：把"理解 + 视觉前瞻(forecast) + 动作生成"三合一到一个 policy，<strong>推理时丢弃 video 分支降延迟</strong>——这是"训练用重模型当老师、推理用轻 student"的蒸馏思想在 VLA 上的落地。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中-高</span>。训练+评测代码、多 benchmark（RoboTwin/Libero/DOMINO）权重(HF+ModelScope)、微调教程齐全，但 <strong>CC BY-NC-SA 4.0（禁商用）</strong>，是 InternRobotics 多数 repo 的共性约束。</li>
+</ul>
+<p><strong>PointLLM（点云 + LLM，ECCV2024 Best Paper Candidate）</strong> <a href="https://github.com/InternRobotics/PointLLM">github.com/InternRobotics/PointLLM</a> · 1k stars</p>
+<ul>
+  <li><strong>架构</strong>：Point-BERT/Point Transformer 点云编码器（ULIP-2 预训练）+ Vicuna 7B/13B LLM + projector。<strong>直接吃点云，不靠多视图 2D 编码</strong>（区别于 3D-LLM）。每物体 8192 个彩色点。</li>
+  <li><strong>训练</strong>：Stage1 660K 简单描述指令对；Stage2 70K 复杂指令对（GPT-4 生成）。</li>
+  <li><strong>创新点</strong>：首次证明"纯点云直接进 LLM"优于"2D 多视图编码再进 LLM"，避开深度歧义/遮挡/视角依赖。<strong>是具身 3D 物体感知的基座工作</strong>。</li>
+</ul>
+<p><strong>EmbodiedScan（具身 3D 感知数据+基座，CVPR+NeurIPS 2024）</strong> <a href="https://github.com/OpenRobotLab/EmbodiedScan">github.com/OpenRobotLab/EmbodiedScan</a> · 672 stars</p>
+<ul>
+  <li><strong>架构</strong>：Embodied Perceptron 基座——吃 RGB-D 序列（任意视角）+文本，每模态经典编码器提特征，dense + 各向同性 sparse 融合 + 多任务 decoder，输出 3D 检测/占用/语言 grounding。</li>
+  <li><strong>数据（重要）</strong>：<strong>5000+ scans，100 万 ego-centric RGB-D 视图，100 万语言 prompt，16 万 3D oriented box（760+ 类），dense 语义占用（80 类）</strong>。是具身第一人称 3D 感知最大规模开源数据集之一。</li>
+  <li><strong>创新点</strong>：把 3D 感知从"全局上帝视角"转到"<strong>ego-centric 第一人称</strong>"——这才是具身 agent 真正需要的感知设定。配套 MMScan-devkit。</li>
+</ul>
+<p><strong>OpenHomie / HOMIE（外骨骼人形遥操作）</strong> <a href="https://github.com/InternRobotics/OpenHomie">github.com/InternRobotics/OpenHomie</a> · 593 stars</p>
+<ul>
+  <li><strong>架构</strong>：RL（PPO via rsl_rl + Isaac Gym + legged_gym）训练人形全身控制；上层用"<strong>同构外骨骼驾驶舱</strong>"遥操作。奖励含上肢姿态课程 + 高度跟踪 + 对称性利用。</li>
+  <li><strong>创新点</strong>："同构外骨骼"消除人形全身控制对动捕数据的依赖，<strong>硬件成本仅 ~/bin/bash.5k（外骨骼臂+动捕手套+踏板）</strong>。是国内低成本人形数据采集的代表性开源硬件方案。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中</span>。HomieRL 训练代码 + HomieDeploy（Unitree G1+Dex3）开源，HomieHardware 设计文件/PCB/固件需 form 申请；<strong>CC BY-NC-SA 4.0 禁商用</strong>。</li>
+</ul>
+<p><strong>HoST（人形起身控制，RSS2025 Best Systems Finalist）</strong> <a href="https://github.com/InternRobotics/HoST">github.com/InternRobotics/HoST</a> · 602 stars</p>
+<ul>
+  <li><strong>架构</strong>：Isaac Gym + PPO（rsl_rl）+ legged_gym。分阶段课程学习（stage1-2 ~35% 身高，stage3 ~70% 身高），姿态课程+高度跟踪奖励+对称性。</li>
+  <li><strong>创新点</strong>：单一策略让人形从任意姿态/地形站起来，用 ~60% 重力的拉力+分阶段奖励。<strong>是人形"跌倒恢复"这个长尾但关键能力的开源代表</strong>。支持 Unitree G1/H1/High Torque Mini Pi/DroidUp，<strong>MIT 协议</strong>（少数 InternRobotics 用 MIT 而非 CC NC 的 repo）。</li>
+</ul>
+
+<h4>3.2.3 SJTU（卢策吾组 / Noematrix）— 低成本外骨骼遥操作主力</h4>
+<p><strong>AirExo / AirExo-2（低成本外骨骼遥操作）</strong> <a href="https://github.com/AirExo/AirExo-2">github.com/AirExo/AirExo-2</a> · AirExo=ICRA2024, AirExo-2=CoRL2025 Oral · 35+ 引用</p>
+<ul>
+  <li><strong>架构</strong>：低成本、便携、可适配的双臂外骨骼，用于遥操作+示教采集。<strong>AirExo-2 把"人在野采集的人类示教"转换成"伪机器人数据（pseudo-robot data）"</strong>，无需真机在场即可大规模采集。</li>
+  <li><strong>创新点（对数据闭环 PM 最关键）</strong>："人示教→伪机器人数据"的跨域转换，<strong>把数据采集从"必须有真机"解放出来</strong>，是降低具身数据成本的关键工程创新。这跟 AD 的"数据采集车队/仿真合成"是同构问题。Noematrix 团队（吕峻等，SJTU 卢策吾组）与之同源。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。AirExo-2 完整源码+采集代码+组装指南开源，兼容初代 AirExo 硬件。是数据采集硬件里复现度最高的之一。</li>
+</ul>
+
+<h4>3.2.4 PKU-EPIC — 视频导航 VLA 标杆</h4>
+<p><strong>NaVid / Uni-NaVid（video-VLN VLA）</strong> <span class="tag green">RSS 2024 / 2025</span> <a href="https://arxiv.org/abs/2402.15852">arXiv:2402.15852</a></p>
+<ul>
+  <li><strong>架构</strong>：首个面向连续环境 VLN 的 video-based VLM/VLA。主干 LLaMA-VID：Vicuna-7B + EVA-CLIP vision encoder + Q-Former。每帧：1 个 instruction-queried token + 历史帧 4 个 instruction-agnostic token + 当前帧 64 token。<strong>action 以语言形式输出</strong>（FORWARD/TURN-LEFT/TURN-RIGHT/STOP + 量纲），正则解析。Uni-NaVid 升级为端到端 VLA，统一 4 类导航任务。</li>
+  <li><strong>训练</strong>：NaVid 510K 导航样本（320K R2R oracle 61 个 MP3D 场景 + 180K DAgger）+ 10K instruction-reasoning + 763K web video-caption。Uni-NaVid 3.6M 导航样本。推理 ~1.2-1.5s/action（0.67-0.83 FPS）。</li>
+  <li><strong>创新点</strong>："纯 RGB 视频 → 端到端低层动作"的导航 VLA——<strong>不依赖地图/里程计/深度</strong>，最接近人类导航行为。R2R-CE SOTA，200 条真机指令 66% 成功率。<strong>VLA 在"导航（而非操作）"子赛道的标杆</strong>。</li>
+</ul>
+
+<h4>3.2.5 RoboCodeX（多模态代码生成，ICML 2024）</h4>
+<p><a href="https://github.com/RoboCodeX-source/RoboCodeX_code">github.com/RoboCodeX-source/RoboCodeX_code</a></p>
+<ul>
+  <li><strong>架构</strong>：树结构多模态代码生成框架：把人类指令分解成 object-centric manipulation units（含 affordance + safety 物理约束），再生成可执行代码。<strong>区别于 VLA 输出连续动作，它输出的是 ROS/MoveIt 可执行代码</strong>。</li>
+  <li><strong>创新点</strong>："指令→可执行机器人代码"的 sim-to-real 最小化：Gazebo 测完直接部署真机。<strong>"LLM 写代码控机器人"而非"VLA 输出动作"的另一条路线，与 VLA 互补</strong>。repo 含 franka_policy / gazebo_plugins / grasp_detection / instruct_to_policy / joint_prediction 等 ROS 1 Noetic + MoveIt + Franka ROS 包。</li>
+</ul>
+
+<blockquote class="migrate"><strong>迁移判断（强）</strong>：ShareRobot（51403 episodes × 3 维标注）、AirExo-2（人示教→伪机器人数据）、EmbodiedScan（100万 ego-centric 视图+100万语言 prompt）都是"<strong>大规模+多维度对齐标注</strong>"的范例。AD 数据闭环 PM 最擅长的"数据采集→清洗→多任务标注→评测闭环"正是具身当前最缺的，<strong>PM 角色比模型角色更稀缺、更值钱</strong>。</blockquote>
+
+
+<h3 id="s2-ali">3.3 阿里（达摩院/湖畔/高德） + 地平线（Horizon）</h3>
+
+<h4>3.3.1 阿里 RynnBrain — 122B-A10B MoE 具身大脑</h4>
+<p><span class="tag">Apache-2.0</span> <a href="https://github.com/alibaba-damo-academy/RynnBrain">github.com/alibaba-damo-academy/RynnBrain</a> · 2B/9B/122B-A10B 三档权重全开 · HF + ModelScope 双发</p>
+<ul>
+  <li><strong>架构</strong>：decoder-only 视觉-语言架构，三档 2B/9B/<strong>122B-A10B（稀疏 MoE，10B 激活）</strong>。主干基于 Qwen3-VL/Qwen3.5，支持 dense 与 sparse-MoE 双形态。能吃 image/video/机器人轨迹 + 语言指令（omni-vision inputs）。1.1 版新增<strong>原生 3D grounding（单张 RGB 预测 3D bbox 位姿/尺寸/朝向）与接触点（contact point）预测</strong>。配套 RynnBrain-VLA 做真机动作迁移。</li>
+  <li><strong>训练</strong>：训练算力/数据规模 README 未披露具体 token/GPU 数；论文称 122B-A10B 即可在部分基准上对标/超过 Google、NVIDIA 的更大具身模型。范式：VLM 视觉-语言大规模预训练 → 具身任务对齐（空间认知/grounding/pointing/affordance/3D）→ RynnBrain-VLA 真机 VLA 微调。</li>
+  <li><strong>数据</strong>：omni-vision 输入（image + video + egocentric 第一视角）+ 机器人轨迹；五类具身定位标注：物体定位/区域定位/操作点定位/轨迹定位/夹爪位姿。自家 RynnBrain-Bench 覆盖 object cognition / spatial cognition / grounding / pointing。真机评测在 <strong>Unitree G1、Astribot、天工（Tianji-Wuji）三个平台</strong>上做。</li>
+  <li><strong>创新点</strong>：(1) "<strong>时空记忆</strong>"的具身大脑：把语言 grounding 到物理时空而不只是图像平面；(2) 首次把具身认知 scaling 系统推到 122B（MoE），可研究具身能力的 emergent scaling；(3) RynnVLA-001：用视频生成 + 人类轨迹预训练的 VLA，从人第一视角操作视频隐式迁移到机器人动作；(4) <strong>同期开源 RCP（Robot Context Protocol）机器人上下文协议，桥接 传感器采集 → 模型推理 → 机器人执行 全链路</strong>，已对接 Pi0、GR00T N1.5、SO-100/SO-101。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>（推理侧）。权重(HF/ModelScope) + 推理代码(SGLang/transformers，依赖 transformers==5.2.0) + 8 个 Jupyter cookbook + 技术报告 PDF 全开放；但训练管线/数据/算力未开源，无法完整复训，只能复用权重做推理与微调。</li>
+</ul>
+
+<h4>3.3.2 阿里高德 ABot 家族</h4>
+<p><a href="https://github.com/amap-cvlab/ABot-ER">github.com/amap-cvlab/ABot-ER</a> · Preview 阶段</p>
+<ul>
+  <li><strong>架构</strong>：ABot-ER-Preview 是高德 CV Lab 的通用具身大脑 preview。家族架构更清晰：<strong>ABot-Claw</strong> 基于 OpenClaw 的 VLAC（Vision-Language-Action-Critic）统一 VLN+VLA+WAM；<strong>ABot-PhysWorld</strong> 是 14B Diffusion 的物理一致、动作可控视频世界模型；<strong>ABot-N0</strong> 采用 Brain-Action 层级（LLM 认知脑 + Flow Matching 动作模块）。</li>
+  <li><strong>创新点</strong>：(1) <strong>高德把"地图/空间智能"能力外溢到具身</strong>（团队核心是 CV Lab，强 spatial cognition 基因）；(2) 家族式全栈：ER(大脑) + Claw(VLA/VLN/WAM 统一) + PhysWorld(物理世界模型) + Navigation(3DGS 导航评测) + Earth-0.5(生成式地球)；(3) 强调 reasoning（物体-空间-任务三者关系）而非纯识别。</li>
+  <li><strong>可复现度</strong>：<span class="tag red">当前低</span>（仅 README 占位）。但 ABot-Claw / ABot-Navigation / ABot-PhysWorld / ABot-Earth-0.5 等姊妹 repo 已可访问。<strong>暂观望</strong>。</li>
+</ul>
+
+<h4>3.3.3 地平线 HoloMotion — 全身人形运动基础模型（车端基因外溢）</h4>
+<p><span class="tag">Apache-2.0</span> <a href="https://github.com/HorizonRobotics/HoloMotion">github.com/HorizonRobotics/HoloMotion</a> · ~598 stars · 权重+代码均释出</p>
+<ul>
+  <li><strong>架构</strong>：Reference-conditioned MoE Transformer，参数 60M–400M。核心子系统：<strong>HoloSMPL</strong>（把 10+ 个数据集、VR/惯性/光学/视觉四类动捕统一到 SMPL 共享表征）；<strong>HoloRetarget</strong>（RTX 4090 上训练数据生成 3000+ FPS，纯机载遥操作 300+ FPS）。</li>
+  <li><strong>训练/数据</strong>：训练数据 80–2000+ 小时人形运动数据；推理 ~300 FPS 实时策略。VR / 惯性 / 光学 / 视觉四类动捕源 → HoloSMPL 标准化；统一 10+ 公开/私有数据集。</li>
+  <li><strong>创新点（数据闭环关键基建）</strong>：(1) 全身人形控制的基础模型化（replay/teleop 免标定）；(2) <strong>HoloSMPL 统一异构动捕源是数据闭环关键基建</strong>（对应 AD 里的多传感器统一时空标定）；(3) HoloRetarget 把 retarget 速度拉到 3000/300 FPS，是 sim-to-real 与遥操作放量的瓶颈解法；(4) 地平线官方称之为"小脑"模型，与 LLM 大脑分层。</li>
+</ul>
+
+<h4>3.3.4 地平线 HoloAgent — 统一具身 Agent 编排壳</h4>
+<p><a href="https://github.com/HorizonRobotics/HoloAgent">github.com/HorizonRobotics/HoloAgent</a> · ~305 stars · 论文 arXiv:2606.23565</p>
+<ul>
+  <li><strong>架构</strong>：四层：<strong>AgentOS</strong>（语言→可执行动作的任务分解与规划）+ <strong>记忆层（3D 空间记忆 + 时序记忆）</strong> + <strong>技能层（HoloNavi 导航 / VLA 操作 / HoloMotion 全身运动）</strong> + 闭环执行。是 HoloMotion/HoloNavi 等子能力的编排壳（orchestrator）。</li>
+  <li><strong>创新点（AD 同构）</strong>：(1) <strong>把 LLM-only 的 plan 与物理执行闭环起来</strong>——这正是 AD 端到端规划落地的同构问题；(2) 3D 空间记忆 + 时序记忆，类比 AD 的占用网络 + 时序融合；(3) 统一 Agent 框架，把导航/操作/运动编排成可被大模型 on-demand 调用的技能库。</li>
+</ul>
+
+<h4>3.3.5 地平线 EmbodiedGen — 生成式 3D 世界引擎（数据闭环 PM 最对口）</h4>
+<p><span class="tag">Apache-2.0</span> <a href="https://github.com/HorizonRobotics/EmbodiedGen">github.com/HorizonRobotics/EmbodiedGen</a> · ~565 stars · Docker + HF 数据集 EmbodiedGenData · 支持 Claude Code 插件"3D Vibe Coding"</p>
+<ul>
+  <li><strong>架构</strong>：混合生成管线：3D 资产用可插拔后端（SAM3D / TRELLIS / Hunyuan3D Pro）；场景理解用 GPT agent 解析自然语言→scene graph；视觉处理用 SAM + diffusion（SD3.5）+ QWEN-2.5VL + ChatGLM3；输出 mesh(.obj/.glb) / URDF / MJCF / USD / 3DGS(.ply)。</li>
+  <li><strong>创新点</strong>：(1) <strong>sim-first</strong>：所有产出带 collision 几何 + 物理元数据，直接进 SAPIEN/Isaac Sim/Isaac Gym/MuJoCo/Genesis/PyBullet 六大引擎，无需手工适配；(2) Agentic 编辑"3D Vibe Coding"用自然语言迭代改世界、保持物理有效性；(3) <strong>sim-to-real 收益：策略纯在生成世界训，真机成功率从 21.7%→75.0%</strong>；(4) 单一资产→房间→任务驱动场景的分层生成。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。代码 + Docker + 预训练管线 + 数据集全开放；<strong>属于本批里最易上手、对"数据闭环 PM"最对口的一项</strong>。</li>
+</ul>
+
+<h4>3.3.6 地平线 BIP3D — 具身 3D 感知最小可复现单元</h4>
+<p><span class="tag">MIT</span> <a href="https://github.com/HorizonRobotics/BIP3D">github.com/HorizonRobotics/BIP3D</a> · ~180 stars · HF 权重 · 已集成进 robo_orchard_lab</p>
+<ul>
+  <li><strong>架构</strong>：基于 GroundingDINO 改造：把 deformable aggregation 换成<strong>"3D deformable attention"</strong>，用深度分布做 trilinear interpolation 采样；支持 RGB 与 RGB-D。任务：多视图 3D 检测 + 视觉 grounding。</li>
+  <li><strong>训练</strong>：8 RTX 3090 量级。混合检测+grounding 数据训练。在 EmbodiedScan 上 grounding AP@0.25 达 66.58（test 70.53），轻量高效。</li>
+  <li><strong>创新点</strong>：(1) 把 2D grounding 模型低成本升级到 3D（用 depth 分布做可变形采样），不重训大模型；(2) RGB/RGB-D 双模态。<strong>是入门"具身感知"的最小可复现单元</strong>。</li>
+</ul>
+
+<h4>3.3.7 地平线 Sparse4D / SparseDrive — 车端感知范式外溢具身（PM 的天然优势）</h4>
+<p><span class="tag">MIT</span> <a href="https://github.com/HorizonRobotics/Sparse4D">github.com/HorizonRobotics/Sparse4D</a> · ~682 stars · TPAMI 2026-04</p>
+<ul>
+  <li><strong>架构</strong>：稀疏 query 的多视图时序感知——encoder-decoder + Efficient Deformable Aggregation（在 anchor box 内生成 3D keypoint，跨尺度/视图采样融合，CUDA 加速）。v1/v2/v3+lidar 整合版 / SparseDrive（端到端智驾稀疏场景表示）。</li>
+  <li><strong>训练</strong>：8× RTX 3090 (24GB)；100 epoch 15h–2d。nuScenes（主）。</li>
+  <li><strong>创新点（车端基因外溢具身的关键资产）</strong>：(1) 稀疏 query 替代稠密 BEV，<strong>是车端 BPU 友好的高性价比范式</strong>（这正是地平线"车端基因"外溢到具身的关键资产）；(2) SparseDrive 把"稀疏场景表示"推到端到端规划，<strong>理念与 HoloAgent 的稀疏空间记忆同源</strong>；(3) deformable + CUDA 优化是部署范式范本。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">极高</span>。代码+权重+训练脚本+TPAMI 论文齐全，单卡/小集群即可复现，<strong>是这一批最"教科书级"的开源</strong>。</li>
+</ul>
+
+<blockquote class="migrate"><strong>迁移判断（强）</strong>：Sparse4D→SparseDrive→HoloAgent（稀疏空间记忆）是一条清晰的"<strong>车端感知范式外溢到具身</strong>"的脉络。作为 AD 数据闭环 PM，你比纯机器人背景的人更懂 sparse/deformable/时序融合 的部署价值，这是转战具身时"<strong>车规级工程纪律</strong>"的差异化竞争力。<strong>HoloMotion 的"机载 300 FPS 遥操作"就是 BPU 部署形态的体现</strong>。</blockquote>
+
+<blockquote class="warn"><strong>命名纠偏</strong>：用户原 prompt 把 HumanPlus/GR-1/VPP 列为阿里——HumanPlus 是 Stanford（MarkFzp/humanplus），GR-1 与 VPP 是 ByteDance。阿里真正的具身旗舰是 2026 年初开源的 RynnBrain（达摩院/湖畔实验室），高德 CV Lab 另起一条 ABot 线。地平线 DK5H/Sunrise/ToG 在 GitHub 上找不到公开开源（搜索 0 命中），真正的具身开源矩阵是 Holo* 系列 + EmbodiedGen + BIP3D + RoboOrchard，且 D-Robotics 子品牌运营 RDK X5 开发套件与 rdk_model_zoo。<strong>车端芯片结合点</strong>：阿里侧结合点较弱（平头哥/玄铁 C950 主要对标云端大模型推理）；地平线侧结合点是天然强项——<strong>征程6（BPU Nash，原生支持大参 Transformer，最高 560 TOPS）+ RDK X5（10 TOPS BPU，机器人机载部署）</strong>。</blockquote>
+
+
+<h3 id="s2-nv">3.4 NVIDIA + 西方高星 VLA</h3>
+
+<h4>3.4.1 NVIDIA Isaac Lab — GPU 并行机器人 RL 事实标准</h4>
+<p><span class="tag">~7.8k stars</span> <a href="https://github.com/isaac-sim/IsaacLab">github.com/isaac-sim/IsaacLab</a> · BSD-3-Clause + Apache-2.0 · 成熟度最高</p>
+<ul>
+  <li><strong>架构</strong>：基于 Isaac Sim（Omniverse Kit / USD / RTX 渲染）的 GPU 加速统一框架。物理用 PhysX，传感器建模 RGB/Depth/Segmentation + IMU/Contact/Ray-cast，16+ 机器人本体（机械臂、四足、人形）、30+ 现成环境、原生多智能体。Python 配置 + Hydra 风格。<strong>对 RL Games / RSL RL / SKRL / Stable Baselines 一线适配</strong>，并支持模仿学习与 mimic 数据生成（isaaclab_mimic 扩展）。</li>
+  <li><strong>训练</strong>：单卡 RTX 可跑 4096+ 并行环境，~1000x 实时；可本地+云端分布式部署；有官方 Isaac Lab Performance Dashboard 跟踪吞吐。但 PhysX/渲染比 MuJoCo 单环境重，约 20x overhead。</li>
+  <li><strong>创新点</strong>：把"仿真+合成数据+RL/IL+真机"统一在一套 GPU 框架里；传感器/渲染保真度业内最高，photorealistic 合成数据直接喂真机训练，<strong>是 sim-to-real 的"重型现成方案"</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。按 release tag 对 Isaac Sim 版本（4.5/5.x/6.0）锁定；官方 docker + 训练脚本 + 性能 dashboard。<strong>代价是 NVIDIA 硬件/驱动绑定深</strong>（GPU、Omniverse、RTX）。</li>
+</ul>
+
+<h4>3.4.2 NVIDIA Isaac GR00T N1 — 西方最完整开源人形 VLA 基座</h4>
+<p><span class="tag">~7.7k stars</span> <a href="https://github.com/NVIDIA/Isaac-GR00T">github.com/NVIDIA/Isaac-GR00T</a> · arXiv:2503.14734 · 自研 License</p>
+<ul>
+  <li><strong>架构（双系统认知）</strong>：<strong>System 2 = VLM</strong>（Eagle-2，SmolLM2 LLM + SigLIP-2 @224×224，10Hz，每帧 64 image token）；<strong>System 1 = 扩散 Transformer Action Decoder，flow-matching 生成动作，120Hz</strong>。总 2.2B 参数，VLM 占 1.34B。action chunk H=16，推理 4 步去噪（K=4），L40 GPU 上 63.9ms/16 actions。</li>
+  <li><strong>训练</strong>：<strong>预训练 50,000 H100 GPU-hours</strong>，OSMO 编排，峰值 1024 GPU。数据金字塔：人视频（Ego4D/Ego-Exo4D/EPIC-KITCHENS 等）+ 88h 真机遥操 + <strong>827h 视频模型生成的"neural trajectories"</strong> + <strong>78 万条 Isaac Sim 合成轨迹（约 6500h）</strong>。Pretrain→post-training 两段式。</li>
+  <li><strong>数据</strong>：多源异构混合：真机 GR00T N1 Humanoid、Open X-Embodiment、AgiBot-Alpha + 人视频 + 大量合成数据。latent action 统一跨 embodiment 表征。</li>
+  <li><strong>创新点</strong>："<strong>System 1/System 2</strong>"认知双系统（慢思考 VLM + 快反射扩散动作头）；"<strong>数据金字塔</strong>"方法论把人视频/合成/真机分层利用；已部署 Fourier GR-1 人形做语言条件双臂操作。<strong>是西方目前参数最大、最完整开源的人形 VLA 基座之一</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中-高</span>。checkpoint、训练代码、数据 pipeline（含 GR00T Blueprint 数据合成）开源；支持 LeRobot/RLDS/H5 多格式；post-training 工具链完整。但完整复现需大量 H100，普通团队难以 1:1 复现。</li>
+</ul>
+
+<h4>3.4.3 NVIDIA Cosmos — 世界基座模型平台（VLA 与 world model 合流）</h4>
+<p><a href="https://github.com/nvidia/cosmos">github.com/nvidia/cosmos</a> · arXiv:2501.03575（666+ 引用）· Cosmos3-Super 64B / Nano 16B / Edge 4B · OpenMDW-1.1 License</p>
+<ul>
+  <li><strong>架构</strong>：<strong>Mixture-of-Transformers (MoT)</strong>——Diffusion WFM（Generator，全注意力去噪 image/video/audio/action token）+ Autoregressive WFM（Reasoner，因果自注意力做感知/规划）。统一 media tokenizer（图像/视频/音频）+ action tokenizer（机器人/AV），3D mRoPE 编码时空结构。Cosmos 3 自带原生 action model，支持 <strong>policy / inverse dynamics / forward dynamics 三种动作模式</strong>。</li>
+  <li><strong>数据</strong>：覆盖 single-arm(10D)/dual-arm(20D)/humanoid(29D)/AV(9D)/camera-motion(9D)/egocentric(57D) 等多种 action 空间。</li>
+  <li><strong>创新点（工业信号）</strong>：把"<strong>世界模型"和"action policy"统一进一个 omni 模型</strong>——既能生成未来视频（前向动力学），又能从视频反推动作（逆向动力学），还能直接出 policy。<strong>这是 VLA 与 world model 合流的最强工业信号</strong>。内置安全 guardrail（prompt 审查 + 人脸模糊）。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中</span>。权重 + 训练/评估/后训练框架开放，但完整 pretrain 复现成本极高。Policy 微调（DROID 系列）和推理对中小团队可行。</li>
+</ul>
+
+<h4>3.4.4 OpenVLA — 开源 VLA 事实基线</h4>
+<p><span class="tag green">CoRL 2024</span> <span class="tag">~6.7k stars · 3300+ 引用</span> <a href="https://github.com/openvla/openvla">github.com/openvla/openvla</a> · MIT + Llama Community</p>
+<ul>
+  <li><strong>架构</strong>：Prismatic-7B VLM 主干：Llama-2 7B（LLM）+ 融合的 DINOv2 + SigLIP（共 ~600M，224×224，vision encoder 不冻结、做 finetune）。action token 化：每维 256-bin 离散化（用 1st–99th 分位），7 维动作 → 7 个 token，<strong>自回归生成 1 个 action/次（无 action chunk）</strong>。</li>
+  <li><strong>训练</strong>：970K Open X-Embodiment 轨迹（oxe_magic_soup，含 BridgeData V2 等）。<strong>64×A100 跑 14 天，batch=2048，27 epoch，约 21,500 A100-hours</strong>。LoRA 微调单 A100 即可（10-15h，1.4% 参数追平全参）；全参微调 8×A100 × 5-15h/任务。推理：bf16 15GB / int4 仅 7GB，RTX 4090 ~6Hz。</li>
+  <li><strong>创新点</strong>：把"VLM 复用做 VLA"这条路工程化到极致——直接在 Prismatic VLM 上加 action token，自回归输出离散动作，<strong>证明 7B 开源 VLA 在通用 manipulation 上能超过 RT-2-X (55B) 16.5%</strong>。是西方 VLA 开源事实标准与基线。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。代码、权重、训练 recipe、微调脚本（LoRA/OFT/全参）全开，文档好，社区 fork 多。<strong>算力门槛相对友好（单 A100 可微调），是 VLA 训练基建标杆</strong>。</li>
+</ul>
+
+<h4>3.4.5 RT-1 / RT-2 — VLA 范式奠基（权重闭源）</h4>
+<p><strong>RT-1</strong>（arXiv:2212.06817，未开源权重）：~35M 参数。FiLM EfficientNet（ImageNet 预训练）做图像 token 化，按指令 embedding 做 FiLM 调制；Token Learner 压成紧凑 token 集；Transformer 自注意输出离散 action token。action 空间：7 维臂 + 3 维底盘 + 1 维模式切换；每维 256-bin。3Hz 闭环控制。<strong>训练 130K episode / 700+ 任务，13 台 Everyday Robots 真机采集 17 个月</strong>。奠定"离散 action token + 大数据真机"的 VLA 工程范式。</p>
+<p><strong>RT-2</strong>（arXiv:2307.15818，未开源权重）：Co-fine-tune 已有大 VLM 直接当 VLA。两版：RT-2 PaLM-E（12B，另有 5B 消融）/ RT-2 PaLI-X（55B）。action 同 RT-1 的 256-bin，但<strong>表达成文本 token</strong>（如 <code>1 128 91 241 5 101 127 217</code>）。<strong>首次正式提出 VLA 概念，是整个西方 VLA 路线的源头</strong>。</p>
+
+<h4>3.4.6 Physical Intelligence π0 / π0.5 — flow-matching 分水岭</h4>
+<p><span class="tag green">openpi ~13k stars · π0 被引 2500+ · π0.5 被引 946+</span> <a href="https://arxiv.org/abs/2410.24164">arXiv:2410.24164</a> · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：3.3B 总参：PaLI-Gemma 3B VLM 主干 + ~300M 独立 action expert（与 VLM 权重分开）。<strong>核心：Flow Matching action head——不再像 RT-2/OpenVLA 那样把 action 离散成 token 自回归，而是用 conditional flow matching 训练一个连续动作生成头，输出 50 步 action chunk（H=50）</strong>。4090 上 50Hz 灵巧任务、20Hz 标准 arm。</li>
+  <li><strong>训练</strong>：<strong>10,000 小时机器人数据</strong>：自采 903M timestep（106M 单臂 + 797M 双臂）+ OXE/Bridge v2/DROID（占 9.1%）。<strong>7 种自家机器人配置（UR5e/Franka/Trossen/ARX/AgileX/Mobile Fibocom 等）+ 22 种 OXE 机器人 cross-embodiment 共训</strong>。68 个任务。Pretrain→post-training 类 LLM 范式。</li>
+  <li><strong>创新点</strong>：Flow matching 取代离散 action token——<strong>彻底解决"高频 + 多模态动作分布"问题</strong>（自回归离散 VLA 难做 50Hz）。action expert 与 VLM 权重解耦，VLM 提供语义、action expert 提供高频控制。<strong>是西方 VLA 从"离散 token"转向"连续 flow"的分水岭</strong>。</li>
+  <li><strong>π0.5</strong>（arXiv:2504.16054）：π0 升级版，仍是 flow-matching VLA，但加入 high-level 语义预测/规划层，把"<strong>open-world generalization</strong>"作为第一目标（unseen home/object）。π0.5-LIBERO 仿真 benchmark SOTA。是 VLA 从"lab 通用"迈向"in-the-wild 通用"的关键一步。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中-高</span>。openpi 开源 base checkpoint + 全训练 pipeline（PyTorch/JAX）+ LoRA 微调（ALOHA/DROID/LIBERO/UR5/SO-100/LeKiwi）。但<strong>完整 10kh 数据非全公开</strong>，1:1 复现受限；微调与推理对中小团队友好。</li>
+</ul>
+
+<h4>3.4.7 Octo — 轻量 + 灵活接口 + 易微调（教学/研究最佳入门）</h4>
+<p><span class="tag green">RSS 2024 · 1700+ 引用</span> <a href="https://github.com/octo-models/octo">github.com/octo-models/octo</a> · Octo-Small 27M / Octo-Base 93M · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：Transformer-based diffusion policy。核心是"<strong>readout token</strong>"机制：用可学习的 readout token 做任务/观测的灵活接口（语言 or 目标图，单/多相机），diffusion head 解出多模态动作分布。JAX 实现。</li>
+  <li><strong>训练</strong>：800K Open X-Embodiment episode（25 个数据集混合），跨 embodiment/传感器/标注异构统一训练。算力未详列，规模远小于 7B 级 VLA。</li>
+  <li><strong>创新点</strong>："轻量 + 灵活接口 + 易微调"路线代表：<strong>93M 就能在 OXE 上训出通用 policy</strong>，且 readout token 让它优雅地适配新机器人/新传感器（force-torque、新相机、新动作空间），~100 demo 即可微调。是 VLA 里"小而美"的开源标杆，与 7B 级形成互补。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">高</span>。代码、权重、训练/微调脚本全开，JAX 生态完善，算力门槛低（消费级 GPU 可微调）。<strong>是教学/研究的最佳入门 VLA 之一</strong>。</li>
+</ul>
+
+<h4>3.4.8 3D-VLA — 3D-aware VLA + 生成式世界模型</h4>
+<p><span class="tag green">ICML 2024 · 393+ 引用</span> <a href="https://github.com/UMass-Embodied-AGI/3D-VLA">github.com/UMass-Embodied-AGI/3D-VLA</a></p>
+<ul>
+  <li><strong>架构</strong>：把 3D 感知/推理/动作统一进一个 embodied foundation model。LLM 主干（基于 Vicuna 系）+ interaction tokens 与环境交互。<strong>双 diffusion 生成组件</strong>：(1) Goal Image Generation（latent diffusion，基于 InstructPix2Pix + Stable Diffusion，可选深度）；(2) Goal Point Cloud Generation（fine-tune Point-E）。输入 3D 点云（.npy）。</li>
+  <li><strong>创新点</strong>："<strong>VLA + generative world model + 3D</strong>"三合一：用生成式世界模型做"目标图/目标点云生成 + 动作规划"，引入显式 3D 表征，弥补 2D VLA 对空间几何理解的不足。<strong>是"3D-aware VLA"方向的代表作</strong>。</li>
+</ul>
+
+<blockquote class="migrate"><strong>迁移判断（直接·强）</strong>：AD 端到端模型本质就是 VLA（图像/感知 + 意图 → steering/throttle/brake）。RT-1 的"FiLM EfficientNet + Tokenizer + Transformer + 256-bin action"几乎就是早期端到端 AD 驾驶网络的同构；π0 的 flow-matching action head 与 AD 里轨迹规划的连续输出/多模态轨迹分布高度同构。<strong>AD PM 对"感知→动作映射"的产品理解可直接平移</strong>。</blockquote>
+
+<aside class="note"><strong>避坑提示</strong>：不要把 AD 的"里程数=数据量"直觉直接套到 VLA。VLA 数据质量（teleop 质量、任务多样性、cross-embodiment 覆盖）远比纯数据量重要——<strong>π0 10kh 数据里只有 9.1% 是开放数据但效果顶级，OpenVLA 970K 全开但仍被 π0 碾压</strong>。"数据质量 + embodiment 多样性 + 任务覆盖"三位一体才是 VLA 数据产品的核心。</aside>
+
+
+<h3 id="s2-data">3.5 数据集 + 遥操作 + 框架（数据闭环 PM 主场）</h3>
+
+<h4>3.5.1 HuggingFace LeRobot — 具身开源生态事实标准入口</h4>
+<p><span class="tag green">26.1k stars</span> <a href="https://github.com/huggingface/lerobot">github.com/huggingface/lerobot</a> · Apache-2.0 · 1580 commits</p>
+<ul>
+  <li><strong>架构</strong>：纯 PyTorch 训练+评测+部署一体化框架。统一 Robot 基类解耦控制逻辑与硬件；<strong>策略库分层</strong>：模仿学习(ACT/Diffusion/VQ-BeT/Multitask DiT)、RL(HIL-SERL/TDMPC)、VLA(Pi0/Pi0Fast/Pi0.5/GR00T N1.7/SmolVLA/XVLA/EO-1/MolmoAct2/WALL-OSS/EVO1)、世界模型(VLA-JEPA/FastWAM)、奖励模型(SARM/TOPReward/Robometer)。<strong><code>lerobot-train --policy.type=act --dataset.repo_id=...</code> 一行起训</strong>。</li>
+  <li><strong>训练</strong>：桌面级即可起步：单卡 GPU（如 RTX 4090/A100）训练 ACT/Diffusion；VLA 类需多卡（如 8x A100）。社区在 Hub 上托管 100+ 公开数据集+预训练模型，可 stream 直接训练。<strong>算力门槛是所有主流框架里最低的，对个人/小团队最友好</strong>。</li>
+  <li><strong>数据（重要）</strong>：自创 <strong>LeRobotDataset 格式（已升级到 v2.1）</strong>：同步 MP4 视频帧（或图像）做视觉、Parquet 存 state/action/语言指令；Hugging Face Hub 托管，支持 streaming（不必下载全量）、可视化、按 episode 切分、按比例/索引合并删除。<strong>被 OpenDriveLab AgiBot World、RoboMIND 等后续数据集采纳为承载格式之一</strong>。</li>
+  <li><strong>创新点</strong>：把"数据集-策略-机器人"三者统一到 HF Hub + Parquet/MP4 流式栈，<strong>让一个 hobbyist 也能 200 美元起一套 SO-100/Koch 臂做端到端模仿学习</strong>；同时第一时间集成前沿 VLA（Pi0/GR00T/SmolVLA），是学术界→社区的转化层。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">极高</span>。<code>pip install lerobot</code> 即装；官方教程覆盖从遥操采集到 ACT/Diffusion 训练全链路；AGENT_GUIDE.md 让 Cursor/Claude 直接帮你跑。<strong>硬件兼容面最广（SO-100/LeKiwi/Koch/HopeJR/OMX/Reachy2/OpenARM/Unitree G1/reBot/Gamepad/手机键盘都行）</strong>。</li>
+</ul>
+
+<h4>3.5.2 Open X-Embodiment + RT-X — 跨具身体通用数据基座</h4>
+<p><span class="tag green">1.9k stars · ICRA 2024 · 1360+ 引用</span> <a href="https://github.com/google-deepmind/open_x_embodiment">github.com/google-deepmind/open_x_embodiment</a> · Apache-2.0 软件 + CC-BY 4.0 数据</p>
+<ul>
+  <li><strong>架构</strong>：数据格式而非训练框架。统一到 <strong>RLDS（Reinforcement Learning Datasets，episode 序列）</strong>，兼容 tfds.load；配套 RT-1-X（Transformer，输入 workspace RGB + 任务文本，输出 7 维 end-effector delta/abs/velocity，~3Hz）与 RT-2-X（VLM-based，更通用但更重）。</li>
+  <li><strong>数据（具身界的 ImageNet）</strong>：<strong>1M+ 真机轨迹 / 22 种机器人具身体 / 527 项技能 / 160,266 任务 / 21 家机构</strong>。统一 schema 但保留各源数据集 metadata，附 dataset 清单 spreadsheet 逐条引用。</li>
+  <li><strong>创新点</strong>：首次证明"<strong>跨具身体泛化</strong>"：在一个统一 7 维动作空间与 RLDS 格式下，22 种形态机器人的数据能互相增益，RT-X 在很多下游形态上超过各单形态训练。<strong>确立 RLDS 为跨机构数据交换的默认格式</strong>。</li>
+  <li><strong>可复现度</strong>：数据消费侧高（colab+gsutil 即取即用，提供自家数据转 RLDS 的工具链）；模型重训侧低（算力/TPU 门槛）。<strong>是做通用 policy 预训练语料的"ImageNet"级资产</strong>。</li>
+</ul>
+
+<h4>3.5.3 DROID + droid_policy_learning — in-the-wild 规模化</h4>
+<p><span class="tag green">RSS 2024 · 928+ 引用</span> <a href="https://github.com/droid-dataset/droid_policy_learning">github.com/droid-dataset/droid_policy_learning</a> · 数据 1.7TB</p>
+<ul>
+  <li><strong>架构</strong>：数据采集栈（droid-dataset/droid：建 Franka 平台+遥操采集）+ 策略训练栈（droid_policy_learning：fork robomimic，主推 Diffusion Policy，支持语言条件 + 3D Diffuser Actor）。</li>
+  <li><strong>数据</strong>：<strong>76k 真机演示轨迹 / 350h 交互 / 564 个场景 / 86 任务 / 50 名采集者</strong>，全量 1.7TB，主 Franka Panda，~95% 轨迹带语言标注。格式：RLDS（与 Open X-Embodiment 共训）+ HDF5（robomimic 风），含原始 stereo 全 HD 视频分桶。</li>
+  <li><strong>创新点</strong>："<strong>in-the-wild</strong>"规模化——多机构多场景多操作者，强调视觉/光照/物体多样性，<strong>弥合了 lab demo 与真实部署的 distribution shift</strong>；与 Open X 同构（RLDS）可直接共训。</li>
+  <li><strong>可复现度</strong>：训练侧高（A100 单卡 + 清晰 config + W&B）；要完整复现数据侧需自建 Franka DROID 平台。提供 2GB/100 轨迹的 example 子集便于快速上手。</li>
+</ul>
+
+<h4>3.5.4 ALOHA + Mobile ALOHA + ACT — 廉价双臂遥操范式开山</h4>
+<p><span class="tag green">ALOHA RSS 2023 ~2300 引用 + Mobile ALOHA CoRL 2024 ~870 引用</span> <a href="https://github.com/tonyzhaozh/aloha">github.com/tonyzhaozh/aloha</a></p>
+<ul>
+  <li><strong>架构</strong>：<strong>ALOHA = A Low-cost Open-source Hardware for Bimanual teleoperation</strong>：leader-follower 同构双臂遥操 + 同步录制。配套 <strong>ACT（Action Chunking with Transformers）</strong>：CCAE 风格 VAE + Transformer decoder 一次预测一段 action chunk（而非单步），抵消 compounding error。Mobile ALOHA 在其上加移动底盘做 whole-body teleop，并 co-train 静态 ALOHA 数据集。</li>
+  <li><strong>训练</strong>：ACT 极轻量：消费级 GPU（单卡 3090/4090）数小时训完，50~100 条 demo 即可上手 6 类精细任务（开盖/插电池/拉链等）~80% 成功率。</li>
+  <li><strong>创新点</strong>：把双臂精细遥操+模仿学习的硬件门槛打到 <strong>~0k（ALOHA）/ ~2k（Mobile ALOHA）</strong>；<strong>ACT 的 action chunking 思想被几乎所有后续 VLA 复用</strong>（Pi0/π0 同样 chunk）。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">极高</span>。硬件方案完整开源（BOM+CAD+固件+采集脚本），是社区复刻最多的双臂方案；被 LeRobot 当作首选 ACT 教学数据来源。</li>
+</ul>
+
+<h4>3.5.5 Universal Manipulation Interface (UMI) — 手持式零机器人数据采集</h4>
+<p><span class="tag green">RSS 2024 · 669+ 引用</span> <a href="https://github.com/real-stanford/universal_manipulation_interface">github.com/real-stanford/universal_manipulation_interface</a> · 1.5k stars</p>
+<ul>
+  <li><strong>架构</strong>：<strong>手持式夹爪</strong>（改自 Push/Pull Gripper）+ GoPro（刷 GoPro Labs 固件出 clean HDMI）+ IMU + SLAM（ORB_SLAM3 + OpenImuCameraCalibrator）+ SpaceMouse。采集时<strong>不需要机器人</strong>，事后用 SLAM 反推末端位姿→喂给 Diffusion Policy（UNet，timm+ViT-L+CLIP）。推理时把 policy 装回 GoPro 做"in-hand inference"。</li>
+  <li><strong>训练</strong>：Diffusion Policy 训练（同 Diffusion Policy 论文栈），单卡~数卡。<strong>采集门槛极低（无机器人），数据处理门槛中（需跑 SLAM pipeline + Docker，光照敏感：作者注明"晴天采集反而效果差，数据是雨天采的"）</strong>。</li>
+  <li><strong>创新点（颠覆性）</strong>："<strong>In-The-Wild Robot Teaching Without Robot Learning</strong>"——彻底解耦数据采集与机器人本体，让人带个手持夹爪走遍厨房/野外就能造数据集；之后回流 UR5/UR5e/Franka 部署。<strong>把"数据采集硬件"从机器人里解放出来</strong>。</li>
+</ul>
+
+<h4>3.5.6 RoboMIND + AgiBot World — 国内规模化数据主场</h4>
+<p><strong>RoboMIND（+ 2.0）</strong> <span class="tag green">RSS 2025</span> <a href="https://x-humanoid-robomind.github.io/">x-humanoid-robomind.github.io</a> · arXiv:2412.13877 + 2.0 arXiv:2512.24653</p>
+<ul>
+  <li><strong>数据</strong>：1.0 = 107k 轨迹 / 479 任务 / 96 物体类，多具身体（Franka 单臂 + 天工人形 + AgileX Cobot Magic + UR-5e）；<strong>2.0 = 310k+ 双臂移动操作轨迹 / 6 种机器人形态，多模态（视觉/深度/力觉/触觉/关节）</strong>。</li>
+  <li><strong>创新点</strong>："<strong>同一平台采多具身体</strong>"，保证可跨形态比较与迁移；<strong>2.0 主打双臂+移动+力觉/触觉多模态，正好补 Open X/DROID 缺失的力觉通道</strong>（对接触富任务关键）。</li>
+</ul>
+<p><strong>AgiBot World（Colosseo）</strong> <span class="tag green">IROS 2025 Best Paper</span> <a href="https://github.com/OpenDriveLab/Agibot-World">github.com/OpenDriveLab/Agibot-World</a> · 3.1k stars · arXiv:2503.06669 · CC BY-NC-SA 4.0</p>
+<ul>
+  <li><strong>数据（单体规模最大）</strong>：<strong>1,003,672 轨迹 / ~43.8TB（Beta）；Alpha 子集 92,214 轨迹/~8.5TB；100 台真机 / 217 任务 / 5 个部署域（家庭/商业/通用等）100+ 1:1 复刻真实场景</strong>。</li>
+  <li><strong>架构</strong>：AgileX Cobot Magic/Aloha、AgiBot G1、双 Franka 等移动双臂平台 + 6-DoF 灵巧手 + 视触觉传感器。数据格式双轨：HDF5 + LeRobot dataset（基于 LeRobot v2.1）。</li>
+  <li><strong>训练</strong>：配套 <strong>GO-1（含 Latent Planner）</strong>与轻量版 GO-1 Air 通用操作基座模型，HF 上有 checkpoint。全量微调需 ~70GB 显存（batch=16），推理 ~7GB。</li>
+  <li><strong>创新点（量产化采集）</strong>：<strong>100 台真机并行</strong>、把工业级数据流水线（采集→质检→标注→发布）搬进具身；<strong>规模与场景真实度均超过 Open X-Embodiment，是当前最大单体真机数据</strong>。</li>
+</ul>
+<blockquote class="migrate"><strong>迁移判断（强·PM 主场）</strong>：AgiBot World 100 台并行采集流水线本质就是 AD 多车队的对应物，你的"数据生产线 PM"经验是直接加分项。OpenDriveLab 就是上海 AI Lab + HKU 的团队，<strong>和你做 AD 数据闭环的同源团队</strong>，转战具身时这是天然桥梁。</blockquote>
+
+<h4>3.5.7 Open-TeleVision — VR 沉浸式遥操代表</h4>
+<p><span class="tag green">CoRL 2024 · 336+ 引用</span> <a href="https://github.com/OpenTeleVision/TeleVision">github.com/OpenTeleVision/TeleVision</a> · 1.3k stars</p>
+<ul>
+  <li><strong>架构</strong>：<strong>VR 头显（Meta Quest 3 / Apple Vision Pro）</strong> + 机器人头部主动控制的双目立体 RGB 相机 + WebXR 流。操作者头/手/腕位姿实时回传服务器→重定向到人形机器人。采集后用 ACT（chunk=60, hidden=512, KL=10）做模仿学习。</li>
+  <li><strong>创新点</strong>："<strong>主动立体视觉反馈</strong>"——机器人头随操作者头转，操作者获得 ego-centric 沉浸式第一人称，让长时序复杂人形任务的数据采集变得可行且不晕。<strong>是当前人形遥操的事实范式之一</strong>。</li>
+</ul>
+
+<h4>3.5.8 teleop 硬件方案生态（按预算选硬件的菜单）</h4>
+<table>
+<thead><tr><th>方案</th><th>路线</th><th>成本</th><th>适用场景</th></tr></thead>
+<tbody>
+<tr><td><strong>SO-100</strong>（TheRobotStudio）</td><td>极简低成本臂</td><td>~00/臂</td><td>LeRobot 默认入门臂，hobbyist 首选</td></tr>
+<tr><td><strong>GELLO</strong>（Wu et al.）</td><td>3D 打印摇杆式同构</td><td>&lt;00</td><td>通用直觉，社区方案成熟</td></tr>
+<tr><td><strong>ALOHA / Mobile ALOHA</strong>（Stanford）</td><td>同构双臂 leader-follower</td><td>0k/2k</td><td>桌面双臂精细任务</td></tr>
+<tr><td><strong>UMI</strong>（Stanford+CMU）</td><td>手持夹爪 + SLAM</td><td>低</td><td>便携野外/厨房，无机器人</td></tr>
+<tr><td><strong>AirExo / AirExo-2</strong>（SJTU）</td><td>低成本外骨骼，人示教→伪机器人数据</td><td>中</td><td>in-the-wild 大规模</td></tr>
+<tr><td><strong>Open-TeleVision</strong>（UCSD+Berkeley+Stanford）</td><td>VR 头显 + 主动立体视觉</td><td>中高（Quest 3 / Vision Pro）</td><td>人形全身长时序任务</td></tr>
+<tr><td><strong>Bunny-VisionPro</strong>（Dingry）</td><td>Apple Vision Pro 双臂灵巧手 + 力反馈</td><td>高（Vision Pro）</td><td>灵巧手 + 力觉</td></tr>
+<tr><td><strong>AnyTeleop</strong>（UCSD）</td><td>手部追踪重定向</td><td>中</td><td>跨硬件灵巧手</td></tr>
+</tbody>
+</table>
+<aside class="note"><strong>遥操硬件决定数据上限</strong>：leader-follower（ALOHA/GELLO，便宜直觉但桌面受限）→ 手持（UMI，便携野外但 SLAM 脆）→ VR 沉浸（Open-TeleVision/Bunny-VisionPro，人形全身但硬件贵）。<strong>三路线按预算/任务场景选型，没有银弹</strong>。AD PM 通常不碰车体硬件，但具身数据质量强依赖遥操硬件选型——需补"硬件 BOM/标定/SLAM/力觉"这条 AD 里基本不存在的链路。</aside>
+
+<blockquote class="why"><strong>数据生态总结</strong>：格式收敛到 <strong>LeRobotDataset (Parquet+MP4，HF Hub streaming)</strong> 与 <strong>RLDS (跨机构数据交换)</strong>，二者通过转换工具互通——AD 数据闭环 PM 应直接识别这条"事实标准"。数据 &gt; 算法 &gt; 算力：所有项目都在堆数据规模与多样性（Open X 1M→AgiBot World 1M→RoboMIND 2.0 31万双臂），策略架构却高度收敛（ACT action chunking + Diffusion Policy 去噪 + VLA 的 VLM backbone）。<strong>"采集成本/数据质量"是真正护城河</strong>。</blockquote>
+
+
+<h3 id="s2-sim">3.6 仿真引擎 + 训练基建（sim-to-real 主战场）</h3>
+
+<h4>3.6.1 NVIDIA Isaac Lab（含 Isaac Sim）— 业内 GPU 并行机器人 RL 事实标准</h4>
+<p><span class="tag">~7.8k stars</span> <a href="https://github.com/isaac-sim/IsaacLab">github.com/isaac-sim/IsaacLab</a></p>
+<ul>
+  <li><strong>架构</strong>：基于 Isaac Sim（Omniverse Kit / USD / RTX 渲染）的 GPU 加速统一框架。物理用 PhysX，传感器 RGB/Depth/Segmentation + IMU/Contact/Ray-cast，16+ 机器人本体，30+ 现成环境，原生多智能体。Python 配置 + Hydra 风格。<strong>对 RL Games / RSL RL / SKRL / Stable Baselines 一线适配</strong>，并支持模仿学习与 mimic 数据生成。</li>
+  <li><strong>训练</strong>：单卡 RTX 可跑 4096+ 并行环境，~1000x 实时；可本地+云端分布式。代价是 PhysX/渲染比 MuJoCo 单环境重，约 20x overhead。Isaac Sim 本体商业授权（依赖 NVIDIA Omniverse），Isaac Lab 框架 BSD-3-Clause。</li>
+  <li><strong>创新点</strong>：把"仿真+合成数据+RL/IL+真机"统一在一套 GPU 框架里；<strong>传感器/渲染保真度业内最高</strong>，photorealistic 合成数据直接喂真机训练，是 sim-to-real 的"重型现成方案"。</li>
+</ul>
+
+<h4>3.6.2 Genesis — 纯 Python 多物理引擎（社区热度极高）</h4>
+<p><span class="tag">~29.6k stars</span> <a href="https://github.com/Genesis-Embodied-AI/genesis-world">github.com/Genesis-Embodied-AI/genesis-world</a> · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：四层：Simulation Interface / 统一多物理引擎（<strong>Rigid + FEM + MPM + PBD/SPH 粒子 + UIPC 耦合 + SAP</strong>）/ 渲染（Nyx 光追 + LuisaRender/PyRender）/ Compiler 后端（CUDA/ROCm/Metal/Vulkan/x86/ARM64）。一个 scene 一个 state 跨 solver 共享。</li>
+  <li><strong>训练</strong>：宣称 10-80x 快于 Isaac Gym / MJX（社区 Stone Tao 等实测对"仿真+并行渲染"实速有争议）；从笔记本到数据中心 GPU 可缩放。</li>
+  <li><strong>创新点</strong>：纯 Python 重写整套多物理（含可变形/流体 MPM/FEM），跨硬件后端统一编译；"生成式世界"愿景（数据-环境-策略同栈）。</li>
+  <li><strong>可复现度</strong>：<span class="tag amber">中</span>。多数脚本可端到端跑；v0.3.x 仍在快速迭代，benchmark 与 Isaac Lab/ManiSkill3 的 head-to-head 数未完全官方对齐。</li>
+</ul>
+
+<h4>3.6.3 ManiSkill 3（SAPIEN 引擎）— 操作专用高显存效率仿真</h4>
+<p><span class="tag green">NeurIPS 2021 Datasets &amp; Benchmarks</span> <a href="https://github.com/mani-skill/ManiSkill">github.com/mani-skill/ManiSkill</a> · haosulab (UCSD)</p>
+<ul>
+  <li><strong>架构</strong>：基于 SAPIEN 物理（Articulated Body + 渲染）的操作技能框架。v3 转为 GPU 加速并行仿真 + 并行渲染，支持人形/bimanual/可铰接物体。任务族丰富，面向 generalizable manipulation。</li>
+  <li><strong>训练（重要数字）</strong>：据 arXiv 2410.00425 benchmark：<strong>128 并行环境 ManiSkill3 仅 4.4GB 显存 vs Isaac Lab 14.1GB</strong>；多数 setting 比 Isaac Lab 更快、显存更省（尤其带相机）。</li>
+  <li><strong>创新点</strong>：<strong>GPU 并行物理+渲染的"操作专用"高显存效率仿真</strong>，渲染/相机开销显著低于 Isaac Lab；学术 benchmark + challenge 生态成熟。</li>
+</ul>
+
+<h4>3.6.4 Habitat 3.0 — 室内导航 + 人机协作仿真</h4>
+<p><a href="https://github.com/facebookresearch/habitat-lab">github.com/facebookresearch/habitat-lab</a> · facebookresearch (Meta AI) · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：habitat-sim（高性能 3D 渲染/物理内核）+ habitat-lab（任务/算法库）。<strong>3.0 重点：高保真人形仿真（动画步态）+ human-in-the-loop + 家居场景人机协作任务</strong>。室内导航/PointNav/ObjectNav/社会导航是看家本领。</li>
+  <li><strong>创新点</strong>：把"<strong>人在环 + 人形 + 机器人共居</strong>"放进统一家居仿真，是 social navigation / 人机协作的稀缺基建。</li>
+</ul>
+
+<h4>3.6.5 MuJoCo（含 MJX / MJX-Warp）— 学术 RL 默认物理后端</h4>
+<p><span class="tag">DeepMind 机器人组首选</span> <a href="https://github.com/google-deepmind/mujoco">github.com/google-deepmind/mujoco</a> · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：Multi-Joint dynamics with Contact，C++ 通用物理引擎，<strong>接触/约束求解器精度高</strong>。MJX 为 JAX/XLA GPU/TPU 后端；MJX-Warp 为 NVIDIA Warp 后端（针对 NVIDIA GPU 优化）。</li>
+  <li><strong>训练</strong>：MJX 单 GPU 跑 8192 并行环境；对大自由度（如 30-DoF 人形 REEM-C）加速显著。注意 JAX 0.7+ 在 macOS 有 &gt;100x 回退 issue。</li>
+  <li><strong>创新点</strong>：高保真接触动力学 + MJX 把 MuJoCo 搬上 GPU（JAX 可微、与学习框架原生可微分）；<strong>MuJoCo Playground 走"on-device 直接训练"路线</strong>。</li>
+  <li><strong>可复现度</strong>：<span class="tag green">极高</span>。Apache-2.0、跨平台、文档极完整；是仿真里 reproducibility 最稳的一档。</li>
+</ul>
+
+<h4>3.6.6 Gazebo Sim（gz-sim）— ROS 生态事实标准</h4>
+<p><a href="https://github.com/gazebosim/gz-sim">github.com/gazebosim/gz-sim</a> · Apache-2.0</p>
+<ul>
+  <li><strong>架构</strong>：模块化（gz-physics / gz-rendering / gz-sensors / gz-transport 等），高保真物理+渲染+传感器，与 ROS/ROS2 通过 ros_gz bridge 原生集成。</li>
+  <li><strong>创新点</strong>：<strong>ROS 原生、工业级传感器/世界保真，把"真机栈一致性"做到极致</strong>（CI、digital twin、回归测试）。非 GPU 大规模并行 RL 首选（单环境重、ROS IPC 开销大）；强项是工业级保真与真机栈一致性。</li>
+</ul>
+
+<aside class="note"><strong>选型决策表（PM 必备）</strong>：仿真引擎选型维度完全不同于 AD（AD 偏"交通流 + world model + log replay"）。具身选型要看：(1) <strong>物理求解器种类</strong>——Isaac Lab(PhysX)/MJX(可微)/ManiSkill3(SAPIEN 操作专用)/Genesis(MPM-FEM 多物理)；(2) <strong>GPU 并行 env 数</strong>——Isaac 4096+/MJX 8192/ManiSkill3 显存最优；(3) <strong>渲染保真 vs 速度</strong>——Isaac/Habitat photorealistic vs MuJoCo/ManiSkill3 渲染轻；(4) <strong>可微性</strong>——MJX 可微，传统外挂 RL 算法不可微。<strong>建议入门顺序：MuJoCo/ManiSkill3（学术稳定）→ Isaac Lab（工业栈）→ Genesis（前沿）</strong>。</aside>
+
+
+<pre class="mermaid">
+flowchart LR
+  subgraph SIM["仿真侧（主训练场）"]
+    S1["3D 资产生成<br/>EmbodiedGen / SAM3D / TRELLIS"]
+    S2["物理仿真<br/>Isaac Sim / MuJoCo / SAPIEN"]
+    S3["Policy 训练<br/>IL/RL + Domain Randomization"]
+  end
+  subgraph GAP["Sim-to-Real Gap 缩小三件套"]
+    G1["① UDR<br/>Uniform Domain Randomization<br/>摩擦/质量/光照/纹理"]
+    G2["② ADR<br/>Adaptive DR (curriculum)<br/>按 policy 进度调难度"]
+    G3["③ Dynamics Rand<br/>+ 系统辨识<br/>真机数据校准仿真器"]
+  end
+  subgraph REAL["真机侧"]
+    R1["遥操示教采集<br/>ALOHA / AirExo / TeleVision"]
+    R2["真机部署 + 失败案例回流"]
+    R3["数据飞轮自改进<br/>AgiBot LWD / DexFlyWheel"]
+  end
+  S1 --> S2 --> S3
+  S3 -.-> G1
+  S3 -.-> G2
+  S3 -.-> G3
+  G1 --> R2
+  G2 --> R2
+  G3 --> R2
+  R1 --> R3
+  R2 --> R3
+  R3 -.->|"offline-to-online"| S3
+</pre>
+
+<h4>3.6.7 Sim-to-real 三件套（行业默认）</h4>
+<ul>
+  <li><strong>① Domain Randomization (UDR)</strong>——仿真时随机化物理/视觉参数（摩擦/质量/光照/纹理），训出的 policy 对分布偏移鲁棒。</li>
+  <li><strong>② Adaptive/Active DR (ADR)</strong>——Mehta CoRL；Tiboni arXiv:2206.14661 综述。根据 policy 学习进度自适应调整随机化难度（curriculum）。</li>
+  <li><strong>③ Dynamics Randomization + 系统辨识</strong>——随机化动力学参数 + 用真机数据辨识仿真器参数，缩小 sim-real 物理差。</li>
+</ul>
+<p><strong>综述首选</strong>：Muratore 2022 Frontiers（sim-to-real 综述）。</p>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 系统架构与模型架构横评表</h2>
+
+<h3>4.1 VLA 模型架构横评（按 action head 范式分派）</h3>
+<table>
+<thead><tr><th>模型</th><th>规模</th><th>VLM 主干</th><th>Action Head</th><th>Chunk H</th><th>频率</th><th>派系</th></tr></thead>
+<tbody>
+<tr><td><strong>RT-1</strong></td><td>35M</td><td>FiLM EfficientNet</td><td>离散 256-bin token</td><td>1</td><td>3Hz</td><td>A 派奠基</td></tr>
+<tr><td><strong>RT-2</strong></td><td>12B/55B</td><td>PaLM-E / PaLI-X</td><td>离散 256-bin（文本 token）</td><td>1</td><td>1-3Hz</td><td>A 派正式提出 VLA</td></tr>
+<tr><td><strong>OpenVLA</strong></td><td>7B</td><td>Prismatic (Llama-2 + DINOv2 + SigLIP)</td><td>离散 256-bin token</td><td>1</td><td>~6Hz</td><td>A 派开源基线</td></tr>
+<tr><td><strong>RoboFlamingo</strong></td><td>3B</td><td>OpenFlamingo (OpenCLIP ViT-L + MPT/LLaMA)</td><td>LSTM/FC/Diffusion 多选</td><td>per-step</td><td>中</td><td>A 派前作</td></tr>
+<tr><td><strong>GR-1</strong></td><td>—</td><td>MAE ViT-B + causal Transformer</td><td>自回归 action token</td><td>—</td><td>—</td><td>视频生成预训练派</td></tr>
+<tr><td><strong>Octo-Base</strong></td><td>93M</td><td>Transformer + readout token</td><td>diffusion head</td><td>chunk</td><td>中</td><td>B 派小而美</td></tr>
+<tr><td><strong>RDT-1B</strong></td><td>1.2B</td><td>MMDiT</td><td>diffusion (bimanual 128D)</td><td>chunk</td><td>381 action/s</td><td>B 派双臂</td></tr>
+<tr><td><strong>CogACT</strong></td><td>DiT-S/B/L</td><td>Prismatic (SigLIP + LLM)</td><td>独立 diffusion action head</td><td>16</td><td>~5.5Hz</td><td>B 派第三条路</td></tr>
+<tr><td><strong>VPP</strong></td><td>—</td><td>SVD 微调 + CLIP</td><td>diffusion transformer (MDT)</td><td>chunk</td><td>—</td><td>视频表征派（清华）</td></tr>
+<tr><td><strong>π0</strong></td><td>3.3B</td><td>PaLI-Gemma 3B + 300M action expert</td><td><strong>flow matching</strong></td><td><strong>50</strong></td><td><strong>50Hz 灵巧</strong></td><td>B 派分水岭</td></tr>
+<tr><td><strong>π0.5</strong></td><td>3.3B+</td><td>π0 + high-level planner</td><td>flow matching</td><td>50</td><td>50Hz</td><td>B 派 in-the-wild</td></tr>
+<tr><td><strong>GR00T N1</strong></td><td>2.2B (VLM 1.34B)</td><td>Eagle-2 (SmolLM2 + SigLIP-2)</td><td><strong>flow matching (System 1)</strong></td><td>16</td><td>120Hz</td><td>双系统认知</td></tr>
+<tr><td><strong>InternVLA-A1.5</strong></td><td>2B</td><td>Qwen3.5-2B + Gated DeltaNet</td><td>flow matching action expert</td><td>chunk</td><td>—</td><td>上海 AI Lab</td></tr>
+<tr><td><strong>RoboBrain 系列</strong></td><td>3B/7B/32B</td><td>LLaVA-NeXT</td><td>LoRA 多头（Planning/Affordance/Trajectory）</td><td>—</td><td>—</td><td>智源三段式</td></tr>
+<tr><td><strong>RynnBrain</strong></td><td>2B/9B/<strong>122B-A10B MoE</strong></td><td>Qwen3-VL/Qwen3.5</td><td>RynnBrain-VLA + 3D grounding + contact</td><td>—</td><td>—</td><td>阿里 MoE 旗舰</td></tr>
+<tr><td><strong>NaVid/Uni-NaVid</strong></td><td>7B</td><td>Vicuna-7B + EVA-CLIP + Q-Former</td><td>语言输出（FORWARD/TURN...）</td><td>—</td><td>0.67 FPS</td><td>导航 VLA 标杆</td></tr>
+<tr><td><strong>3D-VLA</strong></td><td>—</td><td>Vicuna 系</td><td>双 diffusion（goal image + point cloud）</td><td>—</td><td>—</td><td>3D-aware VLA</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 系统架构（大脑-小脑分层 vs 端到端）横评</h3>
+<table>
+<thead><tr><th>系统</th><th>谁</th><th>分层方式</th><th>AD 对应</th></tr></thead>
+<tbody>
+<tr><td><strong>RynnBrain + RCP</strong></td><td>阿里</td><td>大脑(VLM/RynnVLA) + 接触点/3D grounding + RCP 协议桥接全链路</td><td>≈ 模块化 AD（感知-预测-规划-控制分层）</td></tr>
+<tr><td><strong>HoloAgent</strong></td><td>地平线</td><td>AgentOS + 3D空间记忆 + 时序记忆 + 技能层(HoloMotion小脑/HoloNavi/VLA)</td><td>≈ 模块化 AD（Sparse4D 稀疏 query 外溢）</td></tr>
+<tr><td><strong>RoboOS</strong></td><td>智源</td><td>Cloud MLLM + Cerebellum Skill Library + Redis 共享内存</td><td>≈ 多 agent 编排框架</td></tr>
+<tr><td><strong>GR00T N1</strong></td><td>NVIDIA</td><td>System 2 (VLM) + System 1 (Flow Action)</td><td>≈ 端到端 + 反射层</td></tr>
+<tr><td><strong>π0 / π0.5</strong></td><td>PI</td><td>VLM + action expert 解耦（权重分开）</td><td>≈ 端到端 + 分支头</td></tr>
+<tr><td><strong>Cosmos</strong></td><td>NVIDIA</td><td>MoT: Diffusion WFM (Generator) + Autoregressive WFM (Reasoner)</td><td>≈ World model + policy 合流</td></tr>
+</tbody>
+</table>
+
+<h3>4.3 开源可复现度排序（从高到低）</h3>
+<table>
+<thead><tr><th>档位</th><th>repo</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td><span class="tag green">极高</span></td><td>LeRobot / MuJoCo / Sparse4D / ALOHA / Octo</td><td>单卡/小集群即可复现，文档+权重+脚本齐全</td></tr>
+<tr><td><span class="tag green">高</span></td><td>OpenVLA(LoRA) / VPP / RoboFlamingo / RoboBrain / AirExo-2 / BIP3D / EmbodiedGen / RynnBrain(推理) / HoST / Isaac Lab</td><td>8×A800/A100 量级可复现，权重+训练+评测全开</td></tr>
+<tr><td><span class="tag amber">中-高</span></td><td>RoboBrain 2.5 / GR00T N1 / π0/Pi0.5（微调）/ RDT-1B / CogACT / InternVLA-A / AgiBot World</td><td>权重+脚本开，但完整预训练成本高（数万 A100-h）或数据不全开</td></tr>
+<tr><td><span class="tag amber">中</span></td><td>GR-1 / Genesis / RoboBrain-X0 / Cosmos / 3D-VLA / RoboCodeX / OpenHomie / NaVid</td><td>代码+部分权重开，但训练流水线/数据/算力不透明</td></tr>
+<tr><td><span class="tag red">低</span></td><td>RT-1 / RT-2（权重闭源） / ABot-ER（仅 README） / 见微 Brainμ（独立 repo 未见）</td><td>仅论文级影响力，复现需大量自建</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why"><strong>License 分层（PM 必须理清）</strong>：纯学术/perception 类多用 <strong>Apache-2.0 或 MIT</strong>（RoboBrain/RoboOS/PointLLM/HoST/EmbodiedScan/LeRobot/Open X/RT-X/Sparse4D）；但涉及 VLA 策略和人形控制的 InternRobotics 系（<strong>InternVLA-A、OpenHomie、AgiBot World、RoboMIND</strong>）普遍用 <strong>CC BY-NC-SA 4.0 禁商用</strong>——<strong>具身"控制策略"的商业化壁垒明显高于"感知基座"</strong>。商用落地前必须先理清 license，与 AD 数据集大量"内部数据不外发"的约束同构。</blockquote>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 数据架构：遥操作 / 示教 / 仿真 / Open X / LeRobot 格式</h2>
+
+<h3>5.1 数据飞轮总图（具身数据闭环 = teleop + 仿真 + 真机三路并进）</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph 入口["数据采集（三条路）"]
+    T1["遥操作 teleop<br/>ALOHA/GELLO/SO-100<br/>UMI/AirExo/Open-TeleVision/Bunny-VisionPro"]
+    T2["仿真合成<br/>Isaac Sim / EmbodiedGen<br/>78万轨迹/827h neural trajectory"]
+    T3["人视频迁移<br/>Ego4D/Ego-Exo4D/EPIC-KITCHENS<br/>RynnVLA-001"]
+  end
+  subgraph 格式["统一格式层"]
+    F1["LeRobotDataset v2.1<br/>Parquet + MP4 + HF Hub streaming"]
+    F2["RLDS<br/>跨机构数据交换默认格式"]
+    F3["HDF5<br/>robomimic 风（DROID/ALOHA）"]
+  end
+  subgraph 数据集["数据集资产"]
+    D1["Open X-Embodiment 1M+"]
+    D2["DROID 76k / 1.7TB"]
+    D3["AgiBot World 1M+ / 43.8TB"]
+    D4["RoboMIND 2.0 310k+ 双臂"]
+    D5["ShareRobot 5.1万 × 3维标注"]
+  end
+  subgraph 训练["训练消费"]
+    TR["VLA Pre-train<br/>OpenVLA 970K / GR00T 数据金字塔 / π0 10kh"]
+    FT["VLA Post-train / LoRA"]
+  end
+  T1 --> F1
+  T1 --> F3
+  T2 --> F1
+  T3 --> TR
+  F1 --> D1
+  F1 --> D3
+  F1 --> D4
+  F2 --> D1
+  F2 --> D2
+  F3 --> D2
+  D5 --> FT
+  D1 --> TR
+  D2 --> TR
+  D3 --> TR
+  D4 --> TR
+  TR --> FT
+</pre>
+
+<h3>5.2 LeRobotDataset v2.1 格式（事实标准）</h3>
+<ul>
+  <li><strong>视觉</strong>：同步 MP4 视频帧（或图像），按 episode 切分，支持 streaming（不必下载全量）。</li>
+  <li><strong>状态/动作</strong>：Parquet 存 state/action/语言指令。</li>
+  <li><strong>Hub 托管</strong>：Hugging Face Hub，支持可视化、按比例/索引合并删除。</li>
+  <li><strong>被采纳</strong>：AgiBot World、RoboMIND 等后续数据集采纳为承载格式之一。</li>
+</ul>
+<blockquote class="migrate"><strong>迁移判断（强）</strong>：AD 数据闭环 PM 最熟悉的"多车型/多传感器配置对齐到统一 schema"（如 nuPlan/Waymo）对应 Open X-Embodiment 把 22 种机器人对齐到 RLDS 7 维动作空间、LeRobotDataset 统一 Parquet+MP4。<strong>跨异构源 schema 归一化的产品判断力可平移</strong>。</blockquote>
+
+<h3>5.3 数据采集硬件三路线对比（决定数据上限）</h3>
+<table>
+<thead><tr><th>路线</th><th>代表</th><th>优点</th><th>痛点</th><th>对应 AD 概念</th></tr></thead>
+<tbody>
+<tr><td><strong>leader-follower 同构</strong></td><td>ALOHA / GELLO / SO-100</td><td>便宜直觉、社区方案成熟</td><td>桌面受限、单臂 DOF 低</td><td>无（AD 无 teleop）</td></tr>
+<tr><td><strong>手持式</strong></td><td>UMI</td><td>便携野外、无机器人</td><td>SLAM 脆、光照敏感</td><td>无</td></tr>
+<tr><td><strong>外骨骼</strong></td><td>AirExo-2 / OpenHomie</td><td>人示教→伪机器人数据，in-the-wild 大规模</td><td>硬件定制、跨域转换 loss</td><td>无（AD 无 teleop）</td></tr>
+<tr><td><strong>VR 沉浸</strong></td><td>Open-TeleVision / Bunny-VisionPro</td><td>人形全身长时序任务、ego-centric 沉浸</td><td>硬件贵（Vision Pro）、力觉缺失</td><td>无</td></tr>
+<tr><td><strong>仿真合成</strong></td><td>Isaac Sim / EmbodiedGen</td><td>规模无限、物理可控</td><td>sim-to-real gap</td><td>≈ AD 仿真注入</td></tr>
+<tr><td><strong>人视频迁移</strong></td><td>GR00T 人视频 / RynnVLA-001</td><td>规模无限、零机器人成本</td><td>隐式映射 loss</td><td>≈ AD 影子模式</td></tr>
+</tbody>
+</table>
+
+<h3>5.4 多模态通道补全（力觉/触觉是新增蓝海）</h3>
+<p>从纯 RGB → +wrist cam（ALOHA）→ +深度（DROID stereo）→ +力觉/触觉（<strong>RoboMIND 2.0 / AgiBot World 视触觉</strong>）。<strong>力觉通道是当前相比 AD（多 LiDAR/多相机）最缺、增长最快的方向</strong>。</p>
+<blockquote class="migrate"><strong>机会点（差异化竞争力）</strong>：RoboMIND 2.0/AgiBot World 视触觉是新增且<strong>无标准格式</strong>的蓝海，把 AD 多模态时序对齐经验迁过来定义力觉数据 schema 与评测指标，可能做出行业级贡献。这是你相对其他 AD PM 的差异化机会。</blockquote>
+
+<h3>5.5 Action Chunking 是 VLA 默认范式（理解具身 policy 的最关键单一概念）</h3>
+<p>ACT（ALOHA 配套）一次预测一段 action（而非单步）以对抗 compounding error，<strong>被 Pi0/π0、GR00T、SmolVLA、CogACT 等几乎所有现代 VLA 复用</strong>。对应 AD 里的"轨迹预测"（一次出 N 个未来轨迹点 vs 一次出 1 个）。</p>
+<aside class="note"><strong>难点：compounding error 是什么</strong>。IL 单步预测会让误差累积：小误差导致下一帧观测偏离训练分布 → 预测更大误差 → 雪崩。chunk 一次出 H 步，执行时用 ReActing 机制（每步重新观测但只在 chunk 边界重预测）缓解。<strong>AD PM 已有"多步预测 vs 单步预测"的权衡直觉（多步稳但延迟高、误差传播模式不同），可零成本迁移</strong>。差别只在具身的 chunk 跨控制周期（毫秒级），AD 的轨迹跨秒级。</aside>
+
+<h3>5.6 跨具身体泛化是新圣杯（对应 AD 多车型泛化）</h3>
+<p>Open X（22 形态）+ RoboMIND（6 形态）+ AgiBot World（多平台）都在攻"一份 policy 多机器人"。<strong>对应 AD 里"多车型/多传感器配置泛化"</strong>。各家做法：Open X 用统一 7 维 EE delta/abs/velocity；π0 用 18 维 configuration vector；Cosmos 覆盖 10/20/29/9/57D 多 action 空间；RoboBrain-X0 用 GRVQ+UAV+SE(3) 任务空间。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 训练基建：算力 / 分布式 / sim</h2>
+
+<h3>6.1 VLA 训练基建收敛到三件套</h3>
+<ol>
+  <li><strong>跨本体统一数据格式</strong>——OpenX/OpenVLA 970K demo、LeRobotDataset MP4+Parquet。</li>
+  <li><strong>大骨干</strong>——Llama-2 7B / Prismatic VLM（OpenVLA）；PaliGemma（π0）；Eagle-2 + SmolLM2（GR00T）。<strong>SigLIP 系 vision encoder 几乎成事实标准</strong>。这意味着做 VLA 不必自研 VLM，关键是 action head + 数据。</li>
+  <li><strong>大 batch + 数十卡训数周</strong>——OpenVLA <strong>64×A100×14d ≈ 21,500 A100-h，batch=2048</strong>；GR00T N1 <strong>50,000 H100-h，峰值 1024 GPU</strong>，OSMO 编排。</li>
+</ol>
+<p><strong>开源基线已把 VLA 拉到可复现</strong>。但完整复训成本极高（数万 A100-h），多数人走 LoRA 微调路径（OpenVLA LoRA 单 A100 10-15h，1.4% 参数追平全参）。</p>
+
+<h3>6.2 Pre-train → Post-train 两段式（从 LLM 平移）</h3>
+<p>π0、GR00T N1、RT-2 都明确采用"大规模预训练 + 任务/机器人特定后训练（含 LoRA 微调）"范式。<strong>这把 VLA 从"每个任务训一遍"升级为"基座 + 微调"，是工业化的关键信号</strong>。</p>
+<ul>
+  <li><strong>Pre-train</strong>：吃跨 embodiment 大数据（OXE 1M / OpenVLA 970K / GR00T 数据金字塔 6500h / π0 10kh）。</li>
+  <li><strong>Post-train</strong>：在特定机器人/任务上 LoRA 或全参微调。<strong>OpenVLA LoRA 单 A100 10-15h 可跑</strong>，是中小团队主力路径。</li>
+</ul>
+
+<h3>6.3 训练基建栈图（PM 选型决策依据）</h3>
+<pre class="mermaid">
+flowchart TB
+  subgraph 算力["算力层"]
+    A1["消费级 GPU<br/>RTX 4090/A6000"]
+    A2["单卡 A100<br/>LoRA 微调"]
+    A3["8×A100/A800 节点<br/>RoboBrain / VPP / OpenHomie"]
+    A4["64×A100 / 1024 H100<br/>OpenVLA / GR00T N1 / π0 预训练"]
+  end
+  subgraph 框架["训练框架层"]
+    B1["LeRobot（PyTorch 一体化，事实标准）"]
+    B2["OpenVLA codebase（Prismatic VLM）"]
+    B3["openpi（PyTorch/JAX）"]
+    B4["FlagScale（智源自研分布式）<br/>+ DeepSpeed 兼容"]
+    B5["OSMO（NVIDIA 多集群编排）"]
+  end
+  subgraph 仿真["仿真数据层"]
+    C1["Isaac Sim/Lab（合成 + RL）"]
+    C2["EmbodiedGen（生成式 3D 世界）"]
+    C3["ManiSkill3 / MuJoCo（学术）"]
+    C4["Genesis（多物理前沿）"]
+  end
+  subgraph 评测["评测层"]
+    D1["CALVIN / LIBERO / RoboTwin / RoboMIND-Sim<br/>（公开榜）"]
+    D2["具身高考 / RynnBrain-Bench<br/>（自家/半公开）"]
+  end
+  A1 --> B1
+  A2 --> B2
+  A3 --> B1
+  A3 --> B4
+  A4 --> B3
+  A4 --> B5
+  C1 --> B1
+  C2 --> B1
+  B1 --> D1
+  B2 --> D1
+  B3 --> D1
+</pre>
+
+<h3>6.4 Replay Buffer / 数据飞轮的范式迁移</h3>
+<p>具身里 replay buffer 更多是"<strong>数据集/采样器</strong>"而非 AD 里的 PER（Prioritized Experience Replay）闭环：LeRobotDataset / Diffusion Policy 的 episode buffer 走 <strong>offline IL</strong>；真正"在线 RL + replay"在 <strong>HIL-SERL/TDMPC</strong>；<strong>AgiBot LWD/DexFlyWheel 才是具身版"数据飞轮"</strong>（offline-to-online + 真机自改进）。</p>
+<blockquote class="migrate"><strong>迁移判断</strong>：AD 里 PER + 闭环仿真（9 异步 sim 喂 prioritized replay）对应具身的 HIL-SERL 在线 RL + AgiBot LWD/DexFlyWheel 真机飞轮。<strong>可把 AD 的"长尾难例挖掘 + curriculum"方法论迁移到具身操作任务</strong>。</blockquote>
+
+<h3>6.5 国产算力双轨（智源独特卖点）</h3>
+<p><strong>RoboBrain 2.5 8B 同时在英伟达集群和国产摩尔线程集群上各训一版</strong>（8B-NV / 8B-MT），是国内少有的公开"国产卡 vs 英伟达卡"对照；配套 FlagScale 自研分布式框架（也兼容 DeepSpeed）。这是国产算力替代的真实工程信号。</p>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 具身 vs AD：可迁移 vs 不可迁移（对照读者已有能力）</h2>
+
+<p>本节是全教材的<strong>战略锚点</strong>。读者已有 4 年 AD 数据闭环 PM 经验，转战具身的最高杠杆点不是"学模型"而是"做数据闭环 PM"。下面把每条能力标 <span class="tag green">可迁移</span> / <span class="tag amber">需补</span> / <span class="tag red">不可迁移</span>。</p>
+
+<h3>6.1 能力对照总图</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph AD["AD 数据闭环 PM 已有能力"]
+    AD1["数据飞轮设计<br/>影子模式 + 关键场景挖掘 + 自动标注"]
+    AD2["多传感器时序对齐<br/>+ 统一坐标 + 标注 schema"]
+    AD3["评测体系拆解<br/>NDS/碰撞率/接管率/CI for model"]
+    AD4["端到端 vs 模块化判断力<br/>可解释性/可调试性/数据效率/部署成本"]
+    AD5["sparse query / deformable<br/>车端 BPU 部署范式"]
+    AD6["数据生产线 PM<br/>多车队/多车型/众包采集管理"]
+  end
+  subgraph EM["具身对应能力"]
+    EM1["具身数据闭环<br/>teleop + 仿真 + 真机三路"]
+    EM2["跨本体统一表征<br/>7维EE / 18维config / SE3+UAV"]
+    EM3["评测矩阵<br/>CALVIN/LIBERO/RoboTwin/EmbodiedScan/OpenEQA"]
+    EM4["VLA 架构判断<br/>离散token vs flow matching"]
+    EM5["机载部署<br/>HoloMotion 300 FPS / BPU Nash 560 TOPS"]
+    EM6["具身数据生产线<br/>AgiBot 100台并行 / ShareRobot多维标注"]
+  end
+  AD1 -.->|"强迁移"| EM1
+  AD2 -.->|"强迁移"| EM2
+  AD3 -.->|"强迁移"| EM3
+  AD4 -.->|"强迁移"| EM4
+  AD5 -.->|"强迁移（差异化优势）"| EM5
+  AD6 -.->|"强迁移（PM 主场）"| EM6
+</pre>
+
+<h3>6.2 能力对照表（PM 简历叙事锚点）</h3>
+<table>
+<thead><tr><th>AD 已有能力</th><th>具身对应</th><th>迁移度</th><th>需补的差异</th></tr></thead>
+<tbody>
+<tr><td>数据飞轮设计（影子模式 + 关键场景挖掘 + 自动标注）</td><td>具身数据闭环（teleop + 仿真 + 真机）</td><td><span class="tag green">强迁移</span></td><td>真机遥操采集流水线（ACE-F/ALOHA 硬件）、多 embodiment 数据对齐、contact-rich 失败案例标注（AD 无接触语义）</td></tr>
+<tr><td>多传感器时序对齐 + 统一坐标 + 标注 schema</td><td>跨本体统一表征（7维EE / 18维config / SE3+UAV）</td><td><span class="tag green">强迁移</span></td><td>SE(3) 任务空间、UAV 动作词表、力觉/触觉通道</td></tr>
+<tr><td>评测体系拆解（NDS/碰撞率/接管率/CI）</td><td>评测矩阵（CALVIN/LIBERO/RoboTwin/EmbodiedScan/OpenEQA）</td><td><span class="tag green">强迁移</span></td><td>manipulation 成功率/完成步数/鲁棒性、sim-to-real gap 度量</td></tr>
+<tr><td>端到端 vs 模块化判断力（四维框架）</td><td>VLA 架构判断（离散 token vs flow matching）</td><td><span class="tag green">强迁移</span></td><td>action token 化、flow-matching、action chunk、embodiment 异构</td></tr>
+<tr><td>sparse query / deformable 部署范式（BEV）</td><td>机载部署（HoloMotion 300 FPS / BPU Nash）</td><td><span class="tag green">差异化优势</span></td><td>3D/4D 表征与 grounding（RGB-D / 3D bbox / contact point）</td></tr>
+<tr><td>数据生产线 PM（多车队/多车型）</td><td>具身数据生产线（AgiBot 100 台并行 / ShareRobot 多维标注）</td><td><span class="tag green">PM 主场</span></td><td>遥操作硬件 BOM/标定、分布式采集众包管理、力觉数据 schema</td></tr>
+<tr><td>预测模型预训练（occupancy/flow）</td><td>world model / video generative 预训练（GR-1/VPP/Cosmos）</td><td><span class="tag green">强迁移</span></td><td>video diffusion 内部表征、inverse dynamics policy</td></tr>
+<tr><td>轨迹 diffusion planner（MDP/Ego-Planner）</td><td>diffusion / flow-matching action head（π0/RDT/GR00T）</td><td><span class="tag green">强迁移（需补力/接触）</span></td><td>力/接触维度（AD 无接触语义）</td></tr>
+<tr><td>里程数 = 数据量直觉</td><td>—</td><td><span class="tag red">不可迁移（需重校准）</span></td><td>数据质量 + embodiment 多样性 + 任务覆盖三位一体</td></tr>
+<tr><td>单一 embodiment（车）</td><td>cross-embodiment（单臂/双臂/人形/底盘）</td><td><span class="tag amber">需补</span></td><td>DOF 7/14/29/57 异构统一</td></tr>
+<tr><td>—</td><td>遥操作硬件（leader-follower/手持/外骨骼/VR）</td><td><span class="tag amber">需补（AD 无对应物）</span></td><td>硬件 BOM/标定/SLAM/力觉</td></tr>
+<tr><td>—</td><td>sim-to-real（接触富任务物理不可微、力觉仿真失真）</td><td><span class="tag amber">需补（AD sim 主要做 corner case 注入）</span></td><td>3D 生成、SAPIEN/Isaac/Genesis/MuJoCo 一致性闭环</td></tr>
+<tr><td>—</td><td>力觉/触觉数据闭环</td><td><span class="tag amber">需补（蓝海机会）</span></td><td>无标准格式，可定义行业级 schema</td></tr>
+</tbody>
+</table>
+
+<h3>6.3 三个最深的洞察（战略级判断）</h3>
+
+
+<h4>洞察零：具身 vs AD 数据闭环对照图（核心战略图）</h4>
+<pre class="mermaid">
+flowchart TB
+  subgraph AD["AD 数据闭环（读者已有）"]
+    direction LR
+    A1["车队日志<br/>百车 24h TB/日"]
+    A2["影子模式<br/>+ 关键场景挖掘"]
+    A3["自动标注<br/>+ 人工复核"]
+    A4["仿真注入<br/>CARLA corner case"]
+    A5["模型训练<br/>+ 闭环评测"]
+    A6["OTA 回灌<br/>里程数=数据量"]
+    A1 --> A2 --> A3 --> A5
+    A4 --> A5
+    A5 --> A6 --> A1
+  end
+  subgraph EM["具身数据闭环（需补的差异）"]
+    direction LR
+    E1["遥操 teleop<br/>ALOHA/AirExo/UMI/VR<br/>分钟级成本"]
+    E2["仿真合成<br/>Isaac Sim / EmbodiedGen<br/>主训练场（比 AD 更激进）"]
+    E3["人视频迁移<br/>Ego4D / RynnVLA-001<br/>隐式映射"]
+    E4["多维标注<br/>ShareRobot 5.1万×3维<br/>+ 力觉/触觉（蓝海）"]
+    E5["跨本体统一<br/>7维EE / SE3+UAV"]
+    E6["模型训练<br/>+ 评测矩阵<br/>CALVIN/LIBERO/RoboTwin"]
+    E7["真机部署<br/>+ 失败案例回流"]
+    E1 --> E4 --> E6
+    E2 --> E6
+    E3 --> E6
+    E5 --> E6
+    E6 --> E7 --> E1
+  end
+  A2 -.->|"强迁移"| E4
+  A3 -.->|"强迁移"| E4
+  A4 -.->|"强迁移（更激进）"| E2
+  A5 -.->|"强迁移"| E6
+  A6 -.->|"需重校准（无车队红利）"| E7
+</pre>
+
+<h4>洞察一：转战具身的最高杠杆点不是"学模型"而是"做数据闭环 PM"</h4>
+<blockquote class="migrate">国内具身界模型人才井喷（清华/北大/SJTU/智源/上海 AI Lab），但<strong>能把 ShareRobot 这种多维度对齐数据集从 0 设计到 5 万 episodes、并配评测体系的人极少</strong>。你的 4 年 AD 数据闭环 PM 经验是稀缺资源，建议把简历叙事锚定在"<strong>具身数据闭环 PM + Function Owner</strong>"而非"具身算法工程师"。</blockquote>
+<p>具体证据：</p>
+<ul>
+  <li><strong>ShareRobot 51,403 episodes × 3 维标注</strong>（planning+affordance+trajectory）是 BAAI 的数据基石，<strong>本质就是 AD PM 最擅长的"大规模+多维度对齐标注"</strong>。</li>
+  <li><strong>AirExo-2 "人示教→伪机器人数据"</strong>是国内降低具身数据成本最关键的工程创新之一，<strong>这跟 AD 的"数据采集车队/仿真合成"是同构问题</strong>。</li>
+  <li><strong>EmbodiedScan 100万 ego-centric 视图 + 100万语言 prompt</strong>是大规模多任务标注的范例，<strong>AD 数据闭环 PM 最擅长的"数据采集→清洗→多任务标注→评测闭环"正是具身当前最缺的</strong>。</li>
+</ul>
+<p><strong>反事实</strong>：如果你去卷模型架构（清华/上海 AI Lab 红海），你的 4 年 PM 经验几乎不加分；如果你去做数据闭环 PM，你的经验直接对标 ShareRobot/AirExo-2/EmbodiedScan 的 owner，是结构性稀缺。</p>
+
+<h4>洞察二："分层大脑" vs "端到端" 的判断力可零成本迁移</h4>
+<blockquote class="migrate">AD 里你已经在端到端 vs 模块化上有判断力；具身领域 <strong>RynnBrain(分层 VLM+VLA) 与 HoloMotion(小脑) + HoloAgent(编排)</strong> 是分层派，<strong>OpenVLA/Pi0</strong> 是端到端派，可用同一套"<strong>可解释性 / 可调试性 / 数据效率 / 部署成本</strong>"四维框架去判断，几乎零迁移成本。</blockquote>
+<table>
+<thead><tr><th>四维框架</th><th>分层大脑（RynnBrain/HoloAgent/RoboOS）</th><th>端到端 VLA（OpenVLA/π0/GR00T）</th></tr></thead>
+<tbody>
+<tr><td>可解释性</td><td>高（感知/规划/控制可分别 debug）</td><td>低（黑盒）</td></tr>
+<tr><td>可调试性</td><td>高（模块化故障定位）</td><td>低（需归因到具体层）</td></tr>
+<tr><td>数据效率</td><td>高（感知层可独立预训练）</td><td>低（需端到端大数据）</td></tr>
+<tr><td>部署成本</td><td>中（多模块编排）</td><td>低（单一模型）</td></tr>
+</tbody>
+</table>
+
+<h4>洞察三：车规级工程纪律是转战具身的差异化竞争力</h4>
+<blockquote class="migrate">Sparse4D→SparseDrive→HoloAgent（稀疏空间记忆）是一条清晰的"<strong>车端感知范式外溢到具身</strong>"的脉络。作为 AD 数据闭环 PM，你比纯机器人背景的人更懂 sparse/deformable/时序融合 的部署价值。<strong>HoloMotion 的"机载 300 FPS 遥操作"就是 BPU 部署形态的体现</strong>，Sparse4D 的稀疏 query + CUDA deformable 是车端 BPU 友好范式。这是转战具身时"车规级工程纪律"的差异化竞争力。</blockquote>
+<p>具体落地：</p>
+<ul>
+  <li>地平线征程6（BPU Nash，原生支持大参 Transformer，最高 560 TOPS）+ RDK X5（10 TOPS BPU，机器人机载部署）。</li>
+  <li>HoloMotion "机载 300 FPS 遥操作"证明 BPU 已能跑实时人形控制策略。</li>
+  <li>Sparse4D 的稀疏 query 范式本就是为 BPU 车端成本/功耗优化，<strong>是车端基因外溢具身的关键资产</strong>。</li>
+</ul>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 转战补习：VLA 底层 + 数据闭环差异 + sim-to-real + 硬件 + 学习路线 + 行动清单</h2>
+
+<h3>7.1 从根补：VLA 底层（必吃透的两篇论文 + 两个 repo）</h3>
+<ol>
+  <li><strong>RoboBrain 论文</strong>（CVPR2025, arXiv 2502.21257）—— 国内最系统的具身大脑教材级材料。吃透 LoRA 多能力挂载（Planning/Affordance/Trajectory）+ ShareRobot 多维标注。</li>
+  <li><strong>InternVLA-A repo</strong>—— 上海 AI Lab 最系统的 VLA 一体化工程。吃透 flow matching action expert + foresight tokens + Gated DeltaNet。</li>
+  <li><strong>OpenVLA repo + 论文</strong>—— 开源 VLA 事实基线。吃透 Prismatic VLM + 离散 action token + LoRA 微调（单 A100 10-15h）。</li>
+  <li><strong>openpi repo（π0/Pi0.5）</strong>—— flow-matching 分水岭。吃透 action expert 与 VLM 权重解耦 + cross-embodiment 共训。</li>
+</ol>
+
+<h3>7.2 从根补：数据闭环差异（具身没有车队红利）</h3>
+<aside class="note"><strong>难点：具身数据"没有车队红利"</strong>。AD 靠几百台车 24h 跑出 TB 级日志，边际成本极低；具身必须靠<strong>遥操作 teleop（人控机器人）+ 仿真合成 + 人视频迁移</strong>三路并进，单条真机 demo 成本以分钟计（DROID 50 人采 350h）。这意味着 AD PM 的"里程数=数据量"直觉在具身完全不适用——π0 用 10kh 但只 9.1% 开放数据，质量 + embodiment 多样性 + 任务覆盖三位一体才是核心。<strong>这条决定了"具身数据闭环 PM"是比"卷模型"更高 ROI 的转战锚点</strong>。</aside>
+<ul>
+  <li><strong>需补 1：teleop 工程链路</strong>——leader-follower / 手持 / 外骨骼 / VR 四路线按预算/任务场景选型。</li>
+  <li><strong>需补 2：人体→机器人映射（retarget）</strong>——HoloRetarget 3000 FPS 是 sim-to-real 与遥操作放量的瓶颈解法；HoloSMPL 统一动捕源是数据闭环关键基建。</li>
+  <li><strong>需补 3：contact-rich 失败案例标注</strong>——AD 无接触语义，机器人有；力觉/触觉通道是新增且无标准格式的蓝海。</li>
+  <li><strong>需补 4：分布式采集众包管理</strong>——DROID 50 人/564 场景、RoboMIND 多具身体统一平台，多操作者一致性管理、场景多样性配比、数据去重是 AD 里更少遇到的"众包采集"问题。</li>
+</ul>
+
+<h3>7.3 从根补：sim-to-real（具身比 AD 更激进）</h3>
+<aside class="note"><strong>难点：sim-to-real gap</strong>。AD 里 CARLA→真车 gap 是已知难题但可量化；具身 sim-to-real 更难（<strong>接触富任务物理不可微、力觉仿真失真</strong>）。需补 Isaac Sim/MuJoCo 工程与 domain randomization。<strong>EmbodiedGen 的"生成世界训策略→真机 75% 成功"、79.8% sim 成功率，是具身相比 AD 更激进的"生成数据闭环"路线</strong>（AD 的 sim 主要做 corner case 注入，具身 sim 可做主训练场）。</aside>
+<ol>
+  <li><strong>Domain Randomization (UDR)</strong>——随机化物理/视觉参数训鲁棒 policy。</li>
+  <li><strong>Adaptive/Active DR (ADR)</strong>——根据 policy 进度自适应调整随机化难度。</li>
+  <li><strong>Dynamics Randomization + 系统辨识</strong>——随机化动力学 + 真机数据辨识仿真器参数。</li>
+  <li><strong>综述首选</strong>：Muratore 2022 Frontiers（sim-to-real 综述）。</li>
+</ol>
+
+<h3>7.4 从根补：硬件（teleop 是物理入口）</h3>
+<p>作为 PM 不必亲手造硬件，但必须理解"<strong>数据采集硬件成本/吞吐/标定</strong>"这条链路——这是具身数据闭环区别于 AD 的最大变量。</p>
+<table>
+<thead><tr><th>硬件方案</th><th>成本</th><th>适合任务</th><th>需理解的关键</th></tr></thead>
+<tbody>
+<tr><td>SO-100</td><td>~00/臂</td><td>hobbyist 入门</td><td>舵机标定、LeRobot 默认栈</td></tr>
+<tr><td>ALOHA</td><td>0k</td><td>桌面双臂精细</td><td>leader-follower 同构、ACT 训练</td></tr>
+<tr><td>UMI</td><td>低</td><td>便携野外</td><td>SLAM 反推位姿、光照敏感性</td></tr>
+<tr><td>AirExo-2</td><td>中</td><td>in-the-wild 大规模</td><td>人示教→伪机器人数据跨域转换</td></tr>
+<tr><td>OpenHomie</td><td>~/bin/bash.5k</td><td>人形全身</td><td>同构外骨骼消除动捕依赖</td></tr>
+<tr><td>Open-TeleVision</td><td>中高</td><td>人形全身长时序</td><td>VR 主动立体、ego-centric 沉浸</td></tr>
+</tbody>
+</table>
+
+<h3>7.5 学习路线（6 阶段，2-3 个月）</h3>
+<pre class="mermaid">
+flowchart LR
+  S1["阶段1·1周<br/>跑通 LeRobot + SO-100<br/>ACT 闭环"]
+  S2["阶段2·1周<br/>精读 OpenVLA 论文+LoRA微调<br/>吃透离散 token"]
+  S3["阶段3·2周<br/>精读 π0/openpi<br/>吃透 flow matching + chunk"]
+  S4["阶段4·1周<br/>精读 RoboBrain + InternVLA-A<br/>国内系统两份教材"]
+  S5["阶段5·2周<br/>跑通 EmbodiedGen + BIP3D<br/>数据闭环+3D 感知"]
+  S6["阶段6·2周<br/>跑通 HoloMotion + AirExo-2<br/>遥操+retarget 数据闭环"]
+  S1 --> S2 --> S3 --> S4 --> S5 --> S6
+</pre>
+<ol>
+  <li><strong>阶段 1（1 周）</strong>：跑通 LeRobot + SO-100（~00）做 ACT 闭环。<strong>最贴近一个 PM"端到端 owning 一个数据闭环"的低门槛起手项目</strong>。</li>
+  <li><strong>阶段 2（1 周）</strong>：精读 OpenVLA 论文 + LoRA 微调（单 A100 10-15h）。吃透离散 action token + Prismatic VLM。优先精读并跑通——最易复现，巩固 VLA 范式。</li>
+  <li><strong>阶段 3（2 周）</strong>：精读 π0/openpi 论文 + 微调。吃透 flow matching action expert + cross-embodiment 共训。</li>
+  <li><strong>阶段 4（1 周）</strong>：精读 RoboBrain（CVPR2025）+ InternVLA-A repo。<strong>国内最系统的两份教材级材料</strong>。</li>
+  <li><strong>阶段 5（2 周）</strong>：跑通 EmbodiedGen（生成数据闭环，与 PM 老本行最近）+ BIP3D（最小 3D 感知入门）。</li>
+  <li><strong>阶段 6（2 周）</strong>：跑通 HoloMotion（遥操+retarget 数据闭环）+ AirExo-2（人示教→伪机器人数据）。</li>
+</ol>
+<p><strong>暂观望</strong>：ABot-ER（权重未释）、RT-1/RT-2（权重闭源）、见微 Brainμ（独立 repo 未见）。</p>
+
+<h3>7.6 行动清单（按周拆解）</h3>
+<table>
+<thead><tr><th>周</th><th>动作</th><th>产出</th><th>认知契约检验</th></tr></thead>
+<tbody>
+<tr><td>W1</td><td>买 SO-100 臂 + 装 LeRobot + 跑 ACT 50 demo</td><td>ACT 训完 + 真机部署 demo</td><td>introduced → practiced（ACT action chunk）</td></tr>
+<tr><td>W2</td><td>精读 OpenVLA 论文 + LoRA 微调 aloha_sim_insert</td><td>OpenVLA LoRA checkpoint + 成功率报告</td><td>introduced → practiced（离散 action token）</td></tr>
+<tr><td>W3-4</td><td>精读 π0 论文 + openpi 微调 LIBERO</td><td>π0 微调 checkpoint + 与 OpenVLA 对比表</td><td>practiced → can-decide（离散 vs flow 选型）</td></tr>
+<tr><td>W5</td><td>精读 RoboBrain + ShareRobot 数据</td><td>多维标注 schema 设计稿（AD 经验迁移）</td><td>can-decide（数据闭环 PM 锚点）</td></tr>
+<tr><td>W6</td><td>精读 InternVLA-A + EmbodiedScan</td><td>评测矩阵设计稿（公开榜 vs 自报）</td><td>can-decide（评测 PM 主场）</td></tr>
+<tr><td>W7-8</td><td>跑通 EmbodiedGen 生成世界 + BIP3D 3D 感知</td><td>生成数据闭环 demo + 3D 检测报告</td><td>practiced（生成数据闭环）</td></tr>
+<tr><td>W9-10</td><td>跑通 HoloMotion retarget + AirExo-2 采集</td><td>遥操数据闭环 demo</td><td>practiced（teleop 工程链路）</td></tr>
+<tr><td>W11-12</td><td>写"具身数据闭环 PM"简历叙事 + 选 3 家目标公司</td><td>简历 + 公司矩阵（地平线/智元/OpenDriveLab/智源）</td><td>can-decide（战略定位）</td></tr>
+</tbody>
+</table>
+
+<h3>7.7 简历叙事锚点（把 AD 经验翻译成具身语言）</h3>
+<blockquote class="migrate">
+<strong>定位</strong>：具身数据闭环 PM + Function Owner（不做模型架构创新，那是清华/上海 AI Lab 红海）。<br><br>
+<strong>核心叙事</strong>：4 年 AD 数据闭环 PM 经验，擅长"数据采集→清洗→多任务标注→评测闭环"全链路 owning。可迁移能力：(1) 多传感器时序对齐 → 跨本体统一表征；(2) 评测体系拆解 → CALVIN/LIBERO 矩阵；(3) 数据生产线 PM → AgiBot 100 台并行采集流水线；(4) 端到端 vs 模块化判断力 → VLA 架构选型；(5) sparse query / deformable 部署范式 → 机载 BPU 部署。<br><br>
+<strong>差异化</strong>：车规级工程纪律 + 力觉/触觉数据闭环蓝海 + 国产算力（摩尔线程）替代经验。<br><br>
+<strong>目标公司矩阵</strong>：地平线（HoloMotion/EmbodiedGen，车端基因强）/ 智元 AgiBot（GO-1，量产化采集）/ OpenDriveLab（AgiBot World，AD 同源团队）/ 智源 BAAI（RoboBrain 系列，国产算力双轨）/ 上海 AI Lab（InternRobotics，VLA 一体化）/ Noematrix（AirExo，遥操硬件）。
+</blockquote>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑨ 延伸阅读（paper / repo）</h2>
+
+<h3>8.1 VLA 范式奠基论文（按时间顺序）</h3>
+<ul>
+  <li><strong>RT-1</strong>（arXiv:2212.06817，Google，未开源权重）—— 离散 action token + 大规模真机数据的 VLA 工程范式奠基。</li>
+  <li><strong>RT-2</strong>（arXiv:2307.15818，Google DeepMind，未开源权重）—— <strong>VLA 概念正式提出</strong>，web 语义迁移到机器人动作。</li>
+  <li><strong>ACT / ALOHA</strong>（RSS 2023，Stanford）—— Action Chunking with Transformers，<strong>被几乎所有现代 VLA 复用</strong>。</li>
+  <li><strong>Diffusion Policy</strong>（RSS 2023，real-stanford）—— diffusion 做 action 生成的开山作。</li>
+  <li><strong>Open X-Embodiment / RT-X</strong>（ICRA 2024，21 家机构联合）—— <strong>跨具身体泛化的 ImageNet 级数据基座</strong>。</li>
+  <li><strong>OpenVLA</strong>（CoRL 2024）—— <strong>开源 VLA 事实基线</strong>，Prismatic VLM + 离散 action token。</li>
+  <li><strong>π0</strong>（arXiv:2410.24164，Physical Intelligence）—— <strong>flow-matching 分水岭</strong>，50Hz 灵巧任务。</li>
+  <li><strong>GR00T N1</strong>（arXiv:2503.14734，NVIDIA）—— 双系统认知 + 数据金字塔，50000 H100-h。</li>
+</ul>
+
+<h3>8.2 视频生成预训练派（清华系）论文</h3>
+<ul>
+  <li><strong>GR-1</strong>（ICLR 2024）—— video generative pre-training 开山作。</li>
+  <li><strong>VPP</strong>（ICML 2025 Spotlight，arXiv:2412.14803）—— video diffusion 内部表征当世界先验。</li>
+  <li><strong>RoboFlamingo</strong>（arXiv:2311.01378）—— VLM + 轻量 action head 范式奠基。</li>
+</ul>
+
+<h3>8.3 国内系统级论文（教材级材料）</h3>
+<ul>
+  <li><strong>RoboBrain</strong>（CVPR2025，arXiv 2502.21257）—— 智源具身大脑统一模型。</li>
+  <li><strong>RoboBrain 2.5</strong>（Depth in Sight, Time in Mind）—— 3D 空间推理 + GRM。</li>
+  <li><strong>RynnBrain 技术报告</strong>（arXiv:2607.17977）—— 阿里 122B-A10B MoE。</li>
+  <li><strong>HoloAgent</strong>（arXiv:2606.23565）—— 地平线统一 Agent 框架。</li>
+  <li><strong>AirExo-2</strong>（CoRL2025 Oral）—— 人示教→伪机器人数据。</li>
+  <li><strong>AgiBot World</strong>（IROS 2025 Best Paper，arXiv:2503.06669）—— 单体最大真机数据集。</li>
+  <li><strong>RoboMIND</strong>（RSS 2025，arXiv:2412.13877）+ 2.0（arXiv:2512.24653）—— 国内最大跨具身体遥操数据集。</li>
+</ul>
+
+<h3>8.4 数据集 + 遥操作 + 框架 repo（数据闭环 PM 主场）</h3>
+<ul>
+  <li><a href="https://github.com/huggingface/lerobot">HuggingFace LeRobot</a> · 26.1k stars · 事实标准入口</li>
+  <li><a href="https://github.com/google-deepmind/open_x_embodiment">Open X-Embodiment</a> · 1M+ 跨具身体数据基座</li>
+  <li><a href="https://github.com/droid-dataset/droid_policy_learning">DROID</a> · 76k in-the-wild 真机</li>
+  <li><a href="https://github.com/tonyzhaozh/aloha">ALOHA + Mobile ALOHA</a> · 廉价双臂遥操 + ACT</li>
+  <li><a href="https://github.com/real-stanford/universal_manipulation_interface">UMI</a> · 手持式零机器人数据采集</li>
+  <li><a href="https://github.com/OpenDriveLab/Agibot-World">AgiBot World</a> · 1M+/43.8TB 单体最大</li>
+  <li><a href="https://github.com/OpenTeleVision/TeleVision">Open-TeleVision</a> · VR 沉浸式遥操</li>
+  <li><a href="https://github.com/AirExo/AirExo-2">AirExo-2</a> · 人示教→伪机器人数据</li>
+</ul>
+
+<h3>8.5 仿真引擎 + 训练基建 repo</h3>
+<ul>
+  <li><a href="https://github.com/isaac-sim/IsaacLab">NVIDIA Isaac Lab</a> · GPU 并行 RL 事实标准</li>
+  <li><a href="https://github.com/Genesis-Embodied-AI/genesis-world">Genesis</a> · 纯 Python 多物理引擎</li>
+  <li><a href="https://github.com/mani-skill/ManiSkill">ManiSkill 3</a> · 操作专用高显存效率仿真</li>
+  <li><a href="https://github.com/facebookresearch/habitat-lab">Habitat 3.0</a> · 室内导航 + 人机协作</li>
+  <li><a href="https://github.com/google-deepmind/mujoco">MuJoCo (MJX)</a> · 学术 RL 默认物理后端</li>
+  <li><a href="https://github.com/gazebosim/gz-sim">Gazebo Sim</a> · ROS 生态事实标准</li>
+  <li><a href="https://github.com/HorizonRobotics/EmbodiedGen">EmbodiedGen</a> · 生成式 3D 世界引擎（数据闭环 PM 最对口）</li>
+</ul>
+
+<h3>8.6 综述与方法论</h3>
+<ul>
+  <li><strong>Muratore 2022 Frontiers</strong> —— sim-to-real 综述首选。</li>
+  <li><strong>Tiboni arXiv:2206.14661</strong> —— Domain Randomization 综述。</li>
+  <li><strong>Mehta CoRL</strong> —— Adaptive/Active DR。</li>
+  <li><strong>MuJoCo Playground</strong>（arXiv 2502.08844）—— on-device 训练路线。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 6 facet 调研（清华系 / 智源+上海AI Lab+SJTU+PKU / 阿里+地平线 / NVIDIA+西方高星 / 数据集+遥操作+框架 / 仿真引擎+训练基建）整理。所有 repo URL 与关键数字（参数/数据/算力）均可在 GitHub/HuggingFace/ModelScope 验证。读者按 §7.5 学习路线 6 阶段依次精读跑通即可。认知契约：模型先行 / 先因果后术语 / 两遍法 / introduced-practiced-can-decide / 难点配 &lt;aside class="note"&gt;。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>

@@ -24,6 +24,7 @@
 | [教材B·JoyDrive-Infra 0→100](textbooks/B-joydrive-infra-0to100.html) | 产品/工程/训练/评测/数据/基建六视角，吃透训练+评测（单 HTML+mermaid） | — |
 | [教材C·JoyDriver 0→100](textbooks/C-joydriver-0to100.html) | 端到端模型本质+训练实战（SIMPL/StreamPETR/DDP+RDMA/ONNX 上车）（单 HTML+mermaid） | — |
 | [教材D·ROVER5.0 发版与问题收敛黄金路径](textbooks/D-rover5-release-golden-path.html) | MR 体系/发版/问题收敛诊断+黄金路径+四流对齐+30-60-90 行动（单 HTML+mermaid） | — |
+| [教材E·具身智能 0→100](textbooks/E-embodied-ai-0to100.html) | 清华/智源/阿里/地平线/NVIDIA/OpenVLA/π0/LeRobot 盘点+VLA 架构+转战补习（单 HTML+mermaid） | — |
 | [教材F·世界模型 0→100](textbooks/F-world-model-0to100.html) | NVIDIA Cosmos/GAIA/DriveDreamer/OccWorld/Vista 盘点+架构横评+转战补习（单 HTML+mermaid） | — |
 | [教材G·Zero to Hero](textbooks/G-nn-zero-to-hero.html) | Karpathy nn-zero-to-hero 保姆式（micrograd→MLP→GPT），吸烟刻肺吃透神经网络底层（单 HTML+mermaid） | — |
 | [教材H·nanochat 工作流](textbooks/H-nanochat-workflow.html) | 学完G后上手 nanochat 搭本地 LLM 训练工作流（环境/数据/训练/调优/命令级 speedrun） | — |
