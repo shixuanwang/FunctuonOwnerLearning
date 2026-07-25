@@ -30,6 +30,7 @@
 | [教材H·nanochat 工作流](textbooks/H-nanochat-workflow.html) | 学完G后上手 nanochat 搭本地 LLM 训练工作流（环境/数据/训练/调优/命令级 speedrun） | — |
 | [教材I·性能之巅+无人车性能](textbooks/I-systems-performance.html) | Systems Performance 方法论+Brendan Gregg 工具栈+eBPF+无人车系统性能(GPU/感知延迟/DDP-NCCL/ROS2 实时) | — |
 | [J·aicoding 协作与能力盘点](textbooks/J-aicoding-collaboration-audit.html) | codex 历史实测+≥10 顶尖 aicoder 对标：认知七维+短板+优化+自检 checklist（单 HTML+mermaid） | — |
+| [K·Onboard PRD 初版](textbooks/K-onboard-prd-v1.html) | 无人车性能全生命周期(研发/QA/发版准出/运营实时)+HiL/实时性能/故障-处置五闭环 PRD（待审核优化） | — |
 
 ## ⚠️ 机密提醒
 
