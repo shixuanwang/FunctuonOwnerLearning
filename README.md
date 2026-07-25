@@ -25,6 +25,7 @@
 | [教材C·JoyDriver 0→100](textbooks/C-joydriver-0to100.html) | 端到端模型本质+训练实战（SIMPL/StreamPETR/DDP+RDMA/ONNX 上车）（单 HTML+mermaid） | — |
 | [教材D·ROVER5.0 发版与问题收敛黄金路径](textbooks/D-rover5-release-golden-path.html) | MR 体系/发版/问题收敛诊断+黄金路径+四流对齐+30-60-90 行动（单 HTML+mermaid） | — |
 | [教材F·世界模型 0→100](textbooks/F-world-model-0to100.html) | NVIDIA Cosmos/GAIA/DriveDreamer/OccWorld/Vista 盘点+架构横评+转战补习（单 HTML+mermaid） | — |
+| [教材G·Zero to Hero](textbooks/G-nn-zero-to-hero.html) | Karpathy nn-zero-to-hero 保姆式（micrograd→MLP→GPT），吸烟刻肺吃透神经网络底层（单 HTML+mermaid） | — |
 
 ## ⚠️ 机密提醒
 

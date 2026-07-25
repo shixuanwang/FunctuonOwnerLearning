@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Networks: Zero to Hero（保姆式教材）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --aha-bg:#e8f5e9; --aha-border:#2e7d32;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.78; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  blockquote.verify {
+    border-left:3px solid var(--aha-border); background:var(--aha-bg);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#1b5e20;
+  }
+  blockquote.verify::before { content:"动手验证｜"; font-weight:600; color:var(--aha-border); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .badge { font-size:12px; padding:2px 6px; border-radius:4px; background:#eef; color:#336; margin-left:6px;}
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · Zero → Hero</h2>
+<ol>
+  <li><a href="#sec-0">① 一句话定位 + 你将造出什么</a></li>
+  <li><a href="#sec-1">② 第一性原理：神经网络是什么</a>
+    <div class="sub">函数逼近 · 梯度下降 · 链式法则三件套</div>
+  </li>
+  <li><a href="#sec-2">③ micrograd：手写反向传播</a>
+    <div class="sub">导数 · 计算图 · 链式法则 · 累加 · 拓扑排序</div>
+  </li>
+  <li><a href="#sec-3">④ makemore：从 bigram 到 MLP</a>
+    <div class="sub">字符级语言模型 · one-hot@W · softmax/NLL · embedding</div>
+  </li>
+  <li><a href="#sec-4">⑤ backprop ninja + 训练健康诊断</a>
+    <div class="sub">手撕反向 · 仪表盘 · Kaiming · BatchNorm · WaveNet</div>
+  </li>
+  <li><a href="#sec-5">⑥ Self-Attention 原子拆解</a>
+    <div class="sub">QKV · √d_k · mask · multi-head · 位置编码</div>
+  </li>
+  <li><a href="#sec-6">⑦ 从零搭 GPT</a>
+    <div class="sub">FFN · 残差 · LayerNorm · Block · decoder-only</div>
+  </li>
+  <li><a href="#sec-7">⑧ GPT-2 + Tokenizer + 微调</a>
+    <div class="sub">state_dict · BPE · 采样 · finetune</div>
+  </li>
+  <li><a href="#sec-8">⑨ 实战命令清单（跑通 micrograd→GPT）</a></li>
+  <li><a href="#sec-9">⑩ 学习路径（按 cell 顺序读）</a></li>
+  <li><a href="#sec-10">⑪ 关键数学附录</a></li>
+  <li><a href="#sec-11">⑫ 延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>Neural Networks: Zero to Hero（保姆式教材）</h1>
+<p class="lede">一份把 Andrej Karpathy 的 nn-zero-to-hero 系列焊成<strong>一条因果链</strong>的单文件教材。目标：让一个"判断力领先、实现熟练度需从根补"的读者，从零走到<strong>真能训出 GPT</strong>，并对神经网络底层逻辑"吸烟刻肺"。</p>
+<p class="meta">配套仓库：<code>/home/cheche/Workspaces/Learning/nn-zero-to-hero</code> · 风格基准：Karpathy "教学版"实现 + nanoGPT/minBPE 外部仓 · 编写日期：2026-07-26</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 一句话定位 + 你将造出什么</h2>
+
+<p>整个 nn-zero-to-hero 不是"十节课拼盘"，而是<strong>一条因果递进链</strong>：每一节都回答"上一节留下的问题"。读完你能造出这些东西，且能讲清楚每个零件为什么长这样：</p>
+<ol>
+  <li><strong>micrograd</strong>：~150 行 Python 复现反向传播，<em>证明梯度下降不是黑魔法</em>，是一条可手算的因果链。</li>
+  <li><strong>makemore bigram</strong>：27×27 频率表 → 神经网络，证明 <code>one_hot@W = 查表</code>，让统计变成可梯度下降。</li>
+  <li><strong>makemore MLP</strong>：Bengio 2003 的 3-gram 网络，打破 bigram 的"只看一字"天花板，引入 embedding。</li>
+  <li><strong>backprop ninja</strong>：手撕整张计算图的链式法则，证明 autograd 是机械规则而非高级算法。</li>
+  <li><strong>训练诊断仪表盘</strong>：四张图（饱和率/激活分布/梯度分布/ud 曲线）反推网络病根，对症下药。</li>
+  <li><strong>WaveNet</strong>：树状分层 + 1D 卷积，把上下文从 3 拉到 8，是 attention 的几何前奏。</li>
+  <li><strong>GPT</strong>：用 Q/K/V + mask + multi-head + 残差 + LayerNorm 拼出 decoder-only transformer，跑出莎士比亚风格文本。</li>
+  <li><strong>GPT-2 工程化 + BPE + 微调</strong>：让模型可加载、可复现、可定制——真正"训出模型"。</li>
+</ol>
+
+<blockquote class="why">这条链的设计哲学：<strong>每个新概念都是因为上一个解决不了某个问题</strong>。bigram 只看一字 → 上下文不够，引入 MLP；MLP 参数爆炸 + 看不远 → 引入 attention；attention 越深越训不动 → 引入残差/LayerNorm/BatchNorm。Function Owner 的判断力 = 能在任何新架构面前问出"它解决了上一代的什么问题"。</blockquote>
+
+<aside class="note">诚实声明（必须先点破）：本仓库 <code>lectures/</code> 目录只到 <code>makemore_part5_cnn1.ipynb</code>（WaveNet/CNN 版），<strong>GPT（Lecture 7）和 Tokenizer（Lecture 8）的 .ipynb 从未 commit 进来</strong>，README 里只挂了 YouTube 链接（kCc8FmEb1nY / zduSFxRajkE）。所以本教材 §6-§8 的 <code>code_map</code> 全部指向外部 canonical 仓库：nanoGPT、minBPE、build-nanogpt。如果你要在本地跑 GPT，需要 clone 这些仓；如果你只看仓库内文件，能跟到的是 micrograd → makemore → WaveNet 这条"通向 Transformer 的结构性台阶"。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 第一性原理：神经网络是什么（三件套）</h2>
+
+<p>任何神经网络——从 micrograd 的 7 节点图到 GPT-4 的万亿参数——只做了<strong>三件事</strong>。先说因果，后说术语。</p>
+
+<h3>1.1 函数逼近：网络 = 一个超大的可调函数</h3>
+<p>神经网络是一个带<strong>几十亿个旋钮（参数 W）</strong>的函数 f(x; W)。给一个输入 x（图像、文本、token 序列），输出一个预测 ŷ。<em>"训练"</em>就是反复拧旋钮，让 ŷ 接近真值 y。</p>
+<p><strong>为什么需要"可调"</strong>？因为现实世界的函数（"这张图是不是猫"、"这段话下一个字是啥"）写不出闭式解，只能让一个足够灵活的函数族去拟合。神经网络的灵活性来自两层：(1) <strong>线性变换</strong> y = Wx + b（旋钮）；(2) <strong>非线性激活</strong> y = tanh(x) / ReLU(x)（让函数能弯折，否则多层叠加还是线性）。只有线性+非线性交替堆叠，才能逼近任意函数（万能逼近定理）。</p>
+
+<h3>1.2 梯度下降：怎么拧旋钮（往 loss 减小的方向走）</h3>
+<p>需要一个数字告诉你"现在拧得多差"——<strong>损失 loss</strong>。然后问："每个旋钮该往哪个方向拧一格，loss 降最多？" 数学答案：每个参数的<strong>梯度</strong> ∂loss/∂W 指向 loss 增大最快的方向，所以往<strong>反方向</strong>走一格：W ← W − lr · ∂loss/∂W。这就是<strong>梯度下降</strong>。lr（学习率）是步长大小——太大跨过谷底，太小训练太慢。</p>
+<blockquote class="why">梯度下降的存在理由是"<strong>在高维空间里找方向</strong>"。神经网络有几十亿维参数，没法穷举，只能靠局部斜率贪婪地往低处走。反事实：不靠梯度，要么穷举（爆炸）、要么随机搜索（慢到不可用）。所有现代优化器（SGD/Adam/AdamW）都是"怎么估这个梯度、怎么走这一步"的工程改良。</blockquote>
+
+<h3>1.3 链式法则：怎么算 ∂loss/∂W（这是反向传播的全部数学）</h3>
+<p>loss 是从 W 经过几十层 op 算出来的，没法直接求导。<strong>链式法则</strong>说：把整个过程拆成一串原子 op（加、乘、tanh、矩阵乘），每个 op 只需知道自己的"局部导数"，再沿计算图把上游梯度一路乘下去，就能算出 loss 对任何参数的导数。链式法则 = 反向传播 = autograd。这三者<strong>是同一件事的三个名字</strong>。</p>
+<aside class="note"><strong>最反直觉的一点</strong>：反向传播不需要"重新跑一遍前向"。它用的是前向已经算好的<strong>数据值</strong>来算 local gradient（比如乘法 a*b 的 local gradient 对 a 就是 b 的值）。所以前向必须先跑完、data 就位，反向才能跑。这也是 PyTorch 要求你先 forward 再 backward 的根因。</aside>
+
+<h3>1.4 三件套合在一起：训练循环</h3>
+<pre class="mermaid">
+flowchart LR
+  X["输入 x"] --> F["forward: f(x;W) → ŷ"]
+  F --> L["loss = 距离(ŷ, y)"]
+  L --> B["backward: 链式法则<br/>把 ∂loss/∂W 填进每个 W.grad"]
+  B --> U["update: W ← W − lr·W.grad"]
+  U -->|"未收敛"| X
+  U -->|"收敛"| OK["训练好的 W"]
+</pre>
+<p>整个 nn-zero-to-hero 系列，本质都在反复把这三件套焊死：<strong>micrograd</strong> 拆链式法则、<strong>makemore</strong> 改造函数族和 loss、<strong>GPT</strong> 把函数族换成 transformer、<strong>nanoGPT</strong> 把训练循环工程化到能跑 GPT-2 规模。所有复杂度都是这三件套的放大。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ micrograd：手写反向传播（吸烟刻肺）</h2>
+
+<p class="lede">整门课的原子内核。读不懂这一节，后面 makemore/gpt 的所有数学都是空中楼阁。</p>
+
+<h3>2.1 导数即"抖一下看响应"</h3>
+<p>最朴素的求导方法：把 x 抖一点点 h，看输出 y 变了多少。<em>导数 = Δy/Δx = 每单位输入引起的输出变化</em>。这就是斜率。代码：<code>(f(x+h) − f(x)) / h</code>，叫有限差分。</p>
+<p><strong>位置</strong>：<code>micrograd/micrograd_lecture_first_half_roughly.ipynb</code> cell-4，h=1e-6。</p>
+<p><strong>直觉</strong>：把函数想成山坡，你站在 x，往右挪一小步 h，看脚下高度涨了多少。Δy/h 就是这片小坡的陡度+方向。h 太大就跨过了别处的山头（不准），h 太小会撞浮点精度 floor（变成 0），所以 1e-6 是甜区。</p>
+<blockquote class="why">Karpathy 故意用最朴素的<strong>前向差分</strong>而非中心差分（更准），因为目标是<strong>教学直觉</strong>不是数值最优。工程里几乎不用有限差分求导（慢且不准）——它的真正用途是<strong>验证反向传播的正确性</strong>（cell-11 的 <code>lol()</code> 就是干这个的）。任何写反向传播的 bug 都能被有限差分抓出来。</blockquote>
+<blockquote class="verify">把 cell-4 的 h 从 1e-6 改成 1e-1，结果跳到 ~2.96（偏离真值 0）；改成 1e-20，结果炸成 0 或 nan。亲手感受"h 太大不准、太小被精度吃掉"的窗口。</blockquote>
+
+<h3>2.2 计算图：把任何表达式拆成一串原子 op 的 DAG</h3>
+<p>要对复杂函数自动求导，必须先把它拆成"每一步都很简单"的链条——<strong>计算图</strong>是有向无环图（DAG）：节点 = Value（标量 + grad），边 = "谁是输入"。每个 op 必须是<strong>局部可微</strong>的：只知道自己的输入输出，就能算出"输入动一下我会怎么动"。整张图的导数 = 所有局部导数沿链路乘起来。</p>
+<p><strong>位置</strong>：<code>micrograd_lecture_first_half_roughly.ipynb</code> cell-7 的 Value 类。<code>__init__</code> 存 <code>data/grad/_children/_op/label</code>；<code>__add__/__mul__</code> 每次创建 <code>out=Value(..., (self,other), '+')</code>，把父节点塞进 <code>_children</code>。</p>
+<p><strong>直觉</strong>：把神经网络想成工厂流水线——每个工位只做一件简单事（加、乘、压扁），前一个的产出是后一个的原料。计算图就是工厂图纸。要追问"最终产品 L 里，原料 a 贡献了多少"——沿流水线从成品反着走回去，每个工位告诉你"我这一步放大/缩小了几倍"。</p>
+<aside class="note"><strong>关键认知</strong>：每个节点只知道 (a) 自己两个父节点是谁、(b) 自己的局部求导规则。<strong>不需要知道整个网络</strong>。这就是反向传播能 scale 到百亿参数的原因——每个节点自治。读者第一次看会以为"反向传播要重新求一遍前向"，错——它用前向已经算好的 data 值算 local gradient，所以前向 data 必须先全部就位。</aside>
+
+<h3>2.3 一个神经元的 7 节点 DAG</h3>
+<pre class="mermaid">
+flowchart LR
+  x1(["x1=2.0"]) x2(["x2=0.0"]) w1(["w1=-3.0"]) w2(["w2=1.0"]) b(["b=6.88"])
+  x1w1["x1*w1"] x2w2["x2*w2"]
+  x1 -->|"*w1"| x1w1 w1 --> x1w1
+  x2 -->|"*w2"| x2w2 w2 --> x2w2
+  x1w1 --> add1["+"] x2w2 --> add1
+  add1 -->|"+b"| n["n"] b --> n
+  n -->|"tanh"| o(["o"])
+  classDef seed fill:#fda,stroke:#333;
+  class o seed;
+</pre>
+<p>这是 cell-13 的神经元图：<code>o = tanh(x1·w1 + x2·w2 + b)</code>。<strong>位置</strong>：cell-8 的 <code>draw_dot(o)</code> 把它画成 graphviz。任何神经网络——包括 GPT——本质上都是这种 DAG 的放大版。</p>
+
+<h3>2.4 链式法则手推：local gradient × 上游梯度</h3>
+<p>要算 <code>dL/da</code>（L 对底层输入 a 的导数），但 a 离 L 隔着好几层 op，没法直接求导。链式法则：若 <code>L=g(e)</code> 且 <code>e=f(a)</code>，则 <code>dL/da = (dL/de) · (de/da)</code>。拆两段：(1) <code>de/da</code> 是 e 这个节点的<strong>局部导数</strong>（local gradient），只跟 <code>e=f(a)</code> 有关；(2) <code>dL/de</code> 是<strong>上游已算好的梯度</strong>，从 L 一路乘下来。两者相乘。</p>
+<p><strong>位置</strong>：cell-7 <code>__mul__</code> 的 _backward：<code>self.grad += other.data * out.grad</code>。<code>other.data</code> 是 local gradient（<code>d(a*b)/da = b</code>），<code>out.grad</code> 是上游 dL/dout，两者相乘 = dL/da。手推全程见 cell-23~28。</p>
+
+<h4>local gradient 速查表（每个 op 一行）</h4>
+<table>
+<thead><tr><th>op</th><th>local gradient（对每个输入）</th><th>直觉</th></tr></thead>
+<tbody>
+<tr><td>加法 z=a+b</td><td>dz/da=1, dz/db=1</td><td>直通门：梯度 1:1 透传</td></tr>
+<tr><td>乘法 z=a·b</td><td>dz/da=b, dz/db=a</td><td>缩放器：被"另一输入值"缩放</td></tr>
+<tr><td>幂 z=a^k (k常数)</td><td>dz/da=k·a^(k−1)</td><td>经典幂法则</td></tr>
+<tr><td>tanh</td><td>dz/da=1−z²（用输出值！）</td><td>压扁器：|z|→1 时梯度→0（饱和）</td></tr>
+<tr><td>exp</td><td>dz/da=z（=e^a 自己）</td><td>自我放大器：输出越大梯度越大（易爆炸）</td></tr>
+<tr><td>减/除</td><td>分解成 a+(−b) / a·b^(−1)</td><td>复用加+乘+幂</td></tr>
+</tbody>
+</table>
+
+<aside class="note">最致命的笔误：<strong>tanh 的导数是 1−tanh²(x) = 1−o²，要用输出值 o 不是输入值 x</strong>。代码里用 <code>t = self.data</code> 算 <code>1−t²</code>，t 是 tanh 之后的输出。cell-29 打印 <code>1−o.data**2 = 0.5</code> 验证。这个细节在 makemore part4 反向 tanh、GPT 反向 softmax 时会反复出现。</aside>
+
+<h3>2.5 为什么是 += 而不是 =（梯度累加）</h3>
+<p>当一个节点被<strong>多条路径</strong>使用（比如 <code>b = a+a</code>，a 在加法里出现两次），反向传播时 a 要收到来自两条路的贡献，必须累加。数学：多元链式法则 <code>dL/da = ∂L/∂a|路径1 + ∂L/∂a|路径2</code>。所以 _backward 里必须 <code>self.grad += ...</code>。</p>
+<p><strong>位置</strong>：cell-31 验证 <code>a = Value(3.0); b = a+a; b.backward()</code> 得到 <code>a.grad = 2.0</code>（而非 1.0）。Karpathy 本人在视频里栽过这个坑，<code>micrograd_lecture_second_half_roughly.ipynb</code> exp 的注释明说："NOTE: in the video I incorrectly used = instead of +=. Fixed here"。</p>
+<blockquote class="why">这是 PyTorch <code>optimizer.zero_grad()</code> 必须每步调用的根源。PyTorch <code>.backward()</code> 默认也累加到 <code>.grad</code>——不 zero 就越积越大，方向全错。读者第一次学 PyTorch 经常忘记 <code>zero_grad()</code> 然后 loss 飞天，根因就是这条 += 规则。</blockquote>
+<blockquote class="verify">cell-31 后 <code>print(a.grad)</code> 应该是 2.0。然后把 cell-7 <code>__add__</code> 里的 <code>+=</code> 临时改成 <code>=</code>，重跑，a.grad 变成 1.0（错的）。这个改动 + 重跑是理解累加最直接的实验。</blockquote>
+
+<h3>2.6 拓扑排序：反向传播为什么是 O(n) 而不是指数爆炸</h3>
+<p>反向传播要按正确顺序调用每个节点的 _backward——保证"一个节点 _backward 时，它所有下游的 grad 都已算好"。DAG 的拓扑排序给出"从输出到输入"的合法顺序。复杂度 O(V+E)——每节点每边只访问一次。</p>
+<p><strong>位置</strong>：cell-7 的 <code>backward()</code>：build_topo 递归 DFS（visited 去重 + 后序 append），然后 <code>self.grad = 1.0</code>（种子），再 <code>for node in reversed(topo): node._backward()</code>。cell-16 打印了拓扑顺序供肉眼核对。</p>
+<aside class="note"><strong>最反直觉的点</strong>：很多人以为反向传播会因"路径组合爆炸"很慢。错——拓扑排序保证每节点只被处理一次，梯度只沿父→子边回传一次，整张图线性时间。这也是为什么 6 层 transformer 也能秒级 backward——本质就是这种线性扫描的放大版。</aside>
+
+<h3>2.7 闭环：从一个神经元到 MLP，前向→反向→更新的完整链路</h3>
+<p>有了 Value 的自动求导，把它拼成能学的网络：神经元 = <code>tanh(Σwᵢxᵢ + b)</code>，layer = 多个神经元并行，MLP = 多层串联。loss = MSE = <code>(ŷ−y)²</code>。训练循环三步：(1) 前向算 loss；(2) 反向把所有参数的 grad 填好；(3) <code>p.data += −lr · p.grad</code>（往梯度反方向走，因为梯度指向 loss 增大方向）。</p>
+<p><strong>位置</strong>：<code>micrograd_lecture_second_half_roughly.ipynb</code>：cell-14 Neuron/Layer/MLP 三层抽象；cell-15 实例化 3-4-4-1 MLP；cell-17 完整训练循环。</p>
+<pre class="mermaid">
+flowchart TB
+  subgraph Forward["Forward: 搭计算图"]
+    A1["输入 x"] --> A2["神经元 w·x+b"] --> A3["tanh 压扁"] --> A4["多层堆叠 MLP"] --> A5["loss = MSE"]
+  end
+  subgraph Backward["Backward: 反推梯度"]
+    B5["loss.grad=1.0 种子"] --> B4["反向拓扑序 _backward"] --> B3["local grad × 上游 grad"] --> B2["累加 += 到父节点"] --> B1["参数 grad 全部填好"]
+  end
+  subgraph Update["Update: 梯度下降"]
+    C1["zero_grad 清零"] --> C2["p.data += -lr * p.grad"]
+  end
+  A5 -.->|"loss.data"| B5
+  B1 -.->|"p.grad"| C2
+  C2 -.->|"新参数"| A2
+</pre>
+<blockquote class="verify">改 cell-17 的 lr：0.1 → 1.0，跑 20 步，看 loss 先降后震荡或暴涨（步子太大跨过谷底）；→ 0.001，loss 几乎不动（步子太小）。再把 zero_grad 两行注释掉，看 loss 飞天。这两个改动是理解"为什么需要正确 lr 和 zero_grad"最直接的实验。</blockquote>
+
+<h3>2.8 PyTorch 交叉验证：micrograd = PyTorch autograd 的标量实现</h3>
+<p>micrograd 是教学玩具（标量、Python 循环、慢）。证明它数学正确最干净的方法：和 PyTorch 跑同一道题对答案。<strong>位置</strong>：<code>second_half</code> cell-13 用 PyTorch tensor 重建 cell-9 的神经元，结果 <code>x1.grad=−1.5, w1.grad=1.0, x2.grad=0.5, w2.grad=0.0</code>，和 micrograd 一字不差。</p>
+<blockquote class="why">这证明 micrograd 不是"简化版近似"，而是和 PyTorch 同一个数学的<strong>标量实现</strong>。PyTorch 只是工程升级——tensor 向量化、CUDA 并行、fused kernel、内存复用。<strong>学完 micrograd 你已经懂了 PyTorch autograd 的内核机制</strong>。再看 PyTorch 的 <code>.backward()</code> 就是"同样的逻辑，向量化版本"。</blockquote>
+<aside class="note"><strong>w2.grad = 0.0</strong> 是为什么？因为 <code>x2=0.0</code>，乘法 local gradient 对 w2 是 <code>x2.data = 0.0</code>，所以 w2 这条边梯度=0。这叫"dead neuron"现象的雏形：ReLU 网络里若某神经元对所有样本都输出 0，它的权重永远收不到梯度，永久死亡。makemore/gpt 会再次撞上这个主题。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ makemore：从 bigram 到 MLP（字符级语言模型）</h2>
+
+<p class="lede">把 micrograd 的"能学的函数"具体化到"能生成名字的语言模型"，并证明<strong>能力如何随结构升级而被一节节解放</strong>。</p>
+
+<h3>3.1 bigram 统计法：建模能力天花板 #1（只看一字）</h3>
+<p>最朴素的因果假设：下一个字符只依赖上一个字符（马尔可夫一阶）。把所有 (ch1, ch2) 共现次数统计进 27×27 表 N，行归一化得 <code>P(下一个|上一个) = N[ch1,ch2] / N[ch1,:].sum()</code>。</p>
+<p><strong>位置</strong>：<code>makemore/makemore_part1_bigrams.ipynb</code>：cell-8~10 填表 N；cell-23 <code>P = (N+1).float(); P /= P.sum(1, keepdims=True)</code>（N+1 是平滑，避免 log(0)）；cell-24 <code>multinomial</code> 采样生成（输出 mor./axx./minaymoryles. 这种不像名字的垃圾）。</p>
+<aside class="note"><strong>keepdims=True 的广播维度</strong>是最大卡点：写成 <code>P.sum(1)</code> 不 keepdim，shape 变 (27,) 而非 (27,1)，<code>P (27,27) / p (27,)</code> 会沿对角线广播，结果概率全错。<strong>必须 keepdim=True 让除法沿列广播</strong>。读者第一次写必踩这个坑。</aside>
+<blockquote class="verify">cell-26 把 <code>for w in words</code> 改成 <code>for w in ['andrejq']</code>，对比 (N+1) 平滑前后的 log_likelihood：平滑前会是 −inf，平滑后是有限大数。这让你亲眼看到"<strong>测试集出现训练没见过的 bigram 时，没平滑 loss 直接爆掉</strong>"。</blockquote>
+
+<h3>3.2 从计数表到神经网络：one_hot@W = 查表</h3>
+<p>统计 N 是死表，不能梯度下降、不能平滑可控。把它改写成"矩阵乘法"——把输入字符 ix 编成 one-hot 向量（只在 ix 位为 1），那么 <code>one_hot @ W</code> 的结果就是 W 的第 ix 行（one-hot 起到"选择行"的作用）。于是 W 直接替代 N：W 的第 i 行 = "字符 i 后面接各字符的 log-counts"。再 exp() 还原成 counts，行归一化得概率——这三步合起来叫 <strong>softmax</strong>。</p>
+<p><strong>位置</strong>：part1 cell-30 <code>xenc = F.one_hot(xs, 27).float()</code>；cell-39 <code>logits = xenc @ W; counts = logits.exp(); probs = counts / counts.sum(1, keepdims=True)</code>（注释：last 2 lines together = softmax）。</p>
+<blockquote class="why">这是全章节最关键的 aha：<strong>查表 ≡ 矩阵乘法</strong>。它让"频率统计"立刻变成可微、可梯度下降。读者会突然理解：one-hot 没有信息含量，只起"选择行"的作用；W 初始化成 randn 含负数也没事，因为 exp() 后正负都还原成概率。训练充分后 <code>W ≈ log(N+1)</code>。理解这一点，再看 MLP 的 embedding 查表、GPT 的 token embedding，全是同一件事的放大。</blockquote>
+
+<h3>3.3 softmax + NLL：可优化的分类 loss</h3>
+<p>要量化"模型在这批数据上有多差"且可微。直觉：模型给正确下一个字符分配的概率 prob 越大越好。但直接最大化 prob 乘积（似然）会下溢，所以取 log 把乘变加 → 等价于最小化负 log 似然 <code>nll = −Σ log prob</code> → 最小化平均 <code>nll/n</code>。当输出层是 softmax 时，这个 loss 就叫<strong>交叉熵</strong>。</p>
+<pre class="mermaid">
+flowchart LR
+  subgraph Bigram["bigram 神经网化"]
+    B1["xs one_hot"] -->|x@W| B2["logits<br/>=log-counts"]
+    B2 -->|"exp/sum"| B3["probs=softmax"]
+    B3 -->|"-log"| B4["loss=NLL"]
+    B4 -.反向.-> B2
+  end
+</pre>
+<p><strong>位置</strong>：part1 cell-25 列出四步等价链 max likelihood → max log likelihood → min NLL → min NLL/n；cell-44 <code>loss = -probs[arange(num), ys].log().mean() + 0.01*(W**2).mean()</code>（L2 正则项）。</p>
+<aside class="note">loss 里那项 <code>0.01*(W**2).mean()</code> 是 L2 正则，看起来突兀。<strong>因果是</strong>：鼓励 W 接近 0，等价于鼓励 counts 接近均匀，等价于 <code>(N+1)</code> 里的平滑强度。系数越大越像均匀分布——这就把统计平滑和正则<strong>统一到一个框架</strong>。读者第一次看到正则项和统计平滑是同源的，会突然理解为什么深度学习要靠正则化泛化。</aside>
+<blockquote class="verify">在 part1 cell-26 把 words 换成 <code>['andrejq']</code>，看未平滑 P 下 loss 是 inf。再手算一个均匀分布模型：所有 <code>P[i,j] = 1/27</code>，loss 应精确等于 <code>log(27) ≈ 3.296</code>，验证"随机基线"。这就是为什么训练前 loss ≈ 3.3 表示模型还没学到任何东西。</blockquote>
+
+<h3>3.4 MLP 登场：打破天花板 #2（看多字上下文）</h3>
+<p>bigram 永远学不到 "th 后面常接 a"、"qu 后面常接 e" 这种二字模式。Bengio 2003 MLP 的思路：用前 <code>block_size=3</code> 个字符预测下一个，每个字符先映射成 d 维向量（<strong>embedding</strong>），把 3 个向量拼起来送进一层隐藏神经元做非线性组合，最后输出 27 维 logits。</p>
+<pre class="mermaid">
+flowchart LR
+  X["idx 序列<br/>shape (B,3)"] -->|"C[idx]"| E["emb<br/>(B,3,10)"]
+  E -->|"view(B,30)"| EC["embcat"]
+  EC -->|"@W1+b1"| HP["hprebn (B,200)"]
+  HP -->|"tanh"| H["h"]
+  H -->|"@W2+b2"| L["logits (B,27)"]
+  L -->|"softmax + NLL"| LOSS["loss"]
+</pre>
+<p><strong>位置</strong>：<code>makemore/makemore_part2_mlp.ipynb</code>：cell-7 <code>C = torch.randn((27, 2))</code>（embedding 表）；cell-8 <code>emb = C[X]</code>（查表 = 高级索引）；cell-10 <code>h = torch.tanh(emb.view(-1, 6) @ W1 + b1)</code>。</p>
+
+<h3>3.5 MLP 比 bigram 强的三条因果（核心结论）</h3>
+<table>
+<thead><tr><th>因果</th><th>bigram</th><th>MLP</th><th>怎么验证</th></tr></thead>
+<tbody>
+<tr><td>上下文长度</td><td>P(next|cur) 用 1 字</td><td>P(next|cur,prev1,prev2) 用 3 字</td><td>block_size 1 vs 3，dev loss ~2.45 vs ~2.17</td></tr>
+<tr><td>参数共享 / Embedding 平滑</td><td>a→e 和 i→e 独立</td><td>a/i 通过共享 embedding 互相借力</td><td>把 C 固定成 one-hot（d=27 不可学），loss 退化</td></tr>
+<tr><td>非线性组合</td><td>无 tanh</td><td>学到"辅+元+辅→辅"组合规则</td><td>把 tanh 换成线性，loss 变差</td></tr>
+</tbody>
+</table>
+<blockquote class="why">part1 cell-26 <code>nll/n = 2.476</code>（bigram 天花板）vs part2 cell-29 <code>Xtr loss = 2.126</code>、cell-30 <code>Xdev loss = 2.170</code>——同一个数据集，MLP 把平均 NLL 从 2.47 降到 2.13，相当于每字平均概率从 e^−2.47=0.084 提升到 e^−2.13=0.119（提升 40%+）。part2 cell-31 的 <code>plt.scatter(C[:,0], C[:,1])</code> 可视化 embedding 自发聚成元音/辅音簇——这是 MLP 强于 bigram 的<strong>视觉铁证</strong>。</blockquote>
+<aside class="note">最深的认知：embedding 让"<strong>相似输入产生相似输出</strong>"，这是泛化的物理基础。它是后来 Word2Vec、Transformer 一切表示学习的种子。如果你只能记住一件事，记住 embedding 共享是泛化能 work 的根因。</aside>
+
+<h3>3.6 minibatch SGD + train/dev/test 三分</h3>
+<p>全量 182441 个 3-gram 每步算全量太慢。妥协：每步随机抽 <code>batch_size=32</code>。数学后果：mini-batch loss 是全量 loss 的无偏估计但方差更大（噪声）——<strong>这噪声反而是好事</strong>，帮跳出 sharp minima 提升泛化。lr 分段（前 100k 步 0.1，后 100k 步 0.01）模拟学习率衰减。</p>
+<p>判过拟合：留出 dev(10%) 不参与训练。train loss 持续降但 dev 不降甚至升 = overfit（死记硬背）；train/dev 都高且接近 = underfit（容量不够）。test 只在最后跑一次，作为无偏最终估计。</p>
+<p><strong>位置</strong>：part2 cell-6 三分（80/10/10）；cell-27 训练循环 + minibatch + lr 分段；cell-29/30 train vs dev 对比。</p>
+<aside class="note"><strong>mini-batch 噪声是好事</strong>——这是深度学习反直觉的点。纯梯度下降会陷在 sharp minima（峡谷底部窄，对新数据泛化差），mini-batch 噪声把参数推出 sharp minima 落到 flat minima（宽谷底部，泛化好）。这就是为什么大 batch 反而容易过拟合：太准了，反而收敛到差解。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ backprop ninja + 训练健康诊断</h2>
+
+<p class="lede">这一节是<strong>方法论</strong>：拿到一个训不动的网络怎么办？答案是先造仪表盘，再用仪表盘反推病根，对症下药。</p>
+
+<h3>4.1 诊断仪表盘一：tanh 饱和率（saturated%）</h3>
+<p>tanh 是 S 形压扁器：输入太大就压死在 ±1 平台上，平台处曲线几乎平，平=斜率 0=梯度 0。一个神经元饱和 = 这条信号通道断了；一整层饱和 = 死层。衡量指标：<code>saturated% = mean(|h| > 0.97)</code>，因为 <code>|tanh|=0.97</code> 时 <code>1−h² ≈ 0.06</code>，已吃掉 94% 的梯度。健康标准 <5%，理想 <2%。</p>
+<p><strong>位置</strong>：<code>makemore/makemore_part3_bn.ipynb</code> cell-15：<code>(t.abs() > 0.97).float().mean() * 100</code>。健康版输出 saturated ≈ 2%（layer2=2.78%, layer14=1.88%）。</p>
+<blockquote class="verify">复制 cell-15 在第 1000 步后打印 saturated%。然后把 Linear 初始化的 <code>weight *= 1.0</code> 改成 <code>weight *= 3.0</code>，重跑，看 saturated% 从 2% 跳到 50%+、loss 曲线变平——亲眼看到饱和=学不动。再改回 5/3（tanh 的 Kaiming gain）看回落。</blockquote>
+
+<h3>4.2 诊断仪表盘二：激活分布直方图 + Kaiming 初始化</h3>
+<p>前向每过一层 Linear，方差被 fan_in 倍放大：<code>Var(y) = fan_in · Var(W) · Var(x)</code>。不补偿则 std 逐层指数膨胀（→ 后面层全饱和）；补偿过头则 std 逐层收缩（→ 全死在 0 附近）。<strong>Kaiming</strong> 给出刚好补偿的缩放：<code>W ~ N(0, 2/fan_in)</code>（ReLU）或 <code>gain=5/3 for tanh</code>。</p>
+<p><strong>位置</strong>：part3 cell-13 <code>self.weight = torch.randn((fan_in, fan_out)) / fan_in**0.5</code>（朴素 Kaiming）；part4 cell-8 <code>W1 = randn * (5/3)/((n_embd*block_size)**0.5)</code>（手写 Kaiming）。</p>
+<aside class="note"><strong>为什么 tanh 的 gain 是 5/3 不是 1</strong>？因为 tanh 把方差也压扁了（tanh 在 0 附近斜率 1，整体平均斜率 <1），需要 W 比 N(0,1/fan_in) 大 5/3 倍才能补偿 tanh 的压缩，使 Tanh 输出方差守恒。这个 5/3 来自 <code>1/E[tanh'(x)]</code> 的积分，Karpathy 没推但提到了。</aside>
+
+<h3>4.3 诊断仪表盘三：梯度分布 + grad:data ratio + ud 曲线</h3>
+<p><code>grad:data ratio = grad.std() / data.std()</code> 衡量"这一步更新幅度相对参数本身大小"。太大 loss 震荡/发散，太小白白训练。健康值约 1e-3。<code>ud = log10((lr·p.grad).std() / p.data.std())</code> 跟踪训练过程中这个比值随 step 演化，y=−3 黑线是健康基准。</p>
+<p><strong>位置</strong>：part3 cell-17 ratio；cell-18 ud 时序曲线。</p>
+<blockquote class="why">ud 曲线是最有信息量的图。远离 −3（如 −5）说明 lr 太小学不动；远高于 −3（如 −1）说明 lr 太大要爆。这是比"看 loss 曲线"更早暴露问题的诊断工具——loss 还没明显发散，ud 已经告诉你 lr 不对。</blockquote>
+
+<h3>4.4 诊断决策树：训不动怎么办</h3>
+<pre class="mermaid">
+flowchart TD
+  Start(["第0步 loss"]) --> Q1{"≈ln(vocab)=3.30?"}
+  Q1 -->|否，远高于| Init["初始化病<br/>缩小末层 W2 *= 0.01<br/>b2 = 0"]
+  Q1 -->|是| Q2{"saturated% < 5%?"}
+  Q2 -->|否，>20%| Sat["激活病<br/>检查 Kaiming gain<br/>加/调 BatchNorm"]
+  Q2 -->|是| Q3{"grad std 各层守恒?"}
+  Q3 -->|否，前层衰减| Vanish["梯度消失<br/>加 BN<br/>检查 tanh 饱和链"]
+  Q3 -->|否，某层爆炸| Explode["梯度爆炸<br/>降 lr 或加 BN"]
+  Q3 -->|是| Q4{"ud ≈ −3?"}
+  Q4 -->|远低于 −3| LowLR["优化病<br/>lr 太小，调大"]
+  Q4 -->|远高于 −3| HighLR["优化病<br/>lr 太大，调小"]
+  Q4 -->|是| Healthy(["全网络健康<br/>跑满训练"])
+</pre>
+<p>顺序：先看第 0 步 loss（初始化）→ 再看 saturated%（激活）→ 再看 grad 分布（梯度）→ 再看 ud 曲线（优化）。<strong>按"上游影响下游"的因果链排查</strong>，不要盲调 lr。</p>
+
+<h3>4.5 BatchNorm：把每层激活强行拉回标准分布</h3>
+<p>深层网络哪怕初始化对了，训练几步后权重漂移、激活分布也会跑偏。BatchNorm 在每个激活上插一刀：按 batch 维算 mean/var，标准化到 mean=0, std=1，再用可学 gamma/beta 重新缩放平移：<code>xhat = (x − μ_batch)/σ_batch; out = γ·xhat + β</code>。无论上游怎么漂，下游看到的永远是稳定分布。</p>
+<pre class="mermaid">
+flowchart LR
+  subgraph BN["BatchNorm 内部数据流"]
+    In["输入 x: (B,dim)"] --> M["μ = mean(x, dim=0)"]
+    In --> V["σ² = var(x, dim=0)"]
+    In --> Sub["x − μ"]
+    V --> Sqrt["1/√(σ²+ε)"]
+    Sub --> Mul["·"]
+    Sqrt --> Mul
+    Mul --> xhat["xhat 标准化"]
+    xhat --> G["γ · xhat"]
+    G --> Add["+ β"]
+    Add --> Out["输出"]
+    M -.->|"EMA momentum"| RM["running_mean buffer"]
+    V -.->|"EMA momentum"| RV["running_var buffer"]
+    RM -.->|"推理时用"| Out
+    RV -.->|"推理时用"| Out
+  end
+</pre>
+<p><strong>位置</strong>：part3 cell-13 BatchNorm1d 类；cell-7 内联版 + running buffer 的 EMA 更新 <code>bnmean_running = 0.999·bnmean_running + 0.001·bnmeani</code>；推理时（cell-10/19）用 running buffer 而非 batch 统计。</p>
+<aside class="note"><strong>三个工程后果必须记住</strong>：(1) 训练用 batch 统计、推理用 running 统计——所以推理前必须 <code>model.eval()</code>；(2) BN 让 b1 偏置无用（BN 自己有 β 平移，且先减 μ 把常数偏置抹掉）——part4 cell-8 注释 "using b1 just for fun, it's useless because of BN"；(3) batch 间统计噪声 = 正则化，batch 越小正则越强。</aside>
+<blockquote class="verify">part3 cell-24 是干净的 BN 实验：<code>inp ~ N(0,1), w ~ N(0,1), x = w @ inp</code>，<code>x.std()</code> 飙到 31；加 BN 后 <code>out.std()</code> 回到 1.0，且 <code>inp.grad.std() ≈ 1.0</code>（梯度也守恒了）。对比不加 BN 的 cell-23 <code>inp.grad.std() ≈ 31</code>（梯度爆炸）。一手数据证明 BN 同时修了前向方差和反向梯度。</blockquote>
+
+<h3>4.6 梯度消失/爆炸：深层网络为什么训不动</h3>
+<p>反向传播是连乘：<code>dh_L = dL · Π(每层局部导数)</code>。每层局部导数 <1（饱和 tanh 的 1−h²≈0.05），10 层连乘 ≈0.05^10≈1e-13——前面层梯度比浮点下限还小，等于不学，叫<strong>梯度消失</strong>。每层 >1（未缩放 Linear 的 √fan_in≈31），10 层连乘 ≈31^10≈1e14——梯度爆成 nan，叫<strong>梯度爆炸</strong>。本质都是"连乘的指数效应放大任何偏离 1 的尺度"。</p>
+<p>解法链：Kaiming 让 Linear 局部导数≈1；BN 把激活方差钉回 1 让 tanh 不饱和（局部导数≈0.64，配合 gain=5/3 补偿）；残差连接给梯度一条旁路（GPT 会用）。</p>
+<blockquote class="why">常见误解："梯度消失是 sigmoid/tanh 的错，换 ReLU 就好了"。纠正：ReLU 也有 dead ReLU（负区间梯度=0），深层 ReLU 没 BN 一样会数值不稳。<strong>根因是连乘放大，根治要 BN/残差/合理初始化三件套</strong>，换激活只是缓解。</blockquote>
+
+<h3>4.7 成为 backprop ninja：手动反向每一步</h3>
+<p>调 <code>loss.backward()</code> 是黑盒。要真正理解梯度怎么流，必须把 forward 拆成一串原子操作（matmul、sum、exp、log、tanh、broadcast、max、indexing），对每个原子写局部雅可比，再用链式法则拼起来。part4 把 forward 拆成 20+ 行小步骤（<code>retain_grad()</code> 缓存中间梯度），对每个中间变量手写 <code>d_</code>，用 <code>cmp(s, dt, t)</code> 对比手写 dt 和 PyTorch 自动 <code>t.grad</code>。</p>
+<p><strong>位置</strong>：<code>makemore/makemore_part4_backprop.ipynb</code>：cell-10 forward chunkated；cell-11 Exercise 1 全手写反向（26 个变量逐行）；cell-13 Exercise 2 softmax+CE fused；cell-20 Exercise 3 BatchNorm fused（最难一关）。</p>
+<p><strong>三个关键复合操作的反向公式</strong>：</p>
+<table>
+<thead><tr><th>操作</th><th>fused 反向公式</th><th>把几步合几行</th></tr></thead>
+<tbody>
+<tr><td>softmax + cross_entropy</td><td><code>dlogits = softmax(logits); dlogits[range(n),Yb] -= 1; /=n</code></td><td>6 步 → 3 行</td></tr>
+<tr><td>BatchNorm</td><td><code>dhprebn = bngain·bnvar_inv/n · (n·dhpreact − dhpreact.sum(0) − n/(n−1)·bnraw·(dhpreact·bnraw).sum(0))</code></td><td>8 步 → 1 行</td></tr>
+<tr><td>embedding 查表</td><td><code>dC[ix] += demb[k,j]</code>（scatter-add）</td><td>—</td></tr>
+</tbody>
+</table>
+<aside class="note">手写反向最常见的 bug：<strong>忘记 +=</strong>（如 <code>dC[ix] += demb</code>）。同一个目标位置被多个源贡献梯度时必须累加，否则只算最后一次。这也是 §2.5 那条 += 规则在张量场景的复现——同一个 C[i] 可能被 batch 里多个样本查到，反向时必须累加。</aside>
+
+<h3>4.8 初始化自信度校准：让 loss 第一步就别太离谱</h3>
+<p>训练第一步 loss 应 ≈ <code>−ln(1/vocab_size) = ln(27) ≈ 3.30</code>（均匀分布的交叉熵）。如果初始化让输出层过于自信（logits 一边倒），第一步 loss 会是 10-30，网络要先花几千步"忘记"错误自信再开始真学习——浪费且不稳。修法：(1) 最后一层 <code>W2 *= 0.01</code>；(2) BN 版 <code>layers[-1].gamma *= 0.1</code>。</p>
+<p><strong>位置</strong>：part3 cell-6 <code>W2 *= 0.01</code>；cell-11 loss log "fix softmax confidently wrong: train 2.07 val 2.13"。</p>
+<blockquote class="why">两个独立的初始化目标：(a) 内部激活稳定（Kaiming）；(b) 输出自信度合理（缩小最后一层）。新手只关心第一个，结果第 0 步 loss=18，前几千步白白浪费。验证：part3 cell-7 第 0 步 loss=3.3239≈ln(27)=3.296，完美。</blockquote>
+
+<h3>4.9 WaveNet 分块 flatten：层次化上下文（架构升级）</h3>
+<p>MLP 把 block_size 个字符 embedding 拍平成一条长向量喂第一层 Linear，上下文从 3 涨到 8 后第一层参数膨胀且没有"相邻字符先聚合成局部模式"的归纳偏置。WaveNet 思路：两两聚合（字符1+字符2 → bigram1, ...），再把两个 bigram 聚合成 4-gram，再聚合成 8-gram——树状层次结构，每层只混合相邻 2 个 token，深度 <code>log2(block_size)=3</code> 层。</p>
+<pre class="mermaid">
+flowchart LR
+  subgraph MLP["part2 MLP：拍平，参数随上下文膨胀"]
+    E1["8个 emb<br/>(B,8,24)"] --> F1["Flatten(8)<br/>(B,192)"] --> L1["Linear(192,128)<br/>参数=192×128"] --> O1["logits"]
+  end
+  subgraph WaveNet["part5 WaveNet：层次聚合，深度换宽度"]
+    E2["8个 emb<br/>(B,8,24)"] --> W1["Flatten(2)+Linear(48,128)<br/>(B,4,128)"]
+    W1 --> W2["Flatten(2)+Linear(256,128)<br/>(B,2,128)"]
+    W2 --> W3["Flatten(2)+Linear(256,128)<br/>(B,1,128)"] --> O2["logits"]
+  end
+  WaveNet -->|参数效率高：12K→22K| N1["bigram→4gram→8gram"]
+  MLP -->|第一层一次混合全部8字符| N2["参数浪费、无层次"]
+</pre>
+<p><strong>位置</strong>：<code>makemore/makemore_part5_cnn1.ipynb</code> cell-7 <code>FlattenConsecutive</code> 类（<code>x.view(B, T//n, C·n)</code>）；cell-9 hierarchical model 三层堆叠；cell-14 performance log "flat → hierarchical (22K params): train 1.941 val 2.029"。</p>
+<aside class="note">WaveNet 是仓库内<strong>离 Transformer 最近</strong>的 notebook。causal/dilated 卷积是 attention 的"硬连线版"——固定、稀疏、共享权重的注意力。attention 把它松弛成动态、全连接的软版本。读者理解 WaveNet 的"两两聚合树"，再回头看 attention 的"每位置软查所有位置"，会突然明白 attention 在干什么。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ Self-Attention 原子拆解（QKV / mask / multi-head / 位置编码）</h2>
+
+<p class="lede">从这一节开始进入 GPT。仓库里没有 GPT notebook（见 §0 诚实声明），所以 code_map 全部指向外部 canonical <strong>nanoGPT/model.py</strong>。</p>
+
+<h3>5.1 全局因果：GPT 到底在解什么</h3>
+<p>目标：最大化训练语料每个 token 的对数似然。<code>loss = -(1/N)·Σ log P(x_{t+1}|x_1..x_t)</code>。和 makemore_part1 bigram、part2 MLP <strong>完全同一个 loss、同一个采样框架</strong>——区别只是"用什么把上文压缩成一个向量"。bigram：上文=前 1 字符；MLP：上文=拼接前 N 字符；GPT：上文=用 attention 让每个位置去挑它需要的历史信息。</p>
+<blockquote class="why">读者最容易跳过 bigram 直接看 transformer，结果 attention loss 不降时不知道是 attention 写错了还是数据流写错了。Karpathy 故意先写 BigramLanguageModel 就是给你一个"已知正确的基线"——后面每加一个模块都能和它对比。</blockquote>
+
+<h3>5.2 Self-Attention 的因果：为什么必须有 Q/K/V 三个角色</h3>
+<p>问题分解：(a) 位置 t 想知道"前面哪些位置对我有用"——需要"我想问什么"的向量，叫 <strong>Query Q</strong>。(b) 每个位置 j 要"广播自己有啥信息"——需要"我提供什么"的向量，叫 <strong>Key K</strong>。(c) 真正要被聚合的内容——叫 <strong>Value V</strong>。<code>Q·K^T</code>（点积）= t 和 j 的"匹配度"，softmax 归一化成权重 wei，再 <code>wei·V</code> 加权求和。一行：<code>out_t = Σ_j softmax(Q_t·K_j/√d_k)_j · V_j</code>。</p>
+<pre class="mermaid">
+flowchart LR
+  subgraph Head["单个 Head 前向"]
+    x["x: B,T,n_embd"] --> Wq["Linear Wq"] --> q["Q: B,T,head"]
+    x --> Wk["Linear Wk"] --> k["K: B,T,head"]
+    x --> Wv["Linear Wv"] --> v["V: B,T,head"]
+    q --> dot["q @ k^T<br/>→ B,T,T raw分数"]
+    k --> dot
+    dot --> scale["/ √head_size"]
+    scale --> mask["masked_fill tril==0<br/>→ -inf"]
+    mask --> sm["softmax(dim=-1)<br/>→ wei B,T,T"]
+    sm --> agg["wei @ v<br/>→ B,T,head"]
+    v --> agg
+  end
+  classDef danger fill:#fee2e2,stroke:#dc2626;
+  class mask,scale danger;
+</pre>
+<p><strong>位置</strong>：nanoGPT <code>model.py</code> <code>class Head</code>：<code>nn.Linear(n_embd, head_size, bias=False)</code> 三个（key/query/value）+ <code>register_buffer('tril', torch.tril(ones(T,T)))</code>。forward 关键顺序：<strong>raw 分数 → 缩放 → mask → softmax → 乘 V</strong>。</p>
+<aside class="note"><strong>最致命的误解</strong>：Q/K/V 是三种不同输入。错！它们是<strong>同一份输入 x 经过三个不同线性变换</strong>（Wq/Wk/Wv）投影出来的。原始 x 是"原始语义"，Q/K/V 是 x 戴上三顶不同帽子去完成三个任务（被别人查 K、去查别人 Q、贡献内容 V）。一个位置同时扮演三个角色。</aside>
+
+<h3>5.3 为什么 softmax + 为什么 mask：把未来焊死</h3>
+<p>softmax 解决两个问题：(a) 把任意实数分数变成概率分布（非负、和为 1）—— wei 才能当加权系数；(b) 可微 + 放大最大者（winner-takes-most），让模型敢下决心。mask 解决：autoregressive 语言模型里，位置 t 绝对不许看 t+1..T（否则训练时作弊）。做法：把 tril（下三角=1）作为掩码，把上三角对应位置在 softmax 之前填 −inf，softmax 后变 <code>exp(−inf)=0</code>，权重为 0，贡献被掐死。</p>
+<aside class="note"><strong>三个高频坑</strong>：(1) mask 必须在 softmax 之前用 −inf 填，不是 softmax 之后乘 0——因为 softmax 之后置 0 不会重新归一化，剩余权重和≠1，信息仍泄漏。(2) 最容易写反 tril 方向——<code>torch.tril(ones(T,T))</code> 保留下三角（含对角线）= 位置 t 能看 0..t（含自己）。(3) dim=−1 还是 dim=−2——softmax 在最后一维（key 维）做，让"每个 query 对所有 key 的权重和为 1"。</aside>
+<blockquote class="verify">把 Head 里的 mask 那行注释掉，重训：训练 loss 可能照常降，但生成时会"看到未来"（采样质量虚高），eval 时模型学到"作弊模式"。再把 scale 因子 √d_k 去掉：单层时 softmax 会饱和（一个 wei≈1，其他≈0），梯度消失，深了训不动。</blockquote>
+
+<h3>5.4 为什么除以 √d_k：和 makemore tanh 饱和同源</h3>
+<p>Q·K 的每个分量是 d_k 个乘积之和。若 Q,K 分量 iid、均值 0 方差 1，则点积方差 = d_k（线性增长）。d_k=64 时点积标准差≈8，raw 分数动辄 ±8，进 exp 后变成 e^8≈2980 vs e^(−8)≈0，softmax 几乎 one-hot（梯度≈0）。除 √d_k=8 把方差拉回 1，让 softmax 工作在线性区，梯度健康。</p>
+<blockquote class="why">新手常把它当"魔法常数"记。其实它和 part3 里"初始化时把 W 乘 1/√fan_in"是<strong>同一个原理</strong>：fan_in 越大、累加项越多、方差越大、必须缩放。把这两处连起来，神经网络初始化/归一化的整套逻辑就贯通了。本质就是"控制激活统计，防止 softmax/tanh 进饱和区"。</blockquote>
+
+<h3>5.5 Multi-Head Attention：为什么不一个 head 吃完</h3>
+<p>单 head 的 wei 是 (T,T)，只能学到"一种匹配模式"。语言里同时存在多种关系：语法主谓、指代共指、长距离依赖。Multi-head = 把 n_embd 砍成 num_head 份，每份独立做 attention（学不同关系），最后 concat 回 (B,T,n_embd) 再过一个 Linear 融合。参数量 ≈ 单大 head（因为 head_size 变小），但表达力强得多。</p>
+<p><strong>位置</strong>：nanoGPT <code>class MultiHeadAttention</code>：<code>self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])</code> + <code>self.proj = nn.Linear(n_embd, n_embd)</code>。forward：<code>out = torch.cat([h(x) for h in self.heads], dim=-1); out = self.proj(out)</code>。</p>
+<aside class="note">两个坑：(1) <strong>忘记 cat 之后加 proj 层</strong>。没 proj 的话多 head 输出只是"拼起来的多块独立信息"，没有"跨 head 综合"。(2) <strong>n_embd 必须被 num_heads 整除</strong>，否则 cat 维度对不上后面层。每个 head 维度小，反而逼它学"专精"——组合起来比一个臃肿的全才更聪明。</aside>
+
+<h3>5.6 位置编码：attention 自己不知道"顺序"</h3>
+<p>attention 对输入是"集合"操作——Q·K 只看内容相似度，不看位置。把 [我,爱,你] 和 [你,爱,我] 在 attention 眼里如果不加位置信息是几乎等价的。补丁：给每个位置一个独立"位置向量"加到 token embedding 上。Karpathy 版用<strong>学习式</strong>：<code>wpe = nn.Embedding(block_size, n_embd)</code>。</p>
+<p><strong>位置</strong>：nanoGPT <code>class GPT.__init__</code>：<code>self.wte = nn.Embedding(vocab_size, n_embd)</code> + <code>self.wpe = nn.Embedding(block_size, n_embd)</code>。forward：<code>tok_emb = self.wte(idx); pos_emb = self.wpe(torch.arange(T)); x = tok_emb + pos_emb</code>。两个 embedding 形状都是 (T, n_embd)，相加就是把"这个词是什么"和"这个词在第几位"融合。</p>
+<aside class="note">block_size 限制：wpe 只预定义了 block_size 个位置，超过无法外推（学习式的硬伤）。这也是为什么后面 nanoGPT 要讨论 ALiBi/RoPE 等相对位置编码。读者先把"为什么需要位置编码"焊死，再去看那些进阶方案。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 从零搭 GPT（decoder-only transformer）</h2>
+
+<p class="lede">把 §5 的零件像乐高一样叠成一个完整 GPT，跑出莎士比亚风格文本。</p>
+
+<h3>6.1 FeedForward：attention 之后必须有的"逐位置消化"层</h3>
+<p>attention 输出是"加权聚合的他人信息"，但每个位置拿到这些信息后需要"自己消化、推理"。FeedForward：<code>x → Linear(n_embd, 4·n_embd) → ReLU/GELU → Linear(4·n_embd, n_embd)</code>。中间扩展 4 倍（瓶颈→宽→瓶颈），让模型在高维空间做非线性变换再压回。</p>
+<p><strong>位置</strong>：nanoGPT <code>class FeedForward</code>：<code>nn.Sequential(nn.Linear(n_embd, 4·n_embd), nn.ReLU(), nn.Linear(4·n_embd, n_embd))</code>。在 Block 里 <code>self.ffwd = FeedForward(n_embd)</code>。</p>
+<blockquote class="why">误以为 FFN 可有可无、attention 才是主角，是致命误解。实验证明去掉 FFN 后模型能力断崖式下降。attention 负责"<strong>信息路由</strong>"（谁和谁通信），FFN 负责"<strong>信息变换</strong>"（把路由来的信息加工成新表示），缺一不可。原论文标题"Attention is All You Need"其实有点误导，FFN 和 residual 同样关键。</blockquote>
+
+<h3>6.2 Residual Connection：让深网络能训的"高速公路"</h3>
+<p>标准前向 <code>y = F(x)</code>。残差 <code>y = x + F(x)</code>。反向时 <code>dy/dx = I + dF/dx</code>，恒等项 I 保证梯度可以"无损"回流到浅层，不会因连乘消失。堆叠 N 层残差，梯度从末层到首层有 N 条"直通"路径。</p>
+<p><strong>位置</strong>：nanoGPT <code>class Block.forward</code>：<code>x = x + self.sa(self.ln_1(x)); x = x + self.ffwd(self.ln_2(x))</code>。两处 <code>+ x</code> 就是残差。</p>
+<aside class="note">和 makemore_part3 讲的"深网络难训"是<strong>直接对症下药</strong>。盖楼不搭脚手架，10 层就塌（梯度消失/爆炸）。残差是"脚手架+电梯"：每层楼（F）盖在原有楼（x）旁边，电梯（+x）保证你随时能从顶楼直达底楼。Pre-LN（<code>x + Sublayer(LayerNorm(x))</code>）比 Post-LN（<code>LayerNorm(x + Sublayer(x))</code>）更稳，是现代实现的共识。</aside>
+
+<h3>6.3 LayerNorm：把每个样本的特征归一（vs BatchNorm）</h3>
+<p>对单个样本单个位置的特征向量 x∈R^n_embd：减均值、除标准差、再仿射变换 <code>γ·(x−μ)/σ + β</code>。在每个 (B,T) 位置独立地对 n_embd 维做归一。</p>
+<table>
+<thead><tr><th></th><th>BatchNorm</th><th>LayerNorm</th></tr></thead>
+<tbody>
+<tr><td>归一维度</td><td>batch 维（dim=0）</td><td>特征维（dim=−1）</td></tr>
+<tr><td>依赖 batch 统计</td><td>是（训练/推理行为不同）</td><td>否（每样本独立）</td></tr>
+<tr><td>推理 batch=1</td><td>失效（依赖 running buffer）</td><td>正常工作</td></tr>
+<tr><td>序列长度变化</td><td>统计不稳</td><td>稳定</td></tr>
+<tr><td>适用场景</td><td>CNN（makemore MLP）</td><td>Transformer/RNN（GPT）</td></tr>
+</tbody>
+</table>
+<blockquote class="why">Transformer 用 LN 不用 BN 的三条因果：(1) 序列变长 BN 统计不稳；(2) 推理 batch=1 时 BN 退化；(3) attention 输出对尺度敏感，需逐样本归一。RMSNorm（nanoGPT/Llama 用）是 LN 的简化（不减均值、只除 RMS），稍快效果相当，是进阶阅读。</blockquote>
+
+<h3>6.4 Block 堆叠 + 完整 GPT 拼装</h3>
+<p>数据流：<code>idx(B,T) → tok_emb+wpe → [Block×N] → ln_f → lm_head(Linear(n_embd, vocab)) → logits(B,T,vocab)</code>。Block = <code>[LN→MHA→+] → [LN→FFN→+]</code>。loss = <code>F.cross_entropy(logits.view(B·T, vocab), idx.view(B·T))</code>，标签是"右移一位"（数据加载：<code>x = idx[:,:-1], y = idx[:,1:]</code>）。decoder-only = 只有 mask 的 self-attention，没有 cross-attention。</p>
+<pre class="mermaid">
+flowchart LR
+  idx["idx (B,T) int"] --> wte["wte token-emb"]
+  pos["arange(T)"] --> wpe["wpe pos-emb"]
+  wte --> plus(("+"))
+  wpe --> plus
+  plus --> x1["x: B,T,n_embd"]
+  subgraph Block["Block × n_layer"]
+    x1 --> ln1["LayerNorm"] --> mha["MultiHeadAttn + mask"] --> add1(("+ x"))
+    add1 --> x2["x2"]
+    x2 --> ln2["LayerNorm"] --> ffn["FeedForward 4x+ReLU"] --> add2(("+ x"))
+    add2 --> x3["x3"]
+  end
+  x3 --> lnf["ln_f LayerNorm"] --> head["lm_head Linear → vocab"]
+  head --> logits["logits (B,T,vocab)"]
+  logits --> ce["cross_entropy vs y_shifted"] --> loss["loss"]
+</pre>
+<p><strong>位置</strong>：nanoGPT <code>class GPT.__init__</code>：<code>self.blocks = nn.Sequential(*[Block(n_embd, n_head) for _ in range(n_layer)])</code>；<code>self.ln_f = nn.LayerNorm(n_embd)</code>；<code>self.lm_head = nn.Linear(n_embd, vocab_size)</code>。</p>
+<aside class="note"><strong>decoder-only 不是阉割版</strong>。对纯语言建模（生成）任务，decoder-only 是最优形态（GPT-2/3/4 都是）。encoder（BERT）适合理解任务，encoder-decoder（T5）适合 seq2seq。三者是<strong>任务驱动的不同选择</strong>，不是性能高低。</aside>
+
+<h3>6.5 训练循环：让这一切真的跑起来</h3>
+<p>优化器用 AdamW（Adam + weight decay）。学习率 3e-4（"magic number"，对小型 transformer 几乎万能）。每个 step：<code>xb,yb = get_batch('train') → logits,loss = m(xb,yb) → optimizer.zero_grad() → loss.backward() → optimizer.step()</code>。</p>
+<blockquote class="verify">跑完整训练（n_layer=6, n_head=6, n_embd=384，10k 步），loss 应降到 ~1.5，生成出的莎士比亚风格文本可读。把 n_layer 从 6 调到 1，loss 降到 ~2.x 就停滞；调到 12（参数翻倍），loss 更低但更慢——手感到"深度换能力"的曲线。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ GPT-2 + Tokenizer + 微调（真能训出模型）</h2>
+
+<p class="lede">这一节是"落地段"：从研究 demo 变成可加载、可复现、可定制的真实模型。所有 code_map 指向外部仓库（nanoGPT / minBPE / build-nanogpt）。</p>
+
+<h3>7.1 GPT vs GPT-2 工程化差异</h3>
+<p>GPT-2 工程化核心 = (1) 把每层参数命名固化成稳定 key（如 <code>'transformer.h.0.attn.c_attn.weight'</code>）；(2) 给出 config（n_layer/n_head/n_embd/vocab_size）描述形状；(3) 用 OrderedDict 保存 state_dict。数学上没新东西，关键是"模型拓扑的序列化契约"。</p>
+<p><strong>位置</strong>：外部仓 nanoGPT/model.py 的 GPTConfig + GPT；nanoGPT/gpt2.py 把 OpenAI 原版 tf checkpoint 转成 PyTorch state_dict。</p>
+<aside class="note">最坑的工程细节：OpenAI ckpt 用 TensorFlow 的 Conv1D（weight shape <code>[n_in, 3·n_embd]</code>），PyTorch <code>nn.Linear</code> 存 <code>[out, in] = [3n, n]</code> 布局相反，必须 transpose。c_attn 一个矩阵 <code>[n, 3n]</code> 也要拆成 q/k/v 三份并 transpose，否则 attention 算的是错的相似度——shape 对得上不代表语义对。</aside>
+
+<h3>7.2 BPE tokenizer：字符串 ↔ token 整数的翻译器</h3>
+<p>语言模型只懂整数索引，不认字。BPE 因果链：(1) 初始词表 = 256 字节（永不 OOV）；(2) 反复找语料里出现最频繁的相邻 token 对，合并成新 token 加进词表；(3) 合并 N 次后词表 = 256 + N（GPT-2 是 256+50000+1 特殊符 = 50257）。每合并一次记一条 merge rule（按顺序优先匹配）。</p>
+<pre class="mermaid">
+flowchart LR
+  subgraph 训练["独立训练"]
+    TXT["原始 UTF-8 文本"] --> BPE["BPE 合并训练"]
+    BPE --> VOCAB["词表 50257 + merges 规则"]
+  end
+  subgraph 推理["模型推理"]
+    IN["字符串输入"] --> ENC["tokenizer.encode"]
+    VOCAB -.规则.-> ENC
+    ENC --> IDS["token id 序列"]
+    IDS --> GPT["GPT-2 forward"]
+    GPT --> LOGITS["每步 logits"]
+    LOGITS --> SAM["temperature/top-k 采样"]
+    SAM --> NEXT["下一 token id"]
+    NEXT --> DEC["tokenizer.decode"]
+    DEC --> OUT["字符串输出"]
+  end
+</pre>
+<p><strong>位置</strong>：外部仓 minBPE（github.com/karpathy/minbpe）：<code>minbpe/basic.py</code> 的 <code>train</code> 函数（while + 统计 pair + merge）；<code>minbpe/regex.py</code> 是 GPT-2/GPT-4 用的版本（先按正则切分文本再 BPE，防止跨标点/空格合并）。</p>
+<aside class="note">三个核心卡点：(1) <strong>为什么词表初始化用 256 字节而不是 Unicode 码点</strong>——字节永远 ≤256 种，不会 OOV；Unicode 码点 14 万种放不下。(2) <strong>merge 规则的"顺序优先级"</strong>——encode 时必须按训练时的合并顺序贪心匹配。(3) <strong>为什么模型不会拼写/不会数字母</strong>——根因就是 BPE 把词切成不可见子词，模型根本看不到单字符。</aside>
+
+<h3>7.3 自回归生成：为什么是"采样"不是"argmax"</h3>
+<p>如果总取 argmax（最大那个），就是确定性解码，会陷入循环（"I am I am I am"）。所以按 logits→softmax→概率→按概率抽样。三个旋钮：(1) <strong>temperature</strong> T：<code>logits/T</code> 后再 softmax，T&lt;1 锐化、T&gt;1 平滑，T=0 退化为 argmax。(2) <strong>top-k</strong>：只在概率最高 k 个里采样。(3) <strong>top-p</strong>（nucleus）：取累计概率刚好超过 p 的最小 token 集合。</p>
+<p><strong>位置</strong>：nanoGPT/sample.py 和 build-nanogpt 的 generate：<code>logits = logits[:,-1,:] / temperature; if top_k: topk 过滤; probs = softmax(logits); idx_next = multinomial(probs, 1); idx = cat(idx, idx_next)</code>。</p>
+<blockquote class="verify">用同一 prompt，temperature=0.0 跑 5 次看输出完全一样（等价 argmax）；temperature=1.0 跑 5 次看每次不同；0.7 + top_k=40 是 GPT-2 经典组合。把 top_k 设 1 退化为贪心，观察复读循环。</blockquote>
+
+<h3>7.4 加载预训练权重：strict load 与 key 映射的脏活</h3>
+<p>流程：① 实例化 model（随机权重）；② <code>model.state_dict()</code> 拿到自己的 key→tensor；③ ckpt 也是 key→tensor；④ 逐 key 比对 name 和 shape；⑤ 对不上的报错（strict=True）或忽略（strict=False）。GPT-2 特殊点：OpenAI 把 qkv 合并成一个 c_attn <code>[n_embd, 3·n_embd]</code>，必须 reshape+transpose 转成 nanoGPT 的三个 q/k/v_proj。</p>
+<aside class="note"><strong>三个误解要破除</strong>：(1) <code>load_state_dict(strict=True)</code> 通过 ≠ 万事大吉——strict 只保证 name+shape 对得上，不保证语义（把 q_proj 权重塞给 k_proj shape 也对，但模型错了，loss 会爆）。(2) c_attn 不能直接 load，必须拆 q/k/v + transpose。(3) LayerNorm 的 γ/β 必须加载，漏掉会导致前几层激活分布崩。</aside>
+
+<h3>7.5 微调（finetune）：在冻结架构上用小学习率继续训</h3>
+<p>流程：加载预训练 ckpt → 换/加任务头 → 用你的小数据集 + 小 lr（预训练的 1/10~1/100）继续 forward+backward+step。两个变体：(1) <strong>全参微调</strong>：所有参数更新，风险是灾难性遗忘；(2) <strong>LoRA 等 PEFT</strong>：冻结原权重，注入低秩 A·B 矩阵只训它们，参数量降到 1% 以下。</p>
+<p><strong>位置</strong>：build-nanogpt（github.com/karpathy/build-nanogpt）的 <code>train_gpt2.py</code> 展示从预训练 ckpt 续训的标准循环；nanoGPT README 有 finetune 指引（改 data 路径 + 降 lr + warmup）。</p>
+<blockquote class="why">lr 必须小——大步子会把通识记忆冲乱（灾难性遗忘），就像让博士去学拧螺丝，结果把博士知识全忘了只会拧螺丝。LoRA 像"不改正文，只在页边贴便签"，便签很便宜（低秩）但够用——因为微调时权重变化本来就是低秩的（实证发现）。这是 2023 年后大模型微调的主流方案。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑨ 实战命令清单（本地跑通 micrograd → makemore → GPT）</h2>
+
+<p class="lede">这不是阅读清单，是<strong>命令级 step-by-step</strong>。读者按顺序复制执行，每步配一个"改一行验证理解"动作。</p>
+
+<h3>8.1 第 0 步：环境与仓库</h3>
+<pre><code># 主仓库（只读，含 micrograd + makemore 1-5）
+cd /home/cheche/Workspaces/Learning/nn-zero-to-hero
+ls lectures/   # 应看到 micrograd/ makemore/ 两个目录
+
+# 外部仓（GPT/Tokenizer/finetuning，clone 到任意目录）
+cd /home/cheche/Workspaces/Learning
+git clone https://github.com/karpathy/nanoGPT
+git clone https://github.com/karpathy/minbpe
+git clone https://github.com/karpathy/build-nanogpt
+
+# Python 环境（建议 3.10+，PyTorch 2.x）
+pip install torch numpy matplotlib graphviz jupyterlab</code></pre>
+
+<h3>8.2 第 1 步：micrograd（~30 分钟，焊死链式法则）</h3>
+<pre><code>cd /home/cheche/Workspaces/Learning/nn-zero-to-hero/lectures/micrograd
+jupyter lab micrograd_lecture_first_half_roughly.ipynb
+# 跑到 cell-11 的 lol()，对照 b.grad=-4 vs lol() 的 -3.9999 完全一致
+# 改一行验证：cell-4 的 h 从 1e-6 → 1e-20，看结果炸成 0/nan
+# 改一行验证：cell-31 后 print(a.grad)，应为 2.0；把 += 改 = 重跑，变 1.0
+
+jupyter lab micrograd_lecture_second_half_roughly.ipynb
+# 跑到 cell-17 训练循环，loss 从 0.002 降到 0.00179
+# 改一行验证：lr=0.1 → 1.0，loss 震荡；→ 0.001，loss 不动
+# 改一行验证：注释 zero_grad 两行，loss 飞天</code></pre>
+
+<h3>8.3 第 2 步：makemore bigram + MLP（~1 小时，字符级语言模型）</h3>
+<pre><code>cd /home/cheche/Workspaces/Learning/nn-zero-to-hero/lectures/makemore
+jupyter lab makemore_part1_bigrams.ipynb
+# 跑到 cell-44 训练循环，对比 W ≈ log(N+1)
+# 改一行验证：cell-39 后对比 (W.exp()/W.exp().sum(1)) 和 P，几乎一致
+# 改一行验证：cell-26 改 words=['andrejq']，未平滑 loss=inf
+
+jupyter lab makemore_part2_mlp.ipynb
+# 跑到 cell-31 可视化 C[:,0],C[:,1]，看元音/辅音自发聚类
+# 改一行验证：cell-4 block_size=3→1，dev loss 退化到 bigram 水平
+# 改一行验证：cell-22 容量从 200→2000 + C=10→50，看 train loss 大降但 dev 不动（overfit）</code></pre>
+
+<h3>8.4 第 3 步：训练诊断 + backprop ninja（~1 天，方法论）</h3>
+<pre><code>jupyter lab makemore_part3_bn.ipynb
+# 跑到 cell-15 saturated% 仪表盘（健康版 ~2%）
+# 改一行验证：Linear weight *= 1.0 → *= 3.0，saturated% 飙到 50%+
+# 改一行验证：注释所有 BatchNorm1d，grad std 数量级衰减（梯度消失）
+
+jupyter lab makemore_part4_backprop.ipynb
+# cell-11 Exercise 1：26 个变量逐行手写反向，cmp 全部 exact:True
+# 最难：dcounts 两条路径累加、BatchNorm dhprebn 补 1/n·dbnmeani、dC scatter-add
+# 改一行验证：cell-13 fused softmax+CE 与 cell-11 逐行版 maxdiff &lt; 1e-8
+
+jupyter lab makemore_part5_cnn1.ipynb
+# 看 FlattenConsecutive 树状聚合 + 'convolution is a for loop' 演示
+# 改一行验证：cell-9 注释掉 hierarchical，启用 flat FlattenConsecutive(8)，看 val 变差</code></pre>
+
+<h3>8.5 第 4 步：nanoGPT（~半天，从零搭 GPT）</h3>
+<pre><code>cd /home/cheche/Workspaces/Learning/nanoGPT
+# 配合 YouTube Lecture 7 (youtube kCc8FmEb1nY) 读 model.py
+# 重点：CausalSelfAttention 的 √d_k 和 mask 两行；Block 的 pre-LN 残差结构
+
+# 跑莎士比亚数据集（小 GPT）
+python data/shakespeare_char/prepare.py
+python train.py config/train_shakespeare_char.py --device=cpu --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embd=128 --max_iters=2000 --lr=1e-3
+
+# 采样验证
+python sample.py --out_dir=out-shakespeare-char
+
+# 改一行验证：注释 CausalSelfAttention 里的 * (1.0/math.sqrt(head_size))，
+#   训练 loss 卡在高位（softmax 饱和+梯度消失）
+# 改一行验证：注释 mask 那行，生成时模型"看到未来"，eval 质量虚高
+# 改一行验证：n_layer=4→1，loss 降到 ~2.x 停滞；→ 8，loss 更低但更慢</code></pre>
+
+<h3>8.6 第 5 步：minBPE + GPT-2 加载（~半天，工程化）</h3>
+<pre><code>cd /home/cheche/Workspaces/Learning/minbpe
+# 配合 YouTube Lecture 8 (youtube zduSFxRajkE)
+python -c "from minbpe.basic import Basic; t=Basic(); t.train(open('some_text.txt').read(), 512); print(t.merges[:20])"
+# 改一行验证：vocab_size 从 256 → 4000，同一段文本的 token 数显著变少（压缩率）
+
+cd /home/cheche/Workspaces/Learning/nanoGPT
+# 下载 GPT-2 124M ckpt
+python train_gpt2.py download --write-ckpt --model 124M
+# 采样验证（应输出连贯英文）
+python sample.py --start "Hello, I'm a language model,"
+# 改一行验证：故意删 gpt2.py 里 c_attn 的 reshape 步骤，sample 输出乱码（语义必需）</code></pre>
+
+<h3>8.7 第 6 步：build-nanogpt + 微调（~1 天，落地）</h3>
+<pre><code>cd /home/cheche/Workspaces/Learning/build-nanogpt
+# 读 train_gpt2.py 的 lr+warmup+数据加载
+# 跑从 ckpt 续训的标准循环（小数据集 + lr=3e-5 + warmup）
+# 改一行验证：lr=3e-5 → 3e-3（大 100 倍），loss 反而震荡上升（权重被打飞）
+
+# 进阶衔接：本地兄弟目录 nanochat（教材 H 的范畴）
+# cd /home/cheche/Workspaces/Learning/nanochat  # Karpathy 后续项目</code></pre>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">⑩ 学习路径（按 cell 顺序读）</h2>
+
+<h3>10.1 micrograd（建议 1 天）</h3>
+<ol>
+  <li><code>cell-1~cell-6</code> [热身]：有限差分手动求导，建立"导数=抖一下的响应比"直觉。重点 cell-4 的 h=1e-6 选择。</li>
+  <li><code>cell-7</code> [核心]：Value 类初版。先别看 backward，重点读 <code>__add__/__mul__/__tanh</code> 里 _backward 闭包怎么写——每行都要会说"为什么是 self.data 而不是 other.data"。</li>
+  <li><code>cell-8</code> [可视化]：draw_dot/trace，看一眼就好。</li>
+  <li><code>cell-9~cell-10</code> [搭一个神经元图]：draw_dot(o) 看图长什么样。</li>
+  <li><code>cell-11</code> [★ 镇课之宝]：lol() 函数——验证反向传播的金标准。把 h 改小、改大、把抖动对象改成 a/c/f，全部跑一遍。</li>
+  <li><code>cell-13~cell-16</code> [手动反向]：cell-15 用 backward() 自动反向，cell-16 打印 topo 顺序。</li>
+  <li><code>cell-17~cell-29</code> [手算 local gradient]：跟着 Karpathy 手算每一步。cell-29 打印 <code>1−o.data**2=0.5</code> 验证 tanh local gradient——这是"吸烟刻肺"的关键，别跳。</li>
+  <li><code>cell-31</code> [★ 加法累加验证]：a+a 的 case，a.grad=2.0 而不是 1.0。把 cell-7 的 += 改 = 重跑，亲手感受。</li>
+  <li><code>second_half cell-7</code> [完整 Value]：补全 pow/exp/div/sub/neg/relu。</li>
+  <li><code>second_half cell-9 vs cell-11</code> [★ op 等价性]：内置 tanh vs exp+div 手搓，grad 完全一致。</li>
+  <li><code>second_half cell-13</code> [PyTorch 交叉验证]：四组数字必须和 micrograd 一致。</li>
+  <li><code>second_half cell-14~cell-17</code> [从神经元到训练循环]：完整 forward→zero_grad→backward→update 闭环。</li>
+</ol>
+
+<h3>10.2 makemore（建议 2 天）</h3>
+<ol>
+  <li>part1 cell-0~6：读数据，建 bigram 计数字典。</li>
+  <li>part1 cell-8~13：N 张量填表 + 行归一化。</li>
+  <li>part1 cell-24：multinomial 采样，看生成质量多差（mor./axx.）。</li>
+  <li>part1 cell-25~26：四步等价链 max likelihood → max log → min NLL → min NLL/n。</li>
+  <li>part1 cell-27~39 [★ 最关键 aha]：one_hot@W 怎么等价于查 N 的行。</li>
+  <li>part1 末尾 gradient descent（loss 加 L2 正则）：看正则怎么等价 N+1 平滑。</li>
+  <li>part2 cell-4 (block_size=3 滑窗) → cell-7~8 (C/emb 查表) → cell-9~19 (W1/tanh/W2/手写 cross_entropy)。</li>
+  <li>part2 cell-27 训练循环 + minibatch + lr 分段。</li>
+  <li>part2 cell-29~30：第一次 train vs dev 对比。</li>
+  <li>part2 cell-31：embedding 可视化，MLP 强于 bigram 的视觉铁证。</li>
+  <li>part4 cell-10 forward chunkated → cell-11 Exercise 1 手动反向 → cell-13 fused softmax+CE → cell-20 fused BN（最难一关）。</li>
+</ol>
+
+<h3>10.3 训练诊断 + WaveNet（建议 1 天）</h3>
+<ol>
+  <li>part3 cell-6 看初始化全貌（Kaiming W1、缩小 W2、BN 参数）。</li>
+  <li>part3 cell-7：第 0 步 loss=3.3239≈ln(27)，理解初始化自信度。</li>
+  <li>part3 cell-13 Linear/BatchNorm1d/Tanh 三个类——诊断脚手架。</li>
+  <li>part3 cell-14 训练循环 + break 1000 步（诊断专用）。</li>
+  <li>part3 cell-15 saturated% → cell-16 grad 直方图 → cell-17 ratio → cell-18 ud 曲线。</li>
+  <li>part3 cell-23/24：两个 mini-experiment 验证 Linear 方差爆炸 + BN 修复。</li>
+  <li>part4 cell-7 cmp 工具 → cell-10 chunkated forward → cell-11 Exercise 1。</li>
+  <li>part5 cell-7 6 个模块类（支持 3D 的 BN、FlattenConsecutive）→ cell-9 hierarchical → cell-14 performance log。</li>
+</ol>
+
+<h3>10.4 GPT（建议 2 天，需外部仓）</h3>
+<ol>
+  <li>【地基】先把 makemore_part1 的 BigramLanguageModel 跑通，确认 loss≈4.5。</li>
+  <li>【canonical gpt.py 第 1 段】BigramLanguageModel 基线。</li>
+  <li>【第 2 段】引入 tok_emb + wpe，加 Position Encoding（概念 5）。</li>
+  <li>【第 3 段】class Head：Wq/Wk/Wv + q@k^T + scale + mask + softmax + @v（概念 1/2/3）。<strong>反复读，亲手改 mask 和 scale</strong>。</li>
+  <li>【第 4 段】class MultiHeadAttention：ModuleList + cat + proj（概念 4）。</li>
+  <li>【第 5 段】class FeedForward：Linear→ReLU→Linear 4×（概念 6）。</li>
+  <li>【第 6 段】class Block：<code>x = x + sa(ln_1(x)); x = x + ffwd(ln_2(x))</code>（概念 7/8 残差+LN）。</li>
+  <li>【第 7 段】class GPT：tok_emb+wpe → blocks×N → ln_f → lm_head（概念 9）。</li>
+  <li>【第 8 段】训练循环：AdamW lr=3e-4，10k 步，loss 降到 ~1.5（概念 10）。</li>
+  <li>【回到仓库】重读 makemore_part3 tanh 饱和——它和 attention 的 √d_k、LayerNorm 是"控制激活统计"同一思想。重读 makemore_part4 手撕 cross_entropy——它就是 GPT 末端 loss.backward() 在做的事。</li>
+  <li>【进阶衔接】读 karpathy/build-nanogpt 的 train.py，把 384 维小模型升级到 768 维 GPT-2。</li>
+</ol>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">⑪ 关键数学附录</h2>
+
+<h3>11.1 链式法则（反向传播的全部数学）</h3>
+<p>若 <code>L = g(e)</code> 且 <code>e = f(a)</code>，则 <code>dL/da = (dL/de) · (de/da)</code>。</p>
+<ul>
+  <li><code>de/da</code> = e 节点的 local gradient（只跟 f 这一步有关）</li>
+  <li><code>dL/de</code> = 上游已算好的梯度（从 L 一路乘下来）</li>
+  <li>两者相乘 = dL/da</li>
+</ul>
+<p><strong>多路径累加</strong>（多元链式法则）：当 a 通过多条路径影响 L 时，<code>dL/da = Σ_path (∂L/∂a)|_path</code>。这是 <code>+=</code> 的数学根源。</p>
+
+<h3>11.2 softmax + 数值稳定</h3>
+<p><code>softmax(x)_i = exp(x_i) / Σ_j exp(x_j)</code>。把任意实数变成概率分布（非负、和为 1）。</p>
+<p><strong>数值稳定技巧</strong>：<code>softmax(x) = softmax(x − max(x))</code>，对所有 logits 同加一个常数不变，所以减去行最大值后最大值变 0，exp 不会溢出，结果概率完全不变。这就是 makemore part4 forward 里 <code>logit_maxes = logits.max(1, keepdim=True); norm_logits = logits − logit_maxes</code> 的因果。</p>
+<p><strong>反向</strong>：<code>dsoftmax/dx</code> 的雅可比矩阵非对角元是 <code>p_i·p_j</code>，对角元是 <code>p_i·(1−p_i)</code>。但和 cross_entropy 合一后简化成 <code>dlogits = softmax(logits) − onehot(Y); /=n</code>——这是工程上的 fused 反向公式。</p>
+
+<h3>11.3 交叉熵 / NLL（最大似然 → 最小 NLL 四步等价）</h3>
+<ol>
+  <li><strong>最大化似然</strong>：max Π P(y_i|x_i)（独立事件概率乘积）</li>
+  <li>等价于 <strong>最大化 log 似然</strong>：max Σ log P(y_i|x_i)（log 单调，乘变加，不下溢）</li>
+  <li>等价于 <strong>最小化负 log 似然</strong>：min −Σ log P(y_i|x_i)（约定 loss 越小越好）</li>
+  <li>等价于 <strong>最小化平均 NLL</strong>：min −(1/N) Σ log P(y_i|x_i)（独立 batch 大小）</li>
+</ol>
+<p>当输出层是 softmax 时，这个 loss 就叫<strong>交叉熵</strong>。NLL 和交叉熵数值完全一样，只是推导视角不同（MLE vs 信息论）。随机基线：<code>loss = log(vocab_size)</code>（如 ln(27)≈3.30, ln(65)≈4.17）。</p>
+
+<h3>11.4 scaled dot-product attention</h3>
+<p><code>Attention(Q,K,V) = softmax(Q·K^T / √d_k) · V</code></p>
+<ul>
+  <li>Q,K,V 由同一份 x 经 Wq/Wk/Wv 投影</li>
+  <li><code>Q·K^T</code> 算两两相似度，shape (B, T, T)</li>
+  <li>/√d_k 控制方差，防止 softmax 饱和（同 makemore tanh 饱和原理）</li>
+  <li>causal mask 在 softmax 前把上三角填 −inf</li>
+  <li>softmax 后权重 wei (B,T,T)，再乘 V 得 (B,T,head_size)</li>
+</ul>
+
+<h3>11.5 Kaiming 初始化</h3>
+<p><code>W ~ N(0, gain²/fan_in)</code>。gain=√2 for ReLU，gain=5/3 for tanh。</p>
+<p>因果：前向 <code>y = x·W</code>，<code>Var(y) = fan_in · Var(W) · Var(x)</code>。要让 <code>Var(y) = Var(x)</code>（方差守恒），需 <code>Var(W) = 1/fan_in</code>。再乘 gain² 补偿激活函数对方差的压缩（ReLU 砍一半需 ×2，tanh 压缩约 1/(5/3)² 需 ×(5/3)²）。</p>
+
+<h3>11.6 BatchNorm vs LayerNorm vs RMSNorm</h3>
+<table>
+<thead><tr><th></th><th>BatchNorm</th><th>LayerNorm</th><th>RMSNorm</th></tr></thead>
+<tbody>
+<tr><td>归一维度</td><td>batch（dim=0）</td><td>特征（dim=−1）</td><td>特征（dim=−1）</td></tr>
+<tr><td>是否减均值</td><td>是</td><td>是</td><td>否（只除 RMS）</td></tr>
+<tr><td>训练/推理行为</td><td>不同（running buffer）</td><td>相同</td><td>相同</td></tr>
+<tr><td>典型场景</td><td>CNN</td><td>Transformer</td><td>Llama/现代 LLM</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-11">⑫ 延伸阅读</h2>
+<ul>
+  <li><strong>Karpathy YouTube 系列</strong>："Neural Networks: Zero to Hero"——本教材的全部灵感来源。Lecture 1-2 micrograd，3-5 makemore，6 backprop ninja，7 GPT，8 tokenizer。</li>
+  <li><strong>nanoGPT</strong>（github.com/karpathy/nanoGPT）：教学版 GPT-2 复现，~300 行 model.py 是 GPT 的 canonical 实现。</li>
+  <li><strong>minBPE</strong>（github.com/karpathy/minbpe）：~100 行实现 BPE/regex/minimal tokenization，是 Tokenizer 教学的金标准。</li>
+  <li><strong>build-nanogpt</strong>（github.com/karpathy/build-nanogpt）：从零复现 GPT-2 124M 的完整训练脚本，是 nanoGPT 的工业升级版。</li>
+  <li><strong>"Attention is All You Need"</strong>（Vaswani et al. 2017）：原始 Transformer 论文。注意标题有误导，FFN 和 residual 同样关键。</li>
+  <li><strong>Bengio et al. 2003 "A Neural Probabilistic Language Model"</strong>：makemore part2 MLP 的直接来源，引入 embedding 概念。</li>
+  <li><strong>WaveNet</strong>（van den Oord et al. 2016）：makemore part5 的灵感，causal/dilated 卷积是 attention 的几何前奏。</li>
+  <li><strong>BatchNorm</strong>（Ioffe & Szegedy 2015）/ <strong>LayerNorm</strong>（Ba et al. 2016）/ <strong>RMSNorm</strong>（Zhang & Sennrich 2019）：归一化三件套的演进。</li>
+  <li><strong>He et al. 2015 (Kaiming)</strong>：Delving deep into rectifiers——Kaiming 初始化的原始推导。</li>
+  <li><strong>LoRA</strong>（Hu et al. 2021）：低秩适配微调，现代大模型微调主流方案。</li>
+  <li><strong>本地兄弟目录</strong>：<code>/home/cheche/Workspaces/Learning/nanochat</code>（Karpathy 后续项目，属教材 H 范畴）。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 nn-zero-to-hero 5 视角素材整理。所有 <code>code_map</code> 指向仓库内 <code>.ipynb</code> cell 或外部 canonical 仓库。读者按 §9 学习路径依次精读、按 §8 命令清单动手验证，即可从 0 走到能训出 GPT。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
