@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从 0 到 100 吃透 JoyDriver：端到端模型本质 + 训练实战</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --fg:#1b1f24; --muted:#57606a; --bg:#fafbfc; --card:#ffffff;
+    --accent:#0969da; --accent2:#cf222e; --warn:#bf8700; --ok:#1a7f37;
+    --border:#d0d7de; --code-bg:#f6f8fa; --note-bg:#fff8c5; --note-bd:#d4a72c;
+    --why-bg:#ddf4ff; --why-bd:#54aeff; --counter-bg:#fbefff; --counter-bd:#8957e5;
+    --evd-bg:#f6f8fa;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--fg); background:var(--bg); margin:0; line-height:1.7;
+    font-size:16px; max-width:1180px; margin:0 auto; padding:0 24px 120px;
+  }
+  header.hero{
+    background:linear-gradient(135deg,#0d2c54 0%,#0969da 100%);
+    color:#fff; padding:48px 36px; border-radius:14px; margin:32px 0 28px;
+    box-shadow:0 6px 24px rgba(9,105,218,.18);
+  }
+  header.hero h1{margin:0 0 8px; font-size:32px; letter-spacing:.5px;}
+  header.hero .sub{font-size:15px; opacity:.9; margin-bottom:18px;}
+  header.hero .meta{font-size:13px; opacity:.82; display:flex; gap:18px; flex-wrap:wrap;}
+  header.hero .meta b{font-weight:600;}
+  nav.toc{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:18px 24px; margin-bottom:36px;
+  }
+  nav.toc h2{margin:0 0 12px; font-size:17px; color:var(--muted); font-weight:600;}
+  nav.toc ol{margin:0; padding-left:22px; columns:2; column-gap:32px;}
+  nav.toc li{margin:4px 0; break-inside:avoid;}
+  nav.toc a{color:var(--accent); text-decoration:none; font-size:14px;}
+  nav.toc a:hover{text-decoration:underline;}
+  nav.toc .ch-num{display:inline-block; width:26px; color:var(--muted); font-variant-numeric:tabular-nums;}
+  section.chapter{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:28px 32px; margin-bottom:28px;
+  }
+  section.chapter > h2{
+    border-bottom:3px solid var(--accent); padding-bottom:10px; margin-top:0;
+    font-size:25px; color:#0d2c54;
+  }
+  section.chapter > h2 .ch-tag{
+    display:inline-block; background:var(--accent); color:#fff; font-size:13px;
+    padding:3px 10px; border-radius:5px; margin-right:12px; vertical-align:middle;
+    font-weight:600; letter-spacing:.5px;
+  }
+  h3{font-size:19px; color:#24292f; margin-top:28px; border-left:4px solid var(--accent); padding-left:12px;}
+  h4{font-size:16px; color:#24292f; margin-bottom:6px;}
+  p{margin:10px 0;}
+  strong{color:#0d2c54;}
+  code{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    background:var(--code-bg); padding:1.5px 6px; border-radius:4px;
+    font-size:13.5px; color:#24292f; border:1px solid var(--border);
+    word-break:break-all;
+  }
+  pre{
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); font-size:13.5px; line-height:1.5;
+  }
+  pre code{background:none; border:none; padding:0;}
+  .evd{
+    background:var(--evd-bg); border-left:3px solid var(--muted);
+    padding:8px 14px; margin:10px 0; font-size:13.5px; color:#24292f;
+  }
+  .evd code{font-size:12.5px;}
+  aside.note{
+    background:var(--note-bg); border:1px solid var(--note-bd); border-left:5px solid var(--note-bd);
+    padding:12px 16px; margin:14px 0; border-radius:6px; font-size:14px;
+  }
+  aside.note::before{content:"难点注解 · "; font-weight:700; color:#7d4e00;}
+  aside.why{
+    background:var(--why-bg); border-left:5px solid var(--why-bd);
+    padding:12px 16px; margin:12px 0; border-radius:6px; font-size:14px;
+  }
+  aside.why::before{content:"为什么重要 (rationale) · "; font-weight:700; color:#0969da;}
+  aside.counter{
+    background:var(--counter-bg); border-left:5px solid var(--counter-bd);
+    padding:12px 16px; margin:12px 0; border-radius:6px; font-size:14px;
+  }
+  aside.counter::before{content:"反事实 · "; font-weight:700; color:#8957e5;}
+  .lead{
+    background:#fffbea; border:1px dashed var(--warn); padding:14px 18px;
+    border-radius:8px; font-size:15px; margin:16px 0;
+  }
+  table{border-collapse:collapse; width:100%; margin:14px 0; font-size:14px;}
+  th,td{border:1px solid var(--border); padding:8px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--code-bg); font-weight:600;}
+  tr:nth-child(even) td{background:#fbfcfd;}
+  .cmd{
+    background:#0d1117; color:#e6edf3; padding:12px 16px; border-radius:8px;
+    font-family:"SFMono-Regular",Consolas,monospace; font-size:13px; overflow-x:auto;
+    border:1px solid #30363d; white-space:pre;
+  }
+  .cmd .cmt{color:#8b949e;}
+  .cmd .var{color:#79c0ff;}
+  .cmd .ok{color:#7ee787;}
+  .mermaid{
+    background:var(--code-bg); border:1px solid var(--border); border-radius:8px;
+    padding:16px; margin:16px 0; text-align:center;
+  }
+  .fig-cap{
+    font-size:13px; color:var(--muted); text-align:center; margin-top:4px; font-style:italic;
+  }
+  ul.compact li, ol.compact li{margin:4px 0;}
+  .pill{
+    display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px;
+    background:var(--code-bg); border:1px solid var(--border); color:var(--muted); margin-right:4px;
+  }
+  footer.ext{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px 26px; margin-top:36px;}
+  footer.ext h2{margin-top:0; font-size:20px;}
+  footer.ext ul{font-size:14px;}
+  .kpi-row{display:flex; gap:14px; flex-wrap:wrap; margin:14px 0;}
+  .kpi{flex:1; min-width:160px; background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px;}
+  .kpi .k{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;}
+  .kpi .v{font-size:20px; font-weight:700; color:#0d2c54; margin-top:4px;}
+  @media(max-width:760px){
+    nav.toc ol{columns:1;}
+    section.chapter{padding:18px 16px;}
+    header.hero{padding:28px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>从 0 到 100 吃透 JoyDriver</h1>
+  <div class="sub">端到端（End-to-End）自动驾驶模型本质 + 训练实战 — 面向「数据闭环 PM 转架构师 / 要 own 训练 + 模型」的读者</div>
+  <div class="meta">
+    <span><b>仓库：</b><code>/home/cheche/Workspaces/Learning/JoyDriver</code></span>
+    <span><b>视角：</b>5 视角（定位 / 架构 / 数据 / 评测部署 / 实战）</span>
+    <span><b>深度：</b>0 → 100，9 章</span>
+  </div>
+  <div class="kpi-row" style="margin-top:20px;">
+    <div class="kpi" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);">
+      <div class="k" style="color:#cfe2ff;">模型出口</div><div class="v" style="color:#fff;">未来 6s 轨迹</div>
+    </div>
+    <div class="kpi" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);">
+      <div class="k" style="color:#cfe2ff;">训练规模</div><div class="v" style="color:#fff;">8 卡 DDP / 1M iter</div>
+    </div>
+    <div class="kpi" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);">
+      <div class="k" style="color:#cfe2ff;">部署链路</div><div class="v" style="color:#fff;">ONNX → TensorRT</div>
+    </div>
+    <div class="kpi" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);">
+      <div class="k" style="color:#cfe2ff;">血缘</div><div class="v" style="color:#fff;">SIMPL → JoyDriver</div>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>目录 · 0 → 100 学习路径</h2>
+  <ol>
+    <li><span class="ch-num">①</span><a href="#ch1">项目定位与本质：JoyDriver 在 E2E AD 里的位置</a></li>
+    <li><span class="ch-num">②</span><a href="#ch2">端到端模型本质：为什么 E2E，IL/RL，三段合一</a></li>
+    <li><span class="ch-num">③</span><a href="#ch3">模型架构：从像素到轨迹的"端"到"端"</a></li>
+    <li><span class="ch-num">④</span><a href="#ch4">训练实战：Determined / DDP 8 卡 / RDMA-NCCL</a></li>
+    <li><span class="ch-num">⑤</span><a href="#ch5">数据管线与挖掘闭环：manifest / 采样 / 挖掘回链</a></li>
+    <li><span class="ch-num">⑥</span><a href="#ch6">评测 + ONNX 导出 + onboard 部署</a></li>
+    <li><span class="ch-num">⑦</span><a href="#ch7">实战路径：data → train → eval → export → onboard 命令级</a></li>
+    <li><span class="ch-num">⑧</span><a href="#ch8">学习路径：读文件顺序（模型先行）</a></li>
+    <li><span class="ch-num">⑨</span><a href="#ch9">关键设计 rationale + 反事实合集</a></li>
+  </ol>
+</nav>
+
+<section class="chapter" id="ch1">
+<h2><span class="ch-tag">CH 01</span>项目定位与本质：JoyDriver 在 E2E AD 里的位置</h2>
+
+<div class="lead">
+<b>一句话定位：</b>JoyDriver 是一个<b>「以轨迹预测/规划为出口」的端到端自动驾驶模型</b> —— 单次前向（single forward）把多模态历史观测（向量化的 agent/ego/map + 相机图像 + 时序记忆）<b>一次性</b>映射成 ego 与周围 agent 的未来 6s 轨迹，工程上覆盖<b>训练 → 评测 → 可视化 → ONNX 部署</b>全闭环。<br>
+它在 E2E AD 里的位置<b>不是「纯规划器」</b>，而是 <b>「感知（相机 BEV / 时序融合 StreamPETR）+ 预测（agents 多模态轨迹）+ 规划（ego 轨迹 + refline + refine head）」三段合一的统一网络</b>，最末输出可以直接喂给下游控制器。
+</div>
+
+<h3>1.1 从 pyproject name 看到的真实定位：SIMPL 的 fork 演化</h3>
+<p>读代码的第一站永远是 <code>pyproject.toml</code>。但 JoyDriver 这里藏着一个<b>血缘痕迹</b>：包名写成 <code>simpl</code>、描述写 <code>SIMPL trajectory prediction project</code>，可 entrypoint 命令却是 <code>joydriver-train / -visualize / -export</code>。</p>
+
+<div class="evd">
+<b>证据：</b><code>pyproject.toml:6-9</code> <code>name="simpl"</code>, <code>description="SIMPL trajectory prediction project"</code>；<code>pyproject.toml:26-29</code> entrypoints 是 <code>joydriver-train / visualize / export</code>。<br>
+<code>src/models/__init__.py:1</code> docstring 写 <i>"SIMPL $sub package."</i> —— 仍是 SIMPL 命名痕迹。<br>
+<code>src/cli/export.py:26-29</code> 默认路径仍叫 <code>simpl_av2_bezier_ckpt.tar</code> / <code>simpl.onnx</code>，<code>av2</code>=Argoverse2，<code>bezier</code>=SIMPL 用贝塞尔曲线参数化轨迹的遗留。
+</div>
+
+<p>这告诉我们：<b>SIMPL</b> 是工业界一个用 transformer 做 trajectory prediction 的开源项目（输出多模态轨迹 + 概率，AV2 数据集范式）。原始 SIMPL 的产物是「给定历史轨迹预测未来轨迹」；<b>JoyDriver 在其上加了相机图像编码器、时序记忆、ego 规划 head 和 ONNX 部署链路</b>，把它从「纯预测」扩展成「感知 + 预测 + 规划」一体的端到端模型。入口命令前缀改了，但包元数据没改 —— 是一个典型的「fork 演化到内部产品但元数据滞后」的痕迹。</p>
+
+<aside class="note">
+<b>给数据闭环 PM：</b>「fork 演化」是产品迭代常态。知道这条血缘让你读代码时分得清「哪些是 SIMPL 原始设计（轨迹参数化、agents 编码器、AV2 数据格式）」和「哪些是 JoyDriver 自己加的（相机分支、时序 transformer、规划 head）」。反事实：若不知道这一点，看到 <code>bezier</code>/<code>av2</code>/<code>simpl</code> 这些字样会困惑来源，也无法判断哪些结构能直接换掉（如把 AV2 数据换成自家数据）。
+</aside>
+
+<pre class="mermaid">
+flowchart LR
+  SIMPL["原始 SIMPL<br/>AV2 轨迹预测<br/>多模态 bezier"] -->|"fork 演化"| JD["JoyDriver<br/>+ 相机感知 StreamPETR<br/>+ 时序记忆<br/>+ ego 规划 head<br/>+ ONNX 部署"]
+  JD -->|"产物"| P["端到端 AD 模型<br/>感知+预测+规划合一"]
+</pre>
+
+<h3>1.2 它到底输出什么：ego + agents 的未来 6s 轨迹（核心是规划，不是检测）</h3>
+<p>数据流的终点（<code>JoyDriverV0.forward</code> 的 Stage 4 <code>_generate_predictions</code>）产出的是：<b>自车未来 60 步（60×0.1s=6s）</b>的位置 / 速度 / 加速度 / 偏航角速率 / 模态概率，加上周围 agent 同样的 6s 轨迹，再加一条 80 步的参考线（refline）和可选的 refine 后 ego 轨迹。</p>
+
+<div class="evd">
+<code>configs/joydriver_v0_cfg.py:243-249</code> <code>trajectory_conf: n_step=60, dt=0.1</code>（→6s）, <code>acc_min/max=-8/8</code>；<code>:250-253</code> <code>refline_conf n_step=80</code>。<br>
+<code>src/models/joydriver_v0.py:907-968</code> <code>_generate_predictions</code> 输出 <code>agents_traj_pred / ego_traj_pred / ego_traj_refined</code> 等；traj_head 输出 <code>acc/omega</code> 后积分（<code>:253-271</code> interpolate + 积分）。<br>
+<code>src/models/joydriver_v0.py:1020-1027</code> Stage5 <code>refine_ego_traj</code>：用 map_tokens 对 ego 初轨迹做 cross-attn 残差修正。
+</div>
+
+<p><b>关键洞察：</b>head 不是在预测检测框，而是在<b>直接回归控制层关心的运动量</b>（acc/omega），然后内部积分成 vel/pos。所以这个模型的「产品价值」是：给定当前帧的多源观测，直接吐出可执行的未来轨迹 —— 轨迹再经下游控制器转方向盘/油门。</p>
+
+<aside class="why">
+这定义了整个数据闭环要喂什么标签 —— 训练数据必须有「未来 6s 的 ego 真值轨迹」和「agent 真值轨迹」，<b>不是检测框标注</b>。模型评估用的也是 <code>brier_fde_k</code>（轨迹预测指标，见 <code>run.py:83</code>），不是 mAP。反事实：若误以为是感知模型，会去准备 3D 框标注；但实际上 <code>loss_cfg</code>（<code>cfg:295-315</code>）的全是轨迹回归 loss + 转向角约束（<code>ego_steer_limit_deg=35</code>），这跟检测完全不同。
+</aside>
+
+<aside class="note">
+<b>端到端模型本质（必读）：</b>传统 AD 把「感知(detector) → 预测(predictor) → 规划(planner)」拆成三个独立模型，每个有自己的 loss。JoyDriver 把三段<b>合进一个 transformer</b>：相机分支做 BEV 感知（但不显式出框），时序 transformer 把感知特征和 agent/ego 向量融合，最后一个 TrajectoryHead 直接出轨迹。所谓「端到端」= <b>一次反向传播同时优化感知+预测+规划</b>，避免了级联误差累积。输出 acc/omega（而非直接出 pos）的好处是：物理约束（速度/加速度上限）可以硬 clamp，避免模型预测出物理上不可能的轨迹。
+</aside>
+
+<h3>1.3 与「模块化 AD」的对比：E2E 的本质区别在哪</h3>
+<table>
+<thead><tr><th>维度</th><th>模块化 AD（感知→预测→规划 级联）</th><th>JoyDriver（E2E）</th></tr></thead>
+<tbody>
+<tr><td>中间表示</td><td>3D 框 / 轨迹 / 代价图（结构化、可解释、可人工调度）</td><td>共享的 transformer token 特征（无显式框，无手工级联）</td></tr>
+<tr><td>梯度路径</td><td>三段各训各的，梯度<b>不跨模块</b></td><td>梯度从轨迹 loss <b>一路回传到 RegNet 卷积核</b></td></tr>
+<tr><td>错误累积</td><td>检测漏一帧 → 预测错 → 规划错（级联放大）</td><td>感知为规划目标联合优化，无级联</td></tr>
+<tr><td>训练数据</td><td>每段需独立标注（3D 框 / 轨迹真值）</td><td>只要「未来轨迹真值」，感知是<b>隐式</b>学到的</td></tr>
+<tr><td>可解释性</td><td>高（每段输出可人工 review）</td><td>低（黑盒，靠可视化 + 分桶评测补救）</td></tr>
+<tr><td>迭代手段</td><td>改模块 / 改规则</td><td>改架构开关 + 改 manifest 数据配比</td></tr>
+</tbody>
+</table>
+
+<aside class="counter">
+若中间插一个不可导的排序/滤波/NMS 后处理（很多非 E2E 方案如此），梯度会在那里<b>断裂</b>，骨干就只能用「检测 surrogate loss」训练，规划误差无法改善感知质量 —— 这正是「模块化」与「端到端」的本质区别，也是读者做数据闭环时判断「哪些缺陷能靠加数据修复、哪些必须改架构」的分界线。
+</aside>
+
+<h3>1.4 三个入口命令：train / visualize / export 的分工</h3>
+<p><code>pyproject.toml</code> 定义三个 console script：</p>
+<table>
+<thead><tr><th>命令</th><th>入口</th><th>职责</th></tr></thead>
+<tbody>
+<tr><td><code>joydriver-train</code></td><td><code>train.run:main</code></td><td>训练 + 验证主循环（1500 行，<b>DDP 多卡 + AMP + GradScaler + 异常 loss skip</b>）</td></tr>
+<tr><td><code>joydriver-visualize</code></td><td><code>cli.visualize:main</code></td><td>把数据或模型预测结果画成 BEV 图（<code>viz_infer / viz_preprocess</code> 两模式，人工 review）</td></tr>
+<tr><td><code>joydriver-export</code></td><td><code>cli.export:main</code></td><td>把 ckpt 导出成 ONNX 并用 onnxruntime 验证（<b>注意：这是历史包袱</b>，见第 6 章）</td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>pyproject.toml:26-29</code> 三个 entrypoint 的完整映射；<code>src/train/run.py:72-173</code> <code>parse_arguments</code>（mode/cfg_path/workspace/use_amp/use_onnx 等），<code>:681</code> <code>train_one_epoch</code>，DDP 在 <code>:27</code> import、<code>:324</code> wrap。
+</div>
+
+<aside class="why">
+实际生产里训练走的是 <b>Determined 平台</b>（<code>det.yaml</code> + <code>scripts/run_determined.sh</code> 用 <code>torchrun</code> 起 8 卡 DDP），CLI 入口更多用于本地调试和单卡导出。<code>det.yaml:4</code> <code>slots_per_trial:8</code>，<code>:25</code> <code>shm_size</code> 约 1TB（防 dataloader bus error），<code>:49-51</code> entrypoint 走 <code>run_determined.sh</code>。
+</aside>
+
+<h3>1.5 数据闭环视图：cfg 里的 manifest 是数据迭代演化的「活化石」</h3>
+<p><code>configs/joydriver_v0_cfg.py</code> 的 <code>get_dataset_cfg</code> 里 <code>train_data</code> 是一个 pkl 列表，每行注释都在描述一个「数据版本」：<i>数据集1/2/3</i>、<i>2.5s 后不居中数据</i>、<i>变道发起数据捞回</i>、<i>3.5s 外兜数据</i>、<i>cutin 数据</i>、<i>POC 数据</i>、<i>reverse 数据</i>。这些命名暴露了典型的数据闭环工作流：</p>
+
+<pre class="mermaid">
+flowchart LR
+  F1["模型在某类场景失败<br/>(变道前 2.5s 不居中)"] --> F2["用规则从海量原始数据 recall 特定帧"]
+  F2 --> F3["drop 已收敛/会带偏的帧"]
+  F3 --> F4["拼成新 manifest"]
+  F4 --> F5["重训"]
+  F5 --> F6["分桶评测 (cross/cutin/lanechange/...)"]
+  F6 -.失败场景.-> F1
+</pre>
+
+<div class="evd">
+<code>configs/joydriver_v0_cfg.py:96-122</code> 注释序列：'数据集2-2.5s后不居中数据+变道发起数据捞回'、'cutin数据'、'far_ego_no_outside0p01' 等，每行就是一个数据版本。<br>
+<code>scripts/</code> 目录下 <code>clean_center_after25_*.py</code> / <code>recall_lanechange_initiation25.py</code> / <code>drop_outside_swing35.py</code> 三个脚本名直接对应闭环动作。<br>
+<code>configs/joydriver_v0_cfg.py:221-226</code> <code>target_point_area_radius=2.0 / stop_target_area_radius / stop_speed_threshold</code> —— 这些是定义「成功/失败帧」的阈值，闭环捞数据就靠它判定。
+</div>
+
+<aside class="note">
+<b>数据闭环 PM 视角：</b>端到端模型不是一次训完的，而是靠 manifest 迭代演化的。每一版 manifest 都是「上次模型表现差的场景被显式加回 + 表现已收敛或会带偏的场景被显式去掉」。<code>val_data</code> 列表（<code>cfg:167-198</code>）更细：按 cross/cutin/speed_range/lanechange/centering/defensive 等场景切片评估，对应你做闭环时的「分桶评测」。模型代码（<code>joydriver_v0.py</code>）是相对稳定的「容器」，数据（manifest pkl）才是驱动模型行为变化的「燃料」。这份 cfg 本质上是一份「数据闭环的工作日志」。
+</aside>
+
+</section>
+
+<section class="chapter" id="ch2">
+<h2><span class="ch-tag">CH 02</span>端到端模型本质：为什么 E2E，IL/RL，三段合一</h2>
+
+<div class="lead">
+<b>核心问题：</b>为什么要把感知/预测/规划焊成一张可导图？「端到端」的「端」到底从哪到哪？这一章把 E2E 的范式、训练范式（IL vs RL）、以及 JoyDriver 的 StreamPETR 时序融合机制讲透，为第 3 章的逐层架构打认知地基。
+</div>
+
+<h3>2.1 E2E 的「端」具体从哪到哪：forward() 五阶段总览</h3>
+<p><code>JoyDriverV0.forward()</code> 是这个模型<b>唯一的顶层入口</b>，它把一次推理切成五个有序阶段：</p>
+<table>
+<thead><tr><th>Stage</th><th>方法</th><th>职责</th></tr></thead>
+<tbody>
+<tr><td>① Encode agent/ego</td><td><code>_encode_agent_ego_features</code></td><td>把 agent/ego 的 9 步历史向量经 1D conv 压成 query embedding（<code>joydriver_v0.py:710-753</code>）</td></tr>
+<tr><td>② Temporal transformer</td><td><code>_apply_temporal_transformer</code></td><td>StreamPETR 时序融合：query 进 transformer，融合多帧图像记忆（<code>:970-1018</code>）</td></tr>
+<tr><td>③ Map + self-attn</td><td><code>_apply_map_and_self_attention</code></td><td>map token cross-attn 注入，6 层 agent self-attn 做规划推理（<code>:886-905</code>）</td></tr>
+<tr><td>④ Generate predictions</td><td><code>_generate_predictions</code></td><td>TrajectoryHead 解出 acc/omega 并积分成未来轨迹（<code>:907-968</code>）</td></tr>
+<tr><td>⑤ Refine ego traj</td><td><code>TrajectoryRefineHead</code></td><td>（可选）map token 对 ego 轨迹做残差精修（<code>:1020-1027</code>）</td></tr>
+</tbody>
+</table>
+
+<p>所谓「端到端」的第一个<b>端</b>是 batch 里的<b>原始多源输入</b>：</p>
+<ul class="compact">
+<li>环视图像 <code>img</code>（NHWC，2160×3840）</li>
+<li>BEV 栅格地图 <code>bev_map</code>（240×120 二值目标区 + 车道面）</li>
+<li>自车 / 他车历史向量 <code>ego_feature</code> / <code>agent_feature</code>（9 步 × 多特征）</li>
+<li>初速度、相机内外参、ego 位姿、时间间隔</li>
+<li>上一帧时序记忆（6 个张量：<code>memory_embedding</code> 等）</li>
+</ul>
+<p>第二个<b>端</b>是 <code>result</code> 字典里直接给出的<b>多模态未来轨迹</b>：<code>ego_traj_pred / agents_traj_pred</code>、refline、mode 概率。中间没有任何可手工调度的规则模块（无轨迹拼接器、无运动学后滤波），整条链是<b>可导的单一网络</b>。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph IN["第一个端: 原始多源输入"]
+    A1["相机 img<br/>NHWC"]
+    A2["agent/ego 向量历史<br/>9 步"]
+    A3["map 栅格<br/>240×120"]
+    A4["上一帧时序记忆<br/>6 张量"]
+  end
+  A2 --> S1["Stage1<br/>AgentEncoder<br/>1D conv"]
+  A1 --> IE["ImgEncoder<br/>RegNet+CPFPN+3D PE"]
+  IE --> S2["Stage2<br/>StreamPETRHead<br/>128 query × mem=1024"]
+  A4 --> S2
+  S1 --> S2
+  S2 --> S3["Stage3<br/>MapEncoder+cross-attn<br/>+agent self-attn"]
+  A3 --> S3
+  S3 --> S4["Stage4 TrajectoryHead<br/>acc/omega→积分→vel/pos<br/>ego+agents 各 60 步"]
+  S4 --> S5["Stage5 TrajectoryRefineHead<br/>map-token cross-attn 残差"]
+  S5 --> OUT["ego 6s 规划<br/>+ agents 6s 预测<br/>+ 80 步 refline"]
+</pre>
+
+<aside class="why">
+把感知（3D 检测/特征提取）和规划（轨迹预测）焊成一张可导图，梯度能从「轨迹 L2/碰撞 loss」<b>一路回传到 RegNet 卷积核</b>，让骨干为规划目标（而非检测 mAP）做联合优化。
+</aside>
+
+<aside class="counter">
+如果中间插一个不可导的排序/滤波/NMS 后处理（很多非 E2E 方案如此），梯度会在那里断裂，骨干就只能用检测 surrogate loss 训练，规划误差无法改善感知质量 —— 这是「模块化」与「端到端」的本质区别。
+</aside>
+
+<aside class="note">
+<b>常见误解纠正：</b>读者可能以为「端到端」=「没有中间层」。更准确的说法是：<b>中间层很多</b>（backbone/neck/transformer/head 全在），但全部可导、全部联合训练，<b>没有不可导的「人工缝合点」</b>。另一个常见误解：E2E 不是「感知也输出轨迹」，而是<b>感知和规划共享一份特征</b>，规划 loss 倒逼感知学对。
+</aside>
+
+<h3>2.2 训练范式：行为克隆（IL）而非 RL</h3>
+<p>JoyDriver 走的是<b>模仿学习（Imitation Learning, IL）</b>，更具体是<b>行为克隆（Behavior Cloning, BC）</b>：训练数据是「人类驾驶员的真实未来轨迹」作为 GT，loss 是预测轨迹与 GT 轨迹的 L2 / brier-fde 等<b>回归 loss</b>，让模型直接模仿人类。这跟强化学习（RL）有本质区别：</p>
+<table>
+<thead><tr><th>维度</th><th>IL / 行为克隆（JoyDriver 走的路）</th><th>RL（如 UniAD/AD-MLP 之外的研究）</th></tr></thead>
+<tbody>
+<tr><td>GT 来源</td><td>人类驾驶的未来轨迹（离线、确定）</td><td>环境奖励（在线、需仿真器）</td></tr>
+<tr><td>训练成本</td><td>低（监督学习，8 卡数百万 iter）</td><td>极高（需闭环仿真，采样效率瓶颈）</td></tr>
+<tr><td>分布偏移</td><td><b>有</b>（covariate shift：训练见过的状态 vs 部署自己陷入的状态）</td><td>无（自己探索过）</td></tr>
+<tr><td>可解释性</td><td>低</td><td>更低</td></tr>
+</tbody>
+</table>
+
+<p>JoyDriver 缓解 covariate shift 的两个工程手段（在数据侧而非算法侧）：</p>
+<ol class="compact">
+<li><b>mask_ego_history</b>（<code>joydriver_v0.py:731-735</code>）：训练时随机遮蔽自车历史最后几步，逼模型从图像补全 —— <b>防止模型只依赖历史位置外推</b>（容易在遮挡时崩，是捷径学习的典型）。</li>
+<li><b>BEV 旋转增广</b>（<code>augmentations.py:21-108</code>）：同步旋转轨迹 + BEV，让模型见到更多朝向组合，缓解直行多、急弯少的数据不平衡。</li>
+</ol>
+
+<aside class="note">
+<b>给 PM 转 PM/架构师：</b>IL 的最大软肋是 covariate shift —— 训练时模型看到的状态分布 = 人类驾驶的状态分布，但<b>部署时模型自己犯错进入的状态</b>不在训练分布里，错误会滚雪球。JoyDriver 用「数据闭环 + 分桶评测」缓解：每次发现失败场景 → 用规则从海量原始数据里 recall 类似帧 → 加进 manifest 重训。这本质上是<b>用数据工程绕开 RL 的算力难题</b>，是工业界的务实选择。
+</aside>
+
+<h3>2.3 StreamPETR 时序融合：把「上一帧的检测记忆」喂给这一帧</h3>
+<p>单帧检测无法判断「这辆车会不会动、往哪动」，而轨迹规划必须知道运动历史。<b>StreamPETR</b> 的核心创新是把 DETR 类检测器改成「流式」：每帧不再独立做检测，而是带一份「上一帧的 object query 记忆」进入这一帧。head.py 把这件事拆成三步纯函数：</p>
+
+<table>
+<thead><tr><th>步骤</th><th>方法</th><th>职责</th></tr></thead>
+<tbody>
+<tr><td>(a) 运动补偿</td><td><code>_compute_updated_memory_pre</code>（<code>head.py:167-221</code>）</td><td>用 <code>ego_pose_inv</code> 把上一帧记忆里的 reference point 和 egopose 变换到当前坐标系，旧记忆在空间和时间上对齐到「现在」</td></tr>
+<tr><td>(b) 时序对齐</td><td><code>_temporal_alignment</code>（<code>head.py:223-316</code>）</td><td>把当前帧 query + 前 N 个 propagated 旧 query 拼成 tgt；剩余旧记忆作为 temporal_memory；用 <code>ego_pose_pe</code> (MLN) 和时间 embedding 调制</td></tr>
+<tr><td>(c) 入队</td><td><code>_compute_updated_memory_post</code>（<code>head.py:318-371</code>）</td><td>当前帧 decoder 最后一层输出 <b>detach</b> 后 FIFO 入队，截到 <code>memory_len</code>，并记录新 reference point/egopose/timestamp 供下一帧用</td></tr>
+</tbody>
+</table>
+
+<p>整条记忆链包含 <b>6 个张量</b>（embedding / reference_point / timestamp / egopose / velo / valid_flag），由调用方显式传入传出。decoder 的 self-attention 让当前 query 同时看到「自己 + 旧 query + 旧记忆」，cross-attention 看图像特征。</p>
+
+<div class="evd">
+<code>src/models/streampetr/decoder.py:252-272</code>：<code>temp_key = cat([query, temp_memory])</code> —— self-attn 的 K/V 是「当前 query + 历史记忆」拼接。<br>
+<code>src/models/streampetr/utils.py:250-274</code>：<code>transform_reference_points</code> 用 egopose 矩阵把 reference point 在帧间坐标变换。
+</div>
+
+<aside class="why">
+StreamPETR 通过把上一帧的 query 当作这一帧的「先验」，让网络隐式学到速度 / 遮挡恢复 / ID 一致性，且无需显式做数据关联（DETR 的匈牙利匹配天然处理）。<b>运动补偿（ego_pose_inv 变换）保证记忆在自车移动后仍指向同一物理点</b> —— 这是 cfg 里 <code>ego_pose/ego_pose_inv/timestamp_interval</code> 必须作为输入的原因（<code>forward:1001-1006</code>）。
+</aside>
+
+<aside class="counter">
+如果不做时序融合（纯单帧 PETR，<code>no_img_transformer=True</code> 分支，<code>forward:999</code>），被遮挡车辆每帧都得重新检测、速度估计噪声极大，规划端会看到「跳变」的他车轨迹，cut-in/变道这类需要历史信息的场景会大面积失败 —— 这正是为什么 cfg 里 <code>mem_len</code> 设得很大（1024 = max_agents×8）。如果不做运动补偿，自车一转弯旧记忆就指向错误的世界点，时序融合反而有害。
+</aside>
+
+<aside class="note">
+<b>三个对 PM 最关键的概念：</b><br>
+(1) <b>memory_len 必须是 num_query 的整数倍</b>（<code>head.py:59</code> assert），因为记忆按「每帧 N 个 query」成块管理，propagated 取前 N 个当 query、剩下的当 temporal_memory；<br>
+(2) <b>detach() 是关键</b> —— <code>_compute_updated_memory_post</code> 里 <code>outs_dec[-1][:, :self.num_query].detach()</code>，这意味着记忆只在「当前帧」参与梯度，<b>不会让反向传播沿时间无限回溯</b>（否则显存爆炸，类似 truncated BPTT）；<br>
+(3) <b>clip_length=8</b> 是另一个工程阀门：每 8 帧强制清零记忆，防止长序列漂移。
+</aside>
+
+<h3>2.4 感知 → 预测 → 规划如何「打通」：共享 transformer backbone</h3>
+<p>很多人理解的 E2E 是「三个 head 共用一个 backbone」，但 JoyDriver 更激进：<b>三者共用同一份 token 序列和注意力</b>。具体地，进 StreamPETR transformer 之前，<code>AgentEncoder</code> 把每个 agent 的历史向量压成 query embedding（<code>joydriver_v0.py:69-171</code>），同时建两个 encoder：<code>self.agent_encoder</code> 编他车、<code>self.ego_encoder</code> 编自车，然后 cat 成 <code>[ego; agents]</code> 序列，<b>第 0 个永远是自车</b> —— 这是后面所有「只取 ego token」操作的隐含约定。</p>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:505-514</code>：JoyDriverV0 建两个 AgentEncoder；<br>
+<code>:710-753</code> <code>_encode_agent_ego_features</code>：<code>cat([ego_feature, agent_feature], dim=1)</code>，ego 在 index 0。
+</div>
+
+<p>之后：</p>
+<ul class="compact">
+<li><b>感知</b>：这份 query 在 StreamPETR transformer 里通过 cross-attn 看图像特征，从像素里「读出」每个 agent 的 3D 状态 —— 但<b>不显式出框</b>，状态融在 token 里。</li>
+<li><b>预测</b>：每个 agent token 通过 self-attn 互相看（包括历史记忆），隐式建模交互。</li>
+<li><b>规划</b>：TrajectoryHead 从 <b>ego token（index 0）</b>解出 ego 的未来轨迹；6 层 agent_self_attns 让 ego 看到所有他车再决策。</li>
+</ul>
+
+<aside class="why">
+用 agent 历史向量作为 query 初始化，相当于给 transformer 一个强先验 ——「请围绕这些已知 agent 去融合图像信息」，而不是从零学一组匿名 query。如果 query 用纯可学习 anchor（原版 StreamPETR），规划 head 无法区分「这是 ego 还是他车」，也无法利用速度/朝向历史，轨迹预测精度会大幅下降。
+</aside>
+
+<aside class="counter">
+<b>ego 放 index 0 这个约定如果被破坏</b>，后面 trajectory_head 输出的 <code>ego_traj_pred</code> 就会取错 token，整个规划输出错位 —— 这是代码里最脆弱的隐式约定之一。
+</aside>
+
+<h3>2.5 多模态轨迹输出：为什么是 6 条而不是 1 条</h3>
+<p>TrajectoryHead 输出每个 mode、每个 coarse_step 的 (加速度 acc, 偏航角速度 omega)，<code>cls_head</code> 用 softmax 输出 <code>n_modal=6</code> 个模式的概率。<b>多模态</b>对应「未来本质上是不确定的」这一建模假设 —— 路口可左转可直行，模型必须输出分布而非单点。下游 planner 从 6 条候选里选最优或做加权。</p>
+
+<aside class="note">
+<b>对 PM 转 PM/架构师最关键的洞察：</b>head 的设计直接决定「模型误差能不能被 loss 解释」。acc/omega 积分意味着 loss 是定义在「控制量」上的，长时程位置误差会被 cumsum 放大，所以训练时往往要对早期步加大权重。<code>coarse_steps = n_step//5</code> 是降参技巧 —— 只预测 12 个粗步再插值到 60 步，参数量降 5 倍且防过拟合。<code>autocast(enabled=False)</code>（<code>line 231</code>）说明积分这步要 <b>fp32</b> 做数值稳定，AMP 训练时这是常见坑点。
+</aside>
+
+</section>
+
+<section class="chapter" id="ch3">
+<h2><span class="ch-tag">CH 03</span>模型架构：从像素到轨迹的「端」到「端」</h2>
+
+<div class="lead">
+本章逐层拆解架构。读者建立的总图：<b>像素 → RegNet 骨干 → CPFPN 颈 → 3D 位置编码 → StreamPETR 时序 transformer → map 交叉注意力 + agent 自注意力 → TrajectoryHead 积分出轨迹 → RefineHead 精修</b>。最后讲 ONNX 部署形态（有状态训练 / 无状态部署）。
+</div>
+
+<h3>3.1 骨干（RegNet）+ 颈（CPFPN）：把像素压成 256 维多尺度特征</h3>
+<p>图像进入模型的第一件事是被 <b>RegNet</b> 残差骨干逐级降采样、加宽通道：<code>3×3 stem</code> 卷积 <code>stride=2</code> 起步，再走 4 个 stage（<code>layer1-4</code>），每个 stage 由若干 Bottleneck（<code>1×1→3×3→1×1</code>，带残差）组成，stage 之间 <code>stride=2</code>，最终在 <code>out_indices=[2,3]</code> 取出两个分辨率最低、语义最抽象的特征图（<code>regnetx_800mf</code> 是 288 通道和 672 通道）。</p>
+<p><b>CPFPN</b>（颈）再把这两张图通过 <code>1×1 lateral conv</code> 投到统一 256 通道、用 top-down 把高层特征上采样加到低层（让低层也带高层语义），最后只在 level 0 过一个 <code>3×3 fpn_conv</code>，输出 2 张统一通道、不同分辨率的特征金字塔给下游。这两步合起来就是「骨干+颈」：<b>骨干负责提语义，颈负责统一通道/尺度</b>。</p>
+
+<div class="evd">
+<code>src/models/backbones/regnet.py:271-282</code> <code>RegNet.forward</code>：stem→逐 stage <code>res_layer</code>→按 <code>out_indices</code> 收集输出；<br>
+<code>:197-206</code> <code>_make_stem_layer</code>：3×3 stride=2 stem，第一次降采样；<br>
+<code>:91-100</code> <code>arch_settings</code>：regnetx_800mf 的 <code>w0/wa/wm/group_w/depth</code>，决定每 stage 宽度；<br>
+<code>:22-69</code> Bottleneck：<code>1×1→3×3→1×1</code> + 残差；<br>
+<code>src/models/necks/cp_fpn.py:143-170</code> <code>CPFPN.forward</code>：<code>laterals=1×1 conv → top-down 上采样相加 → level 0 过 3×3 fpn_conv</code>；<br>
+<code>src/models/streampetr/img_encoder.py:40-46</code> <code>ImgEncoder.extract_img_feat</code>：先 backbone 再 neck，<code>img_feats[self.position_level]</code> 才是给 transformer 用的。
+</div>
+
+<aside class="why">
+图像原始像素 512×1024×3 太大、太冗余、且高度相关，直接喂 transformer 会把注意力矩阵爆掉且学不到抽象。骨干把空间分辨率压低、把通道语义抬高，颈把多尺度信息统一到一个 transformer 能消化的 256 维序列。<b>反事实：</b>如果跳过骨干直接用原图，token 数会是 H×W≈50 万，注意力 O(N²) 直接内存溢出；如果跳过颈只用单尺度，小目标（远车）和大目标（近车）的信息无法在同通道下被 query 共享，远车召回会塌。
+</aside>
+
+<aside class="note">
+<b>为什么 backbone 输出 [2,3] 而不是 [0,1,2,3]？</b>因为深层（2,3）语义强、分辨率小，token 数少、注意力便宜；浅层（0,1）细节多但语义弱且贵。CPFPN 只取 2 层 + <code>position_level=0</code>（即选第 0 个输出，对应 backbone 的 layer3）就是「够用且便宜」的工程取舍。<code>regnetx_800mf</code> 这个选型本身是精度/速度折中（约 0.8G FLOPs），对车端实时性是硬约束。<br>
+<b>PM 视角：</b>backbone 选型直接决定车端推理时延和远距检测召回，是 BOM/算力预算的核心变量。
+</aside>
+
+<h3>3.2 3D 位置编码 PositionEmbedding3D：2D 图像特征如何长出「深度」</h3>
+<p>PETR 家族的关键 trick：transformer 的 cross-attention 本身不知道哪个像素对应 3D 空间的哪个点，必须在 key 上注入「这个像素在 3D 世界的位置」信息。<code>PositionEmbedding3D</code> 在每个图像特征像素上构造一束「假设深度」（LID 采样的 64 个深度 bin），用相机内参与 <code>img2lidar</code> 矩阵把 <code>(像素 u, 像素 v, 深度 d)</code> 投到自车坐标系 <code>(x,y,z)</code>，归一化后过 <code>inverse_sigmoid</code> + 一个 MLP，得到该像素的 3D 位置编码。同时把内参 <code>fx/fy</code> 和 3D 坐标拼成 cone（视锥参数），后续给 spatial_alignment（MLN）调制图像特征用。这样每个图像 token 都同时携带「我长什么样（CNN 特征）」和「我在 3D 世界哪个位置（PE）」两条信息。</p>
+
+<div class="evd">
+<code>src/models/streampetr/position_embedding_3d.py:19-29</code> LID 深度采样：bin_size 按二次函数分布，近处密、远处疏；<br>
+<code>:53-63</code> <code>coords3d = img2lidars @ coords</code>，把 <code>(u,v,d)</code> 网格投到 3D；<br>
+<code>:65-67</code> 按 <code>position_range</code> 归一化到 [0,1]；<br>
+<code>:73-76</code> <code>inverse_sigmoid</code> 后过 <code>position_encoder</code> MLP，并拼出 cone 给 MLN 调制；<br>
+<code>:31-35</code> <code>position_encoder</code>：<code>Linear(position_dim=192) → 4*256 → 256</code>。
+</div>
+
+<aside class="why">
+单目图像本身丢了一维（深度），网络无法从纯 2D 卷积特征里恢复「这辆车离我多远」。PETR 的解法是用一组假设深度把每个像素反投影成一束 3D 候选点，让 transformer 的 query（带 3D 位置）通过注意力去「挑」正确的深度 —— <b>等价于把深度估计隐式写进了注意力权重</b>。
+</aside>
+
+<aside class="counter">
+如果不注入 3D PE（纯 2D DETR），cross-attention 只能学到「图像里有车」，无法学到「车在 3D 哪里」，3D 检测/轨迹预测都会失败。这是 PETR 比 2D DETR 多出来的核心一环，也是「图像→3D 检测」这步因果链的物理基础。
+</aside>
+
+<aside class="note">
+<b>LID（Linear Increasing Discretization）</b>采样为什么是二次函数 <code>bin_size = depth_start + bin_size * index * index_1</code>？因为远处深度不确定性大、需要更疏的 bin，否则 64 个 bin 全堆在近处浪费容量 —— 等价于「按距离做对数式分桶」。<b>cone</b> 这个名字来自 cone-of-vision（视锥），它把「相机的焦距 + 像素的 3D 投影」编码进特征调制，让同一张图在不同相机参数下能被对齐处理。
+</aside>
+
+<h3>3.3 感知 query 从哪来：AgentEncoder 把历史向量序列压成 query embedding</h3>
+<p>进 StreamPETR transformer 之前，模型需要一份「这一帧有哪些 agent、各自历史运动如何」的初始 query。<code>AgentEncoder</code> 干这件事：输入是每个 agent 过去 T 步的向量特征 <code>(B,N,T,Fin)</code>（含位置、速度、朝向、类别等），先线性投到 <code>hidden_dim</code>，加上「正弦 PE + 可学习时间 PE」标注时间步，过 <b>2 层 1D 卷积</b>（kernel=3，捕捉局部时序模式）+ 残差，再按 mask 做 <b>masked mean-pool</b> 压成单步，最后过 MLP head 得到 <code>(B,N,C)</code> 的 agent embedding。</p>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:69-171</code> <code>AgentEncoder</code>：<code>proj → time PE → 1D conv×2 → masked mean pool → MLP head</code>；<br>
+<code>:505-514</code> <code>JoyDriverV0</code> 建两个 AgentEncoder：<code>self.agent_encoder</code>（他车）+ <code>self.ego_encoder</code>（自车，<code>obs_len</code> 可不同）。
+</div>
+
+<aside class="note">
+<b>为什么用 1D conv 而不是 LSTM/Transformer 编时序？</b>conv 便宜、可并行、对短序列（<code>obs_len=50</code>）够用；而且后面还有 StreamPETR 的全局 self-attn 做二次融合，conv 只负责提「局部运动斜率」即可。<code>mask_ego_history</code>（<code>:731-735</code>）这个 trick 值得记：它<b>强迫模型不要只依赖「自车历史位置」外推</b>（容易在遮挡时崩），而要学会从图像找自车位置 —— 这是典型的数据增广防捷径学习，PM 视角看就是「防止模型学到伪相关」。
+</aside>
+
+<h3>3.4 Transformer 在感知与轨迹预测中的双重作用</h3>
+<p>这个模型里有<b>两类 transformer</b>，作用完全不同：</p>
+<table>
+<thead><tr><th>类型</th><th>位置</th><th>作用</th><th>风格</th></tr></thead>
+<tbody>
+<tr><td>(1) 感知融合</td><td><code>PETRTemporalTransformer</code>（streampetr/）</td><td>decoder 每层先 self-attn（query 互相看 + 看历史记忆）再 cross-attn（query 看图像特征），输出仍是 agent embedding</td><td>DETR 式 query-到-图像的<b>检测注意力</b></td></tr>
+<tr><td>(2) 规划推理</td><td><code>AttentionBlock</code>（models/transformer.py）</td><td>用在 agent 之间的自注意力（6 层 <code>agent_self_attns</code>）、ego→map 的交叉注意力（<code>agent_map_cross_attn</code>）、TrajectoryRefineHead 里 waypoint→map 的交叉注意力</td><td>nanoGPT 风格 token-到-token 的<b>推理注意力</b></td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>src/models/streampetr/transformer.py:87-164</code> <code>PETRTemporalTransformer.forward</code>：transpose 到 <code>(N,B,C)</code> 后调 decoder；<br>
+<code>src/models/streampetr/decoder.py:206-298</code> <code>PETRTemporalDecoderLayer._forward</code>：<code>operation_order=('self_attn','norm','cross_attn','norm','ffn','norm')</code>；<br>
+<code>src/models/transformer.py:154-233</code> <code>AttentionBlock</code>：nanoGPT 风格，支持 self/cross，用 <code>F.scaled_dot_product_attention</code>；<br>
+<code>src/models/joydriver_v0.py:518-529</code> 6 层 <code>agent_self_attns</code>（规划推理）；<code>:464-470</code> <code>agent_map_cross_attn</code>：ego token 跟 map token 做交叉注意力。
+</div>
+
+<aside class="note">
+<b>transformer 在轨迹预测中的作用（重点）：</b>注意力机制的核心价值是「动态加权」—— 同一组 query 根据上下文挑不同的 key 来读。<b>感知侧</b>用它解决「哪个像素属于哪个 3D 锚点」的分配问题（比 NMS/匈牙利匹配更可导）；<b>规划侧</b>用它解决「自车该关注哪辆他车、哪段地图」的交互建模问题（比手工规则更灵活）。<br>
+读者常困惑：为什么感知 transformer 用 <code>(N,B,C)</code> 顺序、规划 transformer 用 <code>(B,N,C)</code>？这是历史包袱 —— PETR 脱胎于 mmdet 的 <code>nn.MultiheadAttention</code>（默认 seq-first），nanoGPT 风格用 batch-first。<code>decoder.py</code> 里大量 transpose 就是在两种格式间倒腾。<b>flash_attn</b>（<code>attention.py:52-129</code>）是另一层优化 —— 把 attention 的 O(N²) 显存压成 O(N)，训练大 batch 时必开。
+</aside>
+
+<h3>3.5 轨迹/规划 head：从加速度积分到多模态未来轨迹</h3>
+<p><code>TrajectoryHead</code> <b>不直接回归位置</b>，而是回归「控制量」：<code>traj_head</code> 输出每个 mode、每个 <code>coarse_step</code> 的 <code>(加速度 acc, 偏航角速度 omega)</code>，线性插值上采样到 <code>n_step</code>，然后做<b>运动学积分</b>：</p>
+
+<div class="cmd">
+speed  = cumsum(acc)   * dt + init_speed
+angle  = cumsum(omega) * dt
+heading = (cos(angle), sin(angle))
+vel    = speed * heading
+pos    = cumsum(vel) * dt   <span class="cmt"># 这就是 ego/agents 的未来 60 步轨迹</span>
+</div>
+
+<p>同时 <code>cls_head</code> 用 softmax 输出 <code>n_modal</code> 个模式的概率。这是「<b>自行车模型</b>」（bicycle model）的可微实现：<code>acc/omega</code> 是受约束的物理量（可 clamp 到 <code>acc_min/acc_max</code>），积分保证轨迹运动学合法（不会出现侧滑、瞬移）。</p>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:216-229</code> <code>traj_head</code> 回归 acc/omega，<code>cls_head</code> softmax 出 mode 概率；<br>
+<code>:249-273</code> <code>forward</code>：积分链 <code>acc→speed→angle→heading→vel→pos</code>，典型 bicycle model；<br>
+<code>:255-258</code> acc/omega 可 clamp 到物理可行区间；<br>
+<code>:275-283</code> <code>_interpolate_steps</code>：coarse_step 线性插值到 n_step，降维减参；<br>
+<code>:174-175</code> docstring 明确：<i>"Predict per-step acc/yaw-rate, integrate to vel/pos"</i>。
+</div>
+
+<aside class="why">
+<b>直接回归 xy 位置有两个病</b> —— (a) 不满足运动学约束（车不能横向平移），网络可能学到非法轨迹；(b) 误差随时间累积放大，长程预测漂移。回归 acc/omega 再积分，等价于把「自行车模型」作为<b>硬先验</b>嵌入网络，输出的轨迹天然可执行，且误差结构更合理（速度对了，位置就跟得上）。多模态则是为规划服务的：planner 可以从 6 条候选里选最优/做加权。
+</aside>
+
+<aside class="counter">
+如果直接回归位置，下游控制器（转向/油门）无法直接执行，还得反解 acc/omega，引入数值误差；如果单模态输出，遇到「路口可左转可直行」这种本质多解场景，模型会被迫取平均，输出一条<b>直穿绿化带的「平均轨迹」</b>。
+</aside>
+
+<h3>3.6 辅助分支：MapEncoder / ReferLineHead / TrajectoryRefineHead</h3>
+<p>主链路之外还有三个可配置分支增强 E2E：</p>
+<table>
+<thead><tr><th>分支</th><th>结构</th><th>开关</th></tr></thead>
+<tbody>
+<tr><td>(1) <code>MapEncoder</code></td><td>把 240×120 二值 BEV 栅格地图用 3 级 stride-2 CNN（总 stride 8）压成 30×15 token，叠加预计算 3D 正弦 PE（<code>_map_pe_raw</code>）+ 可学习投影，<b>只给 ego token</b> 做交叉注意力（<code>agent_map_cross_attn</code>）让自车「读地图」</td><td><code>no_map</code>（默认开）</td></tr>
+<tr><td>(2) <code>ReferLineHead</code></td><td>从 ego token 经 1 层 self-attn + MLP 解出参考线坐标和 mode 概率，给下游规划器用</td><td><code>with_refline</code></td></tr>
+<tr><td>(3) <code>TrajectoryRefineHead</code></td><td>把 TrajectoryHead 初预测的每个 waypoint 投影成 embedding，加 ego embedding 后跟 map token 做交叉注意力，输出残差 Δxy 修正初预测 —— 这是「coarse-to-fine」两阶段</td><td><code>refine_ego_traj</code></td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:21-66</code> <code>MapEncoder</code>：3 级 <code>Down(stride2)</code>→reshape 成 <code>(B,N_tokens,C)</code>；<br>
+<code>:472-503</code> <code>_map_pe_raw</code> 预计算 + <code>map_query_embedding</code> 可学习投影；<br>
+<code>:886-905</code> <code>_apply_map_and_self_attention</code>：<code>map_encoder → 加 PE → ego cross-attn → 6 层 agent self-attn</code>；<br>
+<code>:893-896</code> <b>ego-only cross-attn</b>：只让 ego token 读地图，他车 token 不读；<br>
+<code>:286-341</code> <code>ReferLineHead</code>；<code>:344-422</code> <code>TrajectoryRefineHead</code>。
+</div>
+
+<aside class="why">
+纯视觉 E2E 在地图结构化信息丰富时（车道线、道路边界）会浪费先验。<code>MapEncoder</code> 把高精地图栅格化后注入，让模型不必从像素重新「发现」车道；<code>TrajectoryRefineHead</code> 用地图对初轨迹做精修，相当于「先用物理积分画出大致形状，再用地图把车拽回车道」。<b>ego-only 的 map cross-attn</b> 是关键工程取舍 —— 他车不需要读自车坐标系的高精地图（语义不符），只 ego 读即可。
+</aside>
+
+<aside class="counter">
+不开 map 分支（<code>no_map=True</code>），模型在复杂路口会频繁压线、偏离车道，因为图像里的车道线在 backbone 深层已模糊；不开 refine，初预测的轨迹点是「物理合法但语义非法」的（可能压线），精修后用地图 token 把它拉回可行驶域。
+</aside>
+
+<aside class="note">
+<code>no_map / no_img_transformer / with_refline / refine_ego_traj</code> 都是 cfg 开关（<code>joydriver_v0.py:453-461, 553-568</code>），这是为<b>消融实验</b>设计的 —— PM 视角看就是「功能开关」，用来 A/B 验证每个模块的边际收益。<code>load_state_dict</code>（<code>line 570-639</code>）那堆兼容性代码（剥 <code>_orig_mod.</code>、加 <code>core.</code> 前缀、删旧 <code>map_encoder</code> key）说明这些开关历史上多次改架构，旧 checkpoint 加载时要小心 —— <b>这是模型迭代管理的真实成本</b>。
+</aside>
+
+<h3>3.7 ONNX 部署：有状态训练 / 无状态 core 的双形态设计</h3>
+<p>ONNX/TensorRT 无法表达 Python 对象的跨调用状态（<code>self._temporal_state</code>），所以代码做了「<b>有状态训练 / 无状态部署</b>」的双形态设计：</p>
+<table>
+<thead><tr><th>形态</th><th>类</th><th>调用入口</th><th>记忆管理</th></tr></thead>
+<tbody>
+<tr><td>训练（有状态）</td><td><code>StreamPETRHead</code> wrapper</td><td><code>JoyDriverV0.forward()</code></td><td>内部维护 <code>_memory_state</code>，按 <code>clip_length</code> 自动 reset</td></tr>
+<tr><td>部署（无状态）</td><td><code>StreamPETRHeadCore</code> 纯函数</td><td><code>JoyDriverV0.forward_with_core()</code></td><td>6 个记忆张量作为显式输入输出，C++/ONNX 侧自管</td></tr>
+<tr><td>ONNX 上车</td><td><code>ONNXModelAdapter</code></td><td>Python 复刻车端推理路径</td><td>numpy 维护 6 个记忆张量，clip 边界清零</td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>src/models/streampetr/head.py:26-46</code> <code>StreamPETRHeadCore</code> docstring：<i>"Stateless... All temporal memory is passed as input/output... ONNX/TensorRT deployment"</i>；<br>
+<code>:479-496</code> <code>StreamPETRHead</code>：<i>"Stateful wrapper for training convenience"</i>，forward 调 <code>_forward_stateful_eager</code>；<br>
+<code>src/models/joydriver_v0.py:1144-1225</code> <code>forward_with_core</code>：ONNX 导出专用，显式传 6 个 <code>prev_memory</code> 入参，返回 <code>result + 6 个 new_memory</code>；<br>
+<code>src/models/onnx_adapter.py:100-128</code> <code>_init_memory / _reset_memory</code>：numpy 维护 6 个记忆张量，clip 边界清零；<br>
+<code>:291-321</code> <code>forward</code>：<code>force_reset</code> 或 <code>batch_count % clip_length</code> 触发 reset，再跑 <code>onnx_session.run</code>。
+</div>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph TRAIN["训练形态: 有状态 wrapper"]
+    W["StreamPETRHead<br/>_memory_state 内部维护<br/>每 clip_length 帧 auto reset"] --> WC[".core<br/>StreamPETRHeadCore"]
+  end
+  subgraph DEPLOY["部署形态: 无状态 core"]
+    O["ONNXModelAdapter<br/>numpy 维护 6 个记忆张量"] --> OS["onnxruntime<br/>InferenceSession"]
+    OS -->|"输出 13 预测 + 6 新记忆"| O
+  end
+  WC -.->|"forward_with_core<br/>显式传 prev_memory"| OS
+</pre>
+
+<aside class="why">
+训练框架（PyTorch）和部署框架（ONNX/TensorRT）的表达能力<b>不对称</b> —— 前者能写任意 Python 状态，后者只能表达纯计算图。把时序状态「外置」成显式 I/O 张量，是让同一个模型既能训练又能落地的<b>标准范式</b>。这套设计还把「何时 reset 记忆」这个产品决策留给了部署侧（<code>force_reset</code> 由数据集 <code>clip_start</code> 决定），训练和部署解耦。ONNX 输出后 6 个张量是新记忆而非在模型内原地更新，是因为 <b>ONNX 计算图没有「副作用」语义</b>。
+</aside>
+
+<aside class="note">
+<b>ONNX 导出陷阱（必读）：</b>三个对 PM 最关键的部署概念：<br>
+(1) <b>clip_length=8 + force_reset 是「工程化时序」</b> —— 训练时按 8 帧一个片段 BPTT，部署时也每 8 帧清零，<b>保证两边状态机一致</b>；如果不一致会出现「训练精度高、上车就崩」的诡异 bug；<br>
+(2) <code>ONNXModelAdapter._to_numpy</code>（<code>line 130-149</code>）把 <code>float64→float32</code>、<code>int64→int32</code>，是因为 ONNX/TensorRT 对 dtype 极敏感，dataloader 默认 dtype 经常和导出时不符 —— <b>这是典型的「模型上线第一类 bug」</b>；<br>
+(3) <code>JoyDriverV0.forward</code> 里特意把 <b>NHWC→NCHW 的 permute 放进 forward 而不是 pre_process</b>（<code>:987-992</code>），就是为了让 ONNX 能 trace 这一步 —— 否则 trace 出来的图会缺这个算子，车端结果会错。这种「为部署服务的代码结构」是端到端工程的关键。
+</aside>
+
+</section>
+
+<section class="chapter" id="ch4">
+<h2><span class="ch-tag">CH 04</span>训练实战：Determined / DDP 8 卡 / RDMA-NCCL</h2>
+
+<div class="lead">
+本章回答三个工程问题：<b>(a) 怎么把训练跑起来（Determined + torchrun）？(b) 多卡怎么同步梯度（DDP + NCCL + InfiniBand）？(c) 训练失败怎么恢复（max_restarts + 异常 loss skip）？</b> 这是「要 own 训练」必须吃透的工程层。
+</div>
+
+<h3>4.1 训练的两条路径：本地 CLI 调试 vs 集群 Determined 训练</h3>
+<p>必须分清「本地 CLI 调试」和「集群 Determined 训练」两条路径，才知道日常改动在哪验证：</p>
+
+<table>
+<thead><tr><th>维度</th><th>本地 CLI</th><th>集群 Determined</th></tr></thead>
+<tbody>
+<tr><td>命令</td><td><code>joydriver-train --mode train --cfg_path ...</code></td><td><code>det experiment create det.yaml .</code></td></tr>
+<tr><td>实际启动</td><td>直接 <code>python -m train.run</code></td><td><code>torchrun --nproc_per_node 8 -m train.run</code>（见 <code>DETERMINED_ZH.md:358-368</code>）</td></tr>
+<tr><td>卡数</td><td>单卡（本地验证）</td><td><b>8 卡</b>（<code>det.yaml:4 slots_per_trial:8</code>）</td></tr>
+<tr><td>用途</td><td>调试 cfg / 单元验证</td><td>真正训练（百万 iter）</td></tr>
+<tr><td>训练步数控制</td><td>cfg.TRAIN_ITERS</td><td><b>同样由 cfg.TRAIN_ITERS 控制</b>，不是 det.yaml</td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>det.yaml:4</code> <code>slots_per_trial:8</code>；<code>:25</code> <code>shm_size</code> 约 1TB（防 dataloader bus error）；<code>:49-51</code> entrypoint 走 <code>run_determined.sh</code>；<code>:56-57</code> <code>searcher.max_length.batches=1</code>（占位）；<code>:26</code> <code>priority</code>（数字越小越优先）。<br>
+<code>DETERMINED_ZH.md:299-306</code> 明确说：「这只是占位，真正训练步数由 <code>cfg.TRAIN_ITERS=1_000_000</code> 决定」—— Determined 在这里只当「任务调度 + 资源管理 + 日志收集」用，<b>不管训练逻辑</b>。
+</div>
+
+<aside class="counter">
+若以为 <code>det.yaml</code> 控制训练步数，会以为只跑 1 个 batch 就结束，造成对系统行为的严重误判。这是新人最常见的坑。
+</aside>
+
+<h3>4.2 DDP（DistributedDataParallel）8 卡并行：梯度怎么同步</h3>
+<p>训练一个端到端模型要 8 卡跑数百万 iter，单机跑不完。<b>DDP</b>（DistributedDataParallel）是把模型在 8 张卡上各放一份、各跑一个 batch、反向传播时用 <b>NCCL</b> 同步梯度的并行方案。具体流程：</p>
+
+<pre class="mermaid">
+flowchart TB
+  M["模型 (8 份副本, 各 GPU 一份)"] --> G1["GPU0: batch0 → forward → loss"]
+  M --> G2["GPU1: batch1 → forward → loss"]
+  M --> G8["GPU7: batch7 → forward → loss"]
+  G1 --> NCCL["NCCL all-reduce<br/>(经 InfiniBand)"]
+  G2 --> NCCL
+  G8 --> NCCL
+  NCCL --> AVG["梯度平均 (÷8)"]
+  AVG --> OPT["各卡 optimizer.step()<br/>(同步更新)"]
+  OPT --> NEXT["下一 iter, 所有卡权重一致"]
+</pre>
+
+<p>DDP 在 <code>train/run.py:27</code> import、<code>:324</code> wrap。每个 batch：每张卡前向算 loss、反向算梯度，NCCL 经 InfiniBand 同步梯度平均，然后各卡独立 optimizer.step()（因为梯度相同，权重更新也相同）。</p>
+
+<aside class="note">
+<b>RDMA / NCCL / InfiniBand 多卡训练（重点）：</b><br>
+<b>InfiniBand</b> 是一种专用高速网络（带宽 100-400 Gbps，延迟 μs 级），比普通以太网快 1-2 个数量级。<code>det.yaml:7-24</code> 挂载了 <code>uverbs0-5</code> 设备 —— 这就是 InfiniBand 的用户态访问设备。<br>
+<b>NCCL</b>（NVIDIA Collective Communications Library）是 NVIDIA 写的集合通信库，专门优化 GPU 间通信，<b>自动用 RDMA</b>（Remote Direct Memory Access，远程直接内存访问，CPU 不参与）走 InfiniBand。<br>
+<b>为什么需要 RDMA-NCCL-InfiniBand：</b>训练时 8 卡要 all-reduce 梯度（每卡 ~1GB 梯度），如果走普通以太网 + TCP，每 iter 通信要几百 ms，训练吞吐崩塌；走 RDMA，CPU 不参与拷贝，延迟降到 μs 级。这就是为什么 <code>det.yaml</code> 要显式挂载 <code>uverbs</code> 设备 —— 没有它 NCCL 退化成 TCP，训练慢 10 倍。
+</aside>
+
+<h3>4.3 AMP + GradScaler：混合精度训练的数值稳定</h3>
+<p><code>run.py</code> 用 <b>AMP（Automatic Mixed Precision）</b>训练：<code>use_amp=True</code> 时，前向用 <code>fp16</code>（省显存、快），反向算梯度时 <code>GradScaler</code> 动态放大 loss 防止小梯度下溢。<code>train_one_epoch</code>（<code>run.py:681</code> 起）的核心循环大致是：</p>
+
+<div class="cmd">
+<span class="cmt"># 伪代码 (run.py:681 起 train_one_epoch)</span>
+scaler = GradScaler()
+for batch in dataloader:
+    optimizer.zero_grad()
+    with autocast(enabled=use_amp):
+        out = model.forward(batch)
+        loss = compute_loss(out, batch)
+    scaler.scale(loss).backward()         <span class="cmt"># 放大梯度</span>
+    scaler.unscale_(optimizer)
+    clip_grad_norm_(...)                  <span class="cmt"># 梯度裁剪</span>
+    scaler.step(optimizer)                <span class="cmt"># 缩放回去再 step</span>
+    scaler.update()
+</div>
+
+<aside class="note">
+<b>AMP 的关键坑点：</b>TrajectoryHead 的积分步骤必须 <code>autocast(enabled=False)</code>（<code>joydriver_v0.py:231</code>），即 <b>fp32</b> 做数值稳定。因为 <code>cumsum</code> 在 fp16 下误差会被放大，6 秒位置预测可能漂几米。这是为什么模型代码里要在关键算子前显式禁用 autocast。<br>
+<b>异常 loss skip：</b>训练中偶尔会出现 NaN/Inf loss（数据异常 / 梯度爆炸），<code>run.py</code> 实现了 skip 逻辑 —— 检测到异常 loss 直接 <code>optimizer.zero_grad()</code> 跳过这 iter，不更新权重。这是百万 iter 训练能跑完的关键防线。
+</aside>
+
+<h3>4.4 loss 设计：轨迹回归 + 转向角约束 + 多模态</h3>
+<p><code>loss_cfg</code>（<code>cfg:295-315</code>）的全是轨迹回归 loss + 转向角约束，跟检测完全不同。核心组件：</p>
+<ul class="compact">
+<li><b>轨迹 L2 loss</b>：预测轨迹 vs GT 轨迹的位置误差（每个未来步加权，早期步权重大）</li>
+<li><b>速度 / 加速度 loss</b>：约束控制量预测准确</li>
+<li><b>转向角约束</b>（<code>ego_steer_limit_deg=35</code>）：惩罚预测轨迹的转向角超出物理可行范围</li>
+<li><b>多模态 loss</b>：从 6 条候选轨迹里挑与 GT 最近的那条算 loss（winner-takes-all），同时 cls_head 学把最高概率分给最准的那条</li>
+<li><b>碰撞 loss</b>（可选）：约束 ego 轨迹不与他车 GT 轨迹相交</li>
+</ul>
+
+<aside class="why">
+acc/omega 积分意味着 loss 是定义在「控制量」上的，长时程位置误差会被 <code>cumsum</code> 放大，所以训练时往往要对早期步加大权重。<code>ego_steer_limit_deg=35</code> 这个值对应车辆物理极限（方向盘打死约 35°），超出说明模型预测了物理上不可能的轨迹，要惩罚。
+</aside>
+
+<h3>4.5 max_restarts + checkpoint：训练失败怎么恢复</h3>
+<p>百万 iter 训练跨数天，中途必然遇到 GPU 故障 / 网络抖动 / 节点重启。<b>Determined</b> 提供 <code>max_restarts</code>（<code>det.yaml</code>）机制：trial 异常退出时自动从最近 checkpoint 重启。<code>train/run.py</code> 的 checkpoint 保存逻辑：每隔 N iter 存一次（含模型权重 + optimizer 状态 + lr scheduler 状态 + 当前 iter），重启时从最新 checkpoint 恢复，训练无缝续接。</p>
+
+<aside class="note">
+<b>checkpoint 要存什么？</b>不只是模型权重 <code>state_dict</code>，还要存 <code>optimizer.state_dict()</code>（Adam 的一阶/二阶动量）、<code>lr_scheduler.state_dict()</code>（当前 lr）、<code>iter_count</code>、<code>rng_state</code>（随机数状态，保证数据增广可复现）。漏存任何一个，重启后训练会「跳跃」（lr 突变、动量丢失、增广不可复现），可能导致 loss 突然爆炸。<br>
+<b>load_state_dict 的兼容性坑：</b><code>joydriver_v0.py:570-639</code> 那堆兼容性代码（剥 <code>_orig_mod.</code> 前缀、加 <code>core.</code> 前缀、删旧 <code>map_encoder</code> key）就是为这个 —— 模型架构改过几次，旧 checkpoint 的 key 名和新代码对不上，要手动映射。这是<b>模型迭代管理的真实成本</b>，PM 要理解：改架构 = 老 checkpoint 失效 = 要么写兼容代码、要么从头训。
+</aside>
+
+<h3>4.6 训练流程总览（mermaid）</h3>
+
+<pre class="mermaid">
+flowchart TD
+  START["det experiment create det.yaml ."] --> SCHED["Determined 调度<br/>分配 8 卡 GPU 节点"]
+  SCHED --> MOUNT["挂载 InfiniBand<br/>uverbs0-5 (RDMA)"]
+  MOUNT --> RUN["run_determined.sh<br/>torchrun --nproc_per_node 8"]
+  RUN --> INIT["8 进程各 init DDP<br/>NCCL 建立 all-reduce 通信"]
+  INIT --> LOOP{"每 iter 循环<br/>(TRAIN_ITERS=1M)"}
+  LOOP --> LOAD["DistClipSampler<br/>每卡 batch_size clip<br/>(同 batch 同 clip)"]
+  LOAD --> FWD["model.forward(batch)<br/>(AMP autocast fp16)"]
+  FWD --> LOSS["compute_loss<br/>(轨迹L2 + 转向约束 + 多模态)"]
+  LOSS --> BKWD["scaler.scale(loss).backward()"]
+  BKWD --> SKIP{"loss 异常?"}
+  SKIP -->|"是"| ZERO["zero_grad, skip<br/>(异常 loss skip)"]
+  SKIP -->|"否"| NCCL["NCCL all-reduce 梯度<br/>(RDMA/InfiniBand)"]
+  NCCL --> STEP["scaler.step(optimizer)"]
+  STEP --> CK{"iter % N == 0?"}
+  CK -->|"是"| SAVE["存 checkpoint<br/>(权重+optim+lr+rng)"]
+  CK -->|"否"| LOOP
+  ZERO --> LOOP
+  SAVE --> LOOP
+  LOOP -->|"完成"| VAL["validate()<br/>(ADE/FDE 内联)"]
+  VAL --> BM["benchmark.py<br/>(18 场景 metric)"]
+  BM --> CKPT["落地 checkpoint"]
+  SCHED -.|"节点故障"| RESTART["max_restarts<br/>从 checkpoint 恢复"]
+  RESTART --> INIT
+</pre>
+
+</section>
+
+<section class="chapter" id="ch5">
+<h2><span class="ch-tag">CH 05</span>数据管线与挖掘闭环：manifest / 采样 / 挖掘回链</h2>
+
+<div class="lead">
+本章强调<b>三条因果主线</b>：(1) <b>manifest = 文件名清单（非数据）</b>；(2) <b>target_area 是模型看的导航指令</b>；(3) <b>数据挖掘是给文件名贴标签后再剪枝/召回清单</b>。这是数据闭环 PM 最能直接对号入座的章节。
+</div>
+
+<h3>5.1 数据形态：一个 .zst 就是一帧，manifest 只存文件名不存数据</h3>
+<p>训练消费的最小单元是一个 <b>zst 压缩的 pickle 帧</b>，文件名形如 <code>{seq_name}_{timestamp_ns}.zst</code>，落在 <code>{seq_dir}/e2e_data/</code> 下。<b>manifest 不是数据本身，而是一个 <code>list[str]</code></b>，每条就是一个 zst 文件名（相对路径即文件名）。<code>build_manifest</code> 扫描目录把所有 zst basename 收集进 pickle，这样训练启动时只需加载一个轻量清单，按需再去磁盘解压具体帧。</p>
+
+<div class="evd">
+<code>src/dataset/build_manifest.py:15-52</code> <code>_filter_zst / scan_zsts_fast</code>：只收 <code>.zst</code> basename；<code>check_img</code> 用 <code>img_ts_set</code> 过滤缺图样本；<br>
+<code>:55-92</code> <code>_process_seq_dir / build_manifest</code>：扫 <code>data_root/&lt;seq_dir&gt;/e2e_data/*.zst</code>，<code>pickle.dump(entries)</code> 存的是文件名清单；<br>
+<code>src/dataset/dataset.py:1148-1166</code> <code>load_data</code>：zlib 解出文件名后拼 <code>data_root/&lt;clip_name&gt;/e2e_data/&lt;file&gt;.zst</code>，zstd 流式解压读 pickle。
+</div>
+
+<aside class="why">
+把「清单」和「数据」分离是数据闭环的根基：<b>清单小（百 MB 级）可频繁增删改、做挖掘筛选、断点续训，而数据大（TB 级）始终只读</b>。反事实：若 manifest 把整帧内联进 pkl，每次挖掘筛选都要重写 TB 数据，闭环迭代周期会从小时级退化到天级，长尾场景根本迭代不动。
+</aside>
+
+<aside class="note">
+PM 闭环思维里「数据」常被当成一个整体概念；这里要补的点：训练侧的「数据加载」其实是<b>两层</b> —— 清单层（决定喂哪些帧、喂的顺序）+ 物理帧层（决定每帧长什么样）。<b>挖掘改的是清单层，preprocess 改的是物理帧层，两者解耦</b>。
+</aside>
+
+<h3>5.2 帧的内部结构：TARGET_AREA / ROUTING / REFER_PATH 是「导航三件套」</h3>
+<p>每一帧 pickle 解开后是按 header 排列的字典序列：<code>SEQ_ID</code>（场景唯一键）、<code>EGO_TRAJ</code>（自车历史 + 未来轨迹）、<code>AGENT_TRAJS</code>（他车轨迹）、<code>REFER_PATH</code>（参考线）、<code>TARGET_AREA</code>（240×120 二值栅格，模型看的「可行驶目标区域」）、<code>ROUTING</code>（导航折线，回退用）、<code>CALIB_INFO</code>（lidar2cam 等标定）、<code>IMAGE_INFO</code>（前视相机图像路径 + 内外参）、<code>RMP/RMP_V2</code>（栅格化地图）。</p>
+
+<p><b>TARGET_AREA 和 ROUTING 不是原始传感器，是 preprocess 阶段用地图 + 参考线算出来的「导航指令栅格」</b>，模型把它当 BEV 图看。</p>
+
+<div class="evd">
+<code>src/preprocess/steps/feature_generator.py:402-404</code> headers 序列：<code>["SEQ_ID","CITY_NAME","EGO_TRAJ","REFER_PATH","AGENT_TRAJS","STATIC_MAP","BEV_MAP","CALIB_INFO","IMAGE_INFO","TARGET_POINT","OCC",rmp_header,"TARGET_AREA","ROUTING","EGO_TRAJ_PRED"]</code>；<br>
+<code>:370-392</code> target_area 由 <code>build_offboard / build_onboard_target_area_result</code> 生成，240×120 uint8；<br>
+<code>src/dataset/dataset.py:1309-1320</code> <code>__getitem__</code> 读 <code>TARGET_AREA</code> 和 <code>ROUTING(target_area_centerline)</code>。
+</div>
+
+<aside class="why">
+<b>TARGET_AREA 是端到端模型实际「读懂导航」的载体</b>：它把高精地图的车道面 + 参考线 + 路口识别压缩成一张「车该往哪片区域开」的二值图。反事实：若没有 TARGET_AREA，模型只能从 REFER_PATH 这种连续坐标学导航，跨城市/路口泛化差，且无法表达「这一片都可走」的柔性约束 —— 这正是 StreamPETR 类端到端模型要 BEV 表征的原因。
+</aside>
+
+<aside class="note">
+对 ML 实现生疏的读者：可以把 TARGET_AREA 理解成「<b>给模型看的导航缩略图</b>」—— 它不是语义分割 GT，而是 preprocess 用地图拓扑算出来的「驾驶意图栅格」。240×120 = 0.5m 分辨率对应 <code>x∈[-40, 80]m</code>、<code>y∈[-30, 30]m</code> 的车前区域。
+</aside>
+
+<h3>5.3 采样：clip_len 把连续帧绑成时序片段，DistClipSampler 保证同 batch 同 clip</h3>
+<p><code>_split_clip</code>（<code>dataset.py:969-1118</code>）把同一序列里时间戳连续（相邻间隔 &lt; 0.15s）的帧切成 <code>clip_len</code> 长的片段。<code>DistClipSampler</code>（<code>sampler.py:48-75</code>）在分布式训练里按 rank 分配 clip，每个 batch 取 <code>batch_size</code> 个 clip，按 clip 内帧序逐帧 yield，<b>保证一个 batch 内同一时刻所有 rank 拿到的是同一批 clip 的连续帧</b> —— 这是时序模型训练的硬约束。</p>
+
+<div class="evd">
+<code>src/dataset/sampler.py:48-75</code> <code>__iter__</code>：先 <code>randperm clips</code>，再 <code>indices[rank::world]</code> 分片，再按 <code>f_idx→clip_idx</code> 双重循环 <code>yield clip_idx*clip_len + f_idx</code>。
+</div>
+
+<aside class="why">
+时序端到端模型（如 StreamPETR）需要连续帧来维护时序 memory，<b>clip 是最小可训练单元</b>。反事实：若用普通随机采样打乱时序，模型每帧都从零初始化 memory，相当于退化成单帧模型，时序增益归零；若 batch 内 clip 不对齐，多卡训练时梯度聚合会混入不同 clip 的 memory 状态，<b>训练发散</b>。
+</aside>
+
+<aside class="note">
+数据闭环 PM 看到「采样」常想到「分层抽样/场景配比」；但这里 sampler 解决的是<b>「工程对齐」</b>问题（多卡时序一致），而「场景配比」是 manifest 层用挖掘脚本做的（见后文 <code>clean_*/recall_*</code>）。两者在管线里位置不同：sampler 在<b>训练运行时</b>，manifest 配比在<b>数据准备时</b>。
+</aside>
+
+<h3>5.4 增广：BEV 旋转 + 图像色彩抖动，两条独立通路</h3>
+<p>增广分两路：</p>
+<ol class="compact">
+<li><b>RandomRotationAugmentor</b>（<code>augmentations.py:21-108</code>）对 BEV map（target_area_centerline）和 agent/ego 轨迹<b>同步</b>绕 ego 原点随机旋转 —— 必须同步否则轨迹和地图错位。</li>
+<li><b>ImageAugmentor</b>（<code>img_augmentations.py:8-50</code>）对前视图像做 brightness/contrast/HSV/Gamma/Blur/Noise 六类像素级抖动，全局概率 0.5，多视角时 <code>consistent_view=True</code> 保证同帧多相机用同一组参数。</li>
+</ol>
+
+<aside class="why">
+旋转增广解决路口转弯数据不平衡（直行多、急弯少）；色彩抖动解决光照/相机差异泛化。<b>但 BEV 旋转必须同步轨迹，否则等于给模型喂错标签</b> —— 这是「增广正确性」比「增广丰富度」更重要的典型例子。
+</aside>
+
+<h3>5.5 预处理管线：record → 11 步串行 → 写 zst，TARGET_AREA 在线生成</h3>
+<p><code>run_data_pipeline.sh</code> 调 <code>src/preprocess/preprocess.py</code>，对一个 record（一次采集片段）跑 <b>11 个串行 step</b>：</p>
+
+<div class="cmd">
+CalibInit → MultiImageInit → PerceptionInit → EgoInit → AgentInit
+  → AgentFilter → MapInit → ScenarioSampler<span class="cmt">  # 滑窗 70-110 帧切场景</span>
+  → ReferPathInit → TargetAreaInit<span class="cmt">  # 仅挂载 routing, 真正生成延后</span>
+  → FrameContinuityCheck → E2EGenFeature<span class="cmt">  # 真正写 zst 并算 TARGET_AREA/ROUTING</span>
+</div>
+
+<div class="evd">
+<code>scripts/run_data_pipeline.sh:43-52</code> <code>python -m src.preprocess.preprocess</code>，env 控制 <code>INPUT_ROOT/START_TIME/MODE</code> 等；<br>
+<code>src/preprocess/preprocess.py:240-263</code> <code>preprocess_steps</code> 11 步顺序，<code>TargetAreaInit</code> 在 L252，<code>E2EGenFeature</code> 最后且 <code>save_data=True</code>；<br>
+<code>:295</code> <code>update_pipeline_status</code> 回调 <code>data-pipeline.jd.com</code> API，这是与外部数据中台的闭环钩子。
+</div>
+
+<aside class="why">
+预处理是数据闭环的「生产侧」：每条新采集 record 走完管线变成可训练 zst，状态回调到 data-pipeline.jd.com 触发下游。反事实：没有标准化的 step 链，每个工程师各写各的预处理，会导致<b>同一场景不同版本特征不一致</b>，模型回归无法定位是数据变了还是模型变了 —— 这是闭环里「特征版本一致性」的命门。
+</aside>
+
+<h3>5.6 TARGET_AREA 生成算法：参考线找目标点 → 沿车道面回溯 → 拓扑连通出可行驶走廊</h3>
+<p><code>build_target_area_from_rmp_and_refer</code> 的因果链：</p>
+<ol class="compact">
+<li>从 <code>REFER_PATH</code> 取第 <code>target_point_index_m=80m</code> 处的点作为<b>目标点</b>；</li>
+<li>从目标点沿参考线向后回溯 <code>refer_range_m=80m</code> 得到 <code>backward_path</code>；</li>
+<li>在 RMP 地图上把 <code>backward_path</code> 光栅化成 corridor，与 <code>lane_mask / drivable_mask</code> 求交，用<b>连通域分析</b>挑出包含目标点的车道连通块；</li>
+<li>若连通块不够长，用 <b>bridge</b> 在车道间断处补线（<code>connect_lane_path_with_bridge</code>）；</li>
+<li>叠加 <code>intersection_mask</code>（路口斑马线连通域）处理路口放宽。</li>
+</ol>
+<p>最终产出 240×120 的 <code>target_area + centerline + boundary</code>。</p>
+
+<div class="evd">
+<code>src/preprocess/target_area/offboard_core.py:908-998</code> <code>build_target_area / build_target_area_from_rmp_and_refer</code>：取 80m 目标点，调 <code>generate_lane_target_masks</code>；<br>
+<code>:737-868</code> <code>generate_lane_target_masks</code>：连通域 <code>pick_best_component</code> + corridor 光栅化 + intersection_mask 叠加；<br>
+<code>:546-636</code> <code>connect_lane_path_with_bridge</code>：Dijkstra + bridge 在车道间断处补连。
+</div>
+
+<aside class="why">
+这一步是把「人类导航意图（参考线）」翻译成「模型能消化的空间分布（栅格）」。反事实：若只给模型一个目标点坐标，模型无法表达「这条车道整个都能走」的柔性，会在车道边界处抖动；TARGET_AREA 把「一片连续可走区域」显式画出，模型轨迹预测更稳。连通域 + bridge 处理是为了应对地图车道面断裂（如遮挡、地图缺漏），保证 target_area 连续不破。
+</aside>
+
+<aside class="note">
+对 ML 不熟的读者：这一段<b>全是经典 CV 几何/形态学操作</b>（dilate/erode/connectedComponents/floodFill/convexHull/Dijkstra），<b>不是神经网络</b>。它是「数据工程」而非「模型」，理解这点能帮 PM 划清「模型问题 vs 数据问题」的边界 —— 轨迹在路口偏，<b>先查 target_area 的 intersection_mask 算对没，而不是先调模型</b>。
+</aside>
+
+<h3>5.7 数据挖掘本质：给 zst 文件名贴场景标签，产出 allinfo 清单供剪枝</h3>
+<p><code>data_mining.py</code> 用 DataLoader 并行遍历整张 manifest 的每一帧，对每帧调一个 Filter（如 <code>TrajInterFilter</code> 横穿、<code>TargetAreaSignedLateralDistanceFilter</code> 车道保持）。<code>Filter.load_data</code> 解帧 → 算几何判据 → 返回 <code>(item_idx, status_code, seq_id, ...)</code>，<code>status_code ∈ {DataError=1, TagSuccess=2, TagFailed=3, TagException=4}</code>。TagSuccess 的帧额外带业务指标（如 <code>signed_lateral_distance_60</code> 即未来 60 帧自车相对车道中心的横向偏移序列），整体落盘成 <code>filter_manifest_*_allinfo_*_batchN.pkl</code>，并支持 <code>checkpoint_interval</code> 断点续传。</p>
+
+<div class="evd">
+<code>scripts/run_data_mining.sh:39-51</code> <code>torchrun -m src.tools.data_mining.data_mining --mining_type</code> 默认 <code>TrajInterFilter</code>；<br>
+<code>src/tools/data_mining/data_mining.py:66-83</code> <code>MiningDataset</code>：<code>filters[0].filter(index)</code>，异常吞掉返回 TagException；<br>
+<code>:105-135</code> <code>save_batch_results</code>：success 落 <code>filter_manifest_*_batchN.pkl</code>，全量落 <code>_allinfo_</code>；<br>
+<code>src/tools/data_mining/tags/base.py:8-13</code> <code>MiningErrorCode</code> 枚举 1/2/3/4。
+</div>
+
+<aside class="why">
+挖掘把「海量无标注采集帧」变成「<b>带场景标签 + 连续指标的清单</b>」，这是长尾数据补强的前提。反事实：没有挖掘，工程师只能凭直觉随机采样标注，长尾场景（横穿、加塞、急刹）占比永远上不去，模型在这些场景表现差且无法定向改进。allinfo 里的连续指标（如横向距离序列）比单纯 hit/miss 标签更值钱 —— 它能做精细剪枝和召回。
+</aside>
+
+<h3>5.8 target_area_distance_allinfo：把「目标区域」当尺子量自车偏移，闭环回链到 manifest</h3>
+<p><code>TargetAreaSignedLateralDistanceFilter</code> 是挖掘里最关键的 filter，它把 <b>TARGET_AREA（训练时模型看的导航栅格）反过来当「真值尺子」</b>：</p>
+<ol class="compact">
+<li>对 target_area 做连通域分析提取中心线；</li>
+<li>在自车当前 x 处插值出中心线 y 作为 <code>anchor_center_y</code>；</li>
+<li>计算 <code>signed_lateral_distance_60 = 未来 60 帧自车 y 减 anchor_center_y</code> 的序列。</li>
+</ol>
+<p>这 60 个数刻画了「未来 6 秒自车会偏离目标车道中心多少」。配套的 <code>clean_center_after25</code>（删非居中样本）、<code>recall_lanechange_initiation25</code>（召回变道起步样本）、<code>drop_outside_swing35</code>（删早期外摆）三个脚本读这份 allinfo，按阈值（median / p90 / 单调性）剪枝或召回 manifest。</p>
+
+<div class="evd">
+<code>src/tools/data_mining/tags/target_area_distance.py:196-301</code> <code>Filter</code>：<code>compute_target_area_signed_lateral_distance + compute_signed_lateral_distance_series</code> 返回 <code>(item, TagSuccess, seq_id, distance_60, anchor_xy, width, speed)</code>；<br>
+<code>scripts/clean_center_after25_from_target_area_distance_allinfo.py:45-53</code> <code>_strict_center_pass</code>：<code>median(0.20)/p90(0.35)/final(0.30)</code> 阈值剪枝非居中；<br>
+<code>scripts/recall_lanechange_initiation25_from_target_area_distance_allinfo.py:90-108</code> <code>_passes_recall</code>：<code>abs_d0&gt;2 且 abs_d25&lt;=0.7*abs_d0 且前 25 帧单调递减</code> → 召回变道起步。
+</div>
+
+<aside class="why">
+这是数据闭环「场景 → 清单」回链的核心机制：<b>用模型训练时同一个 TARGET_AREA 反向量自车行为，得连续指标，再用业务规则把指标翻译成「保留/丢弃/召回」的 manifest 操作</b>。反事实：若用单独标注的居中真值（人工标注车道中心），成本高且与训练 target_area 不一致；用 target_area 反向量等于「用模型的世界观筛模型的数据」，分布完全自洽。
+</aside>
+
+<aside class="note">
+<b>这是给数据闭环 PM 的重点：</b><code>clean_*</code> 是 <b>precision 导向</b>（删掉明确的坏样本保准确率），<code>recall_*</code> 是 <b>recall 导向</b>（补回被误删的好样本保覆盖）。两者阈值（<code>start_frame=25</code>、<code>recovery_ratio=0.70</code>、<code>median 0.20</code>）都是从数据分布调出来的超参，<b>不是模型超参</b> —— 理解这点能划清「数据工程参数」和「模型训练参数」。
+</aside>
+
+<h3>5.9 数据闭环全景（mermaid）</h3>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph COLL["采集"]
+    A["原始 record<br/>JDXRecord"] --> B["run_data_pipeline.sh"]
+  end
+  subgraph PRE["预处理 preprocess.py"]
+    B --> C["11 步串行 step"]
+    C --> D["TargetAreaInit 挂载 routing"]
+    D --> E["E2EGenFeature<br/>算 TARGET_AREA/ROUTING<br/>写 .zst"]
+  end
+  E --> F[("features/<br/>seq_dir/e2e_data/*.zst")]
+  F --> G["build_manifest.py<br/>扫描收 basename"]
+  G --> H[("manifest.pkl<br/>list of filenames")]
+  H --> I["create_mmap.py<br/>filenames.bin + offsets.npy<br/>+ clip_info.npy"]
+  subgraph MINE["挖掘"]
+    I --> J["run_data_mining.sh<br/>DataLoader 并行"]
+    J --> K["Filter.filter<br/>TrajInter/Crosswalk/<br/>TargetAreaSignedLateralDistance"]
+    K --> L[("filter_manifest_<br/>allinfo_batchN.pkl<br/>status+指标序列")]
+  end
+  L --> M["clean_*_after25.py<br/>剪枝非居中"]
+  L --> N["recall_lanechange_<br/>initiation25.py<br/>召回变道起步"]
+  L --> O["drop_outside_swing35.py<br/>删早期外摆"]
+  M --> P[("clean manifest.pkl")]
+  N --> P
+  O --> P
+  P --> Q["训练<br/>JoyDriverDataset +<br/>DistClipSampler"]
+  Q --> R["端到端模型<br/>消费 TARGET_AREA"]
+  R -->|"车端长尾采集"| A
+</pre>
+
+<h3>5.10 内存优化：MMapSamples 让千万级清单零内存常驻</h3>
+<p>manifest 膨胀到千万级帧时，把文件名清单全加载进内存（每帧约 100B）会占 GB 级 RAM。<code>create_mmap.py</code> 把所有 zlib 压缩后的文件名拼成一个 <code>filenames.bin</code>，再用 <code>offsets.npy</code> 记录每帧起止偏移，运行时用 <b>mmap</b> 把 bin 映射到虚拟地址，按需 OS 调页 —— 清单本身零 RAM 占用，访问时只读需要的 4KB 页。配套 <code>clip_info_{clip_len}.npy</code> 预算好 clip 切分，避免每次启动重算 <code>_split_clip</code>（千万帧要十几分钟）。</p>
+
+<div class="evd">
+<code>src/tools/mmap/create_mmap.py:33-148</code> <code>create_mmap_dataset_fast</code>：<code>filenames.bin + offsets.npy + clip_info_{clip_len}.npy</code> 三件套；<br>
+<code>src/dataset/utils.py:118-156</code> <code>MMapSamples</code>：<code>mmap.mmap(bin, ACCESS_READ)</code> + <code>np.load(offsets, mmap_mode='r')</code>，<code>__getitem__</code> 切片读。
+</div>
+
+<aside class="note">
+<b>ML 工程盲点：</b>mmap 不是「读得更快」而是「<b>按需调页 + 多进程共享</b>」。压缩文件名（zlib）是为省 bin 体积，解压在 <code>load_data</code> 里做（<code>zlib.decompress</code>），属于「CPU 换内存」的经典权衡。千万级帧是数据闭环规模化的门槛。
+</aside>
+
+</section>
+
+<section class="chapter" id="ch6">
+<h2><span class="ch-tag">CH 06</span>评测 + ONNX 导出 + onboard 部署</h2>
+
+<div class="lead">
+本章从「训练态模型」走到「可上车推理」，每一步都在解决一个<b>「对齐」</b>问题：训练态 ↔ 部署态对齐、PyTorch ↔ ONNX 输出对齐、离线 ↔ 车端 tensor 对齐。理解这一章就理解了「为什么模型上线不是调个 API」。
+</div>
+
+<h3>6.1 评测的两层结构：训练内 ADE/FDE vs. 离线闭环 benchmark</h3>
+<p>JoyDriver 的「评测」不是<b>一个</b>东西，而是<b>两套</b>互补的指标：</p>
+<table>
+<thead><tr><th>层级</th><th>工具</th><th>指标</th><th>何时跑</th><th>回答的问题</th></tr></thead>
+<tbody>
+<tr><td>第一层（开环）</td><td><code>JoyDriverEvaluator</code>（<code>eval/evaluator.py</code>）</td><td><b>ADE/FDE</b>（Average/Final Displacement Error）</td><td>每 epoch validate()</td><td>「预测轨迹和真值轨迹每个点/末点的欧氏距离」</td></tr>
+<tr><td>第二层（驾驶能力）</td><td><code>benchmark.py</code>（<code>tools/benchmark/</code>）</td><td><b>18 个场景 metric</b>：collision/cutin/crosswalk/TTC/压线/舒适度/...</td><td>val 结束后自动调起</td><td>「模型能不能开」</td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>src/eval/evaluator.py:293-303</code> <code>JoyDriverEvaluator.evaluate()</code> 同时算 agents 和 ego 的 <code>minade/minfde</code>（<code>_1</code> 和 <code>_k</code>）；<br>
+<code>src/eval/metrics.py:8-28</code> <code>get_ade/get_fde</code>：ADE 是每步欧氏距离求和再除以步数，FDE 只取最后一步；<br>
+<code>src/train/run.py:1474-1480</code> <code>val_only_mode</code> 结束后若 <code>evaluator.save_pred=True</code>，<code>os.system</code> 调起 <code>benchmark.py</code>；<br>
+<code>src/tools/benchmark/benchmark.py:9-32</code> import 了 collision/cutin/crosswalk/occ_collision/speed_limit/bypass/pull_over/reverse/comfort/boundary/ttc/progress/center 等 18 个场景 metric。
+</div>
+
+<aside class="why">
+<b>ADE/FDE 是「数学上贴近」，benchmark 是「行为上贴近」</b>。只看 ADE 会被骗：一个 ADE 很低的模型可能在 cutin 场景总是急刹（舒适度差）或总是偏左（压线）。反事实：如果砍掉 benchmark 层只留 ADE，你会迭代出一个「指标好看但不敢上车」的模型；如果砍掉 ADE 只留 benchmark，每个 epoch 都要等几小时离线算，迭代速度崩塌。<b>两层缺一不可</b>。
+</aside>
+
+<h3>6.2 多模态轨迹的评测：minADE_k / minFDE_k 与概率排序</h3>
+<p>JoyDriver 的预测头输出不是一条轨迹而是 <b>M 条候选</b>（多模态，ego 默认 6 条），每条带一个概率。评测时要先按概率从高到低排序，再算两个版本的指标：</p>
+<ul class="compact">
+<li><b>minADE_1 / minFDE_1</b>：「概率最高的那条」和真值的误差 —— 反映「模型最信的那条有多准」（决策质量）</li>
+<li><b>minADE_k / minFDE_k</b>：「K 条里挑最贴近真值的那条的误差」—— 反映「模型的可能性空间里有没有覆盖真值」（覆盖率）</li>
+</ul>
+
+<div class="evd">
+<code>src/eval/evaluator.py:73-100</code> <code>_prob_ordered_metrics</code>：<code>order = np.argsort(-probs)</code> 按概率降序，<code>top1 = top[0]</code> 算 ade1/fde1，<code>top_k = top[:k]</code> 取 min 得 adek/fdek。
+</div>
+
+<aside class="why">
+多模态是端到端预测的核心设计 —— 未来本就不确定（车可能左转也可能直行），模型必须输出分布而非单点。<code>minADE_k</code> 衡量「覆盖率」，<code>minADE_1</code> 衡量「决策质量」。反事实：如果只看 <code>minADE_k</code>，模型可以输出 6 条覆盖所有可能的「撒胡椒面」轨迹拿低分，但下游 planner 选哪条？所以必须同时盯 <code>minADE_1</code>。这也是为什么 <code>run.py:83</code> 把 <code>rank_metric</code> 默认设成 <code>brier_fde_k</code>（带概率惩罚的 FDE，进一步逼模型把概率分给最准的那条）。
+</aside>
+
+<h3>6.3 评测的有效样本筛选：为什么不能对所有 agent 平均</h3>
+<p>评测前要先过滤「有效 agent」。<code>_valid_agent_indices</code> 要求：最后一帧未来真值有效（<code>has_last_future</code>）、非 padding、<code>agent_weight &gt; 0</code>。只有同时满足的 <code>(batch_idx, agent_idx)</code> 对才进入 ADE/FDE 计算。原因是数据里有大量 padding 出来的「假车」（<code>max_agents=128</code> 但实际场景可能只有 5 辆车）。</p>
+
+<aside class="why">
+如果不做这个过滤，一个全 padding 的 batch 会让 ADE 看起来极低，模型会「学会」<b>少预测真车多预测 padding 来刷分</b>，整个训练目标被污染。这是数据闭环里「指标定义错 → 模型学错」的经典案例。
+</aside>
+
+<h3>6.4 训练态模型 vs. 部署态模型：stateful wrapper 与 stateless core 的分叉</h3>
+<p>同一个模型 <code>JoyDriverV0</code> 有两种「跑法」：</p>
+<table>
+<thead><tr><th>形态</th><th>调用</th><th>状态</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td>训练态</td><td><code>forward(batch)</code></td><td>有状态：模型自己持有 <code>_temporal_state</code>（6 个 memory 张量），每个 batch 后 <code>update_temporal_state(out)</code> 写回（<code>detach().clone()</code>）</td><td>训练 / PyTorch 验证</td></tr>
+<tr><td>部署态</td><td><code>forward_with_core(batch, prev_memory_*)</code></td><td>无状态：6 个 memory 张量显式变成输入和输出</td><td>ONNX/TensorRT 导出</td></tr>
+</tbody>
+</table>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:685-708</code> <code>update_temporal_state</code>：训练态从 out 取 <code>_temporal_new_memory_*</code> 写回 <code>self._temporal_state</code>；<br>
+<code>:1144-1205</code> <code>forward_with_core</code>：把 <code>prev_memory_*</code> 作为入参、new memory 作为返回值的一部分，专给 ONNX/TensorRT 用。
+</div>
+
+<aside class="why">
+ONNX/TensorRT 是「一次推理一个确定输入 → 一个确定输出」的计算图，图里不能有跨调用的 python 成员变量。所以<b>任何跨帧状态都必须拍扁成图的输入输出</b>。反事实：如果硬要用 stateful wrapper 导出（代码保留了 <code>--export_stateful</code> 选项），ONNX 图里会固化导出那一刻的 memory，每一帧推理都用同一份初始 memory，相当于「失忆」 —— 时序 transformer 直接退化成单帧模型，精度暴跌。这就是注释里反复警告 stateful "may not be suitable for all deployment scenarios" 的原因。
+</aside>
+
+<aside class="note">
+<b>这是本视角最核心、也最反直觉的点。</b>PM 容易把「模型」当成一个静态对象，但<b>带时序的 transformer 本质是「把历史压缩进 memory 的循环系统」</b>。训练时这个循环由 python 对象托管，部署时必须由 C++ 宿主托管 —— <b>同一份权重，两种「活法」</b>。理解了这个，就理解了为什么导出 ONNX 不是「调个 API」而是「重新设计接口契约」。
+</aside>
+
+<h3>6.5 ONNX 导出工程：dummy inputs、opset、layout 转换、常量折叠</h3>
+<p>导出的真实流程：构造一份 <code>dummy_inputs</code>（<code>build_dummy_inputs</code> 里 <code>map_feature=zeros[1,1,240,120]</code>、<code>agent_feature=zeros[1,127,9,20]</code>、<code>img=zeros[1,540,960,3]</code> 等，shape 来自 cfg），包进 <code>JoyDriverCoreOnnxWrapper</code>，调 <code>torch.onnx.export(opset_version=20, do_constant_folding=True)</code>。两个工程细节：</p>
+<ol class="compact">
+<li><code>img</code> 输入是 <b>NHWC</b>，在 forward 里 <code>permute(0,3,1,2)</code> 转 NCHW。这个 permute<b>故意写在 forward 内部</b>而不是 pre_process，目的是让 ONNX trace 能记录这个算子（C++ 端喂 NHWC，图内自己转）；</li>
+<li><code>dummy_inputs</code> 的具体数值（全 0/全 1）<b>只影响 trace 的 shape 推导，不影响权重</b>。</li>
+</ol>
+
+<div class="evd">
+<code>scripts/export_joydriver_v0_onnx.py:427-436</code> <code>torch.onnx.export: opset_version=20, do_constant_folding=True, external_data=False</code>；<br>
+<code>:197-303</code> <code>build_dummy_inputs</code>：所有 shape 从 <code>net_cfg/dataset_cfg</code> 读，img 显式写成 NHWC（<code>:249 torch.zeros(batch_size,540,960,3)</code>）；<br>
+<code>src/models/joydriver_v0.py:987-992</code> forward 内部做 <code>img.permute(0,3,1,2)</code>，注释明说 <i>"done in forward() so ONNX can trace this operation"</i>；<br>
+<code>scripts/export_onnx.sh:4-7</code> 生产实际调的是 <code>export_joydriver_v0_onnx.py</code>，不是 <code>src/cli/export.py</code>。
+</div>
+
+<aside class="why">
+ONNX 导出的本质是「<b>把动态 python 计算描成一张静态计算图</b>」，dummy input 决定图的形状，opset 决定能用哪些算子（opset 20 才支持较新的 transformer 算子）。把 layout 转换放进图里，是为了让 C++ 端的图像 buffer（天然 NHWC，因为相机驱动吐的就是 NHWC）能直接喂进来，<b>省一次宿主侧拷贝</b>。反事实：如果 layout 转换放在 pre_process（python 侧），ONNX 图就假设输入是 NCHW，C++ 端必须先 permute 再喂，多一次拷贝且容易写错维度顺序 —— 这是经典的「训练用 NCHW、部署相机吐 NHWC」的坑。
+</aside>
+
+<h3>6.6 ONNX 简化（onnxsim）的两副面孔：生产没用，但理解它有用</h3>
+<p><code>onnxsim</code> 做的事是「常量折叠 + 冗余算子消除」：把图里能用 initializers 算出来的部分提前算掉，把 reshape/transpose 链合并。<code>src/cli/export.py</code> 里调了 <code>simplify(args.onnx_path)</code> 并 assert check，再把简化后的存成 <code>_sim.onnx</code>。<b>但生产脚本 <code>export_joydriver_v0_onnx.py</code> 根本没调 onnxsim</b> —— 它直接在 export 时开 <code>do_constant_folding=True</code>，已经做了大部分常量折叠。</p>
+
+<aside class="note">
+onnxsim 在<b>老链路</b>（HiVT 那套，含 python list 输入、dynamic batch）里很有用，因为 torch.onnx 对 list 输入会生成一堆 Identity/SequenceAt 冗余节点，onnxsim 能清掉。但 JoyDriverV0 导出是固定 batch=1、纯 tensor 输入，图本来就比较干净。盲目套 onnxsim 反而可能触发 <code>check=False</code>（简化后数值不等），debug 成本高于收益。这是一条「<b>别抄老脚本</b>」的教训。<br>
+<b>PM 转 architect 要建立的不是「onnxsim 是个好工具」，而是「每个工程动作都有适用条件」。</b>
+</aside>
+
+<h3>6.7 ONNX 验证：ONNXModelAdapter 怎么接进训练验证流水线</h3>
+<p>导出后要验证「ONNX 模型和 PyTorch 模型输出一致」。做法<b>不是单独写个 diff 脚本</b>，而是把 ONNX 包成 <code>ONNXModelAdapter</code>，伪装成 <code>JoyDriverV0</code> 的接口（<code>pre_process / forward / post_process</code>），直接塞进 <code>run.py</code> 的 val 流程跑同样的验证集，看指标是否对齐。关键设计：</p>
+<ol class="compact">
+<li><code>pre_process / post_process</code> 直接复用 PyTorch 模型的方法（保证前处理完全一致）；</li>
+<li><code>forward</code> 内部把 batch dict 拆成 ONNX 的 input dict、调 onnxruntime、再把输出拼回 dict；</li>
+<li>memory 状态由 adapter 自己托管（<code>_init_memory / _reset_memory</code>），在 clip 边界自动重置。</li>
+</ol>
+<p><code>loader.py</code> 在 <code>use_onnx=True</code> 时强制 <code>val_batch_size=1</code>、禁止多卡 DDP。</p>
+
+<div class="evd">
+<code>src/models/onnx_adapter.py:280-332</code> <code>pre_process / post_process</code> 直接 return <code>self.pytorch_model.pre_process / post_process</code>；<br>
+<code>:291-321</code> <code>forward</code>：<code>prepare_onnx_inputs → session.run → _convert_outputs</code>，其中 <code>_convert_outputs</code> 把后 6 个输出存回 <code>self.memory_state</code>（<code>:269-276</code>）；<br>
+<code>src/train/loader.py:251-283</code> <code>use_onnx</code> 时强制 <code>val_batch_size=1</code>、禁止 <code>world_size&gt;1</code>、实例化 <code>ONNXModelAdapter</code>。
+</div>
+
+<aside class="why">
+<b>复用 val 流水线验证 = 零额外代码就能拿到「ONNX 模型在整个 val 集上的 ADE/FDE」</b>，和 PyTorch 跑出来的直接比。这是「对齐」最硬的证据，比单样本数值 diff 强得多。反事实：如果只用几个 dummy 样本数值 diff，可能因为 dummy 样本刚好覆盖不到 memory 跨帧累积的差异，上车后才发现精度漂移 —— 而跑全 val 集会暴露任何系统性偏差。强制 batch=1 是因为 ONNX 导出时 batch 维被固化。
+</aside>
+
+<aside class="note">
+PM 要理解的关键因果：「<b>验证</b>」不是「功能验证」（能不能跑），而是「<b>等价性验证</b>」（ONNX 输出和 PyTorch 是否在统计上不可区分）。前者过不了上不了车，后者过不了上车会出事。<code>ONNXModelAdapter</code> 的精妙在于它让「等价性验证」复用了「功能验证」的全部基建。
+</aside>
+
+<h3>6.8 训练态 memory 管理的细节陷阱：force_reset、clip_length、temporal_iter</h3>
+<p>训练态 memory 不是一直累积的，要在 clip 边界重置。重置信号有两个来源：</p>
+<ol class="compact">
+<li><code>full_seq_mode</code> 时由数据侧的 <code>clip_start</code> 标志位显式给出（<code>pre_process</code> 里把 <code>clip_start</code> 转成 <code>force_reset</code> bool）；</li>
+<li>非 full_seq 时用计数器 <code>self._temporal_iter % temporal_clip_length == 0</code> 自动判断。</li>
+</ol>
+<p><code>_get_temporal_memory_inputs</code> 收到 <code>force_reset=True</code> 就调 <code>_init_temporal_state</code> 把 6 个 memory 张量清零/置单位阵。<b>注意 config 里 <code>clip_len=1</code></b>，意味着实际训练时每个 batch 都重置 memory（单帧训练），只有部署时序列推理才需要跨帧 memory 续接。</p>
+
+<div class="evd">
+<code>src/models/joydriver_v0.py:1113-1121</code> <code>pre_process</code> 里 force_reset 的两套来源：有 <code>clip_start</code> 用 <code>clip_start.any()</code>，没有则用 <code>_temporal_iter % temporal_clip_length == 0</code>；<br>
+<code>:665-683</code> <code>_get_temporal_memory_inputs</code>：force_reset=True 时调 <code>_init_temporal_state</code> 清零；<br>
+<code>configs/joydriver_v0_cfg.py:15</code> <code>clip_len=1</code>，<code>:284</code> <code>'clip_length': clip_len</code> 传给 temporal_transformer；<br>
+<code>src/models/onnx_adapter.py:303-308</code> ONNX 侧也复刻了这个逻辑：优先 force_reset，否则 <code>batch_count % clip_length</code> 重置。
+</div>
+
+<aside class="counter">
+如果重置逻辑写错（比如导出 ONNX 时 <code>clip_length</code> 配成 0 或忘记重置），ONNX 会在第一帧后永远带着第 0 帧的 memory 跑，时序 transformer 退化，且这种 bug 在<b>单样本验证时看不出来</b>（单样本 memory 影响小），<b>只有长序列 val 才暴露</b>。<code>clip_len=1</code> 这个配置点说明：训练用单帧（数据是打散的），部署用序列 —— 训练和部署的时序语义本就不同，<b>重置逻辑必须在两条链路上都正确</b>。
+</aside>
+
+<aside class="note">
+<b>这是最容易被忽略、上车必爆的坑。</b>PM 直觉上「训练准确 = 部署准确」，但时序模型在「训练打散单帧」和「部署连续序列」两种模式下，memory 的语义完全不同。<b>force_reset 就是连接两种模式的「离合器」</b>。
+</aside>
+
+<h3>6.9 onboard 部署链路：从 ONNX 到 TensorRT engine，再到 tensor 录制回放</h3>
+<p>真正上车的是 <b>TensorRT engine</b>（不是 ONNX 本身 —— ONNX 只是中间格式，TensorRT 把它编译成针对具体 GPU 优化的引擎）。链路：ONNX → trtexec/编译 → .engine → C++ 推理服务消费。Joy Driver 仓库里 onboard 的对应物是 <code>src/cli/tensor_recorder.py</code>：它的 <code>TensorRTEngine</code> 类直接 load <code>.engine</code> 文件、用 <code>context.execute_async_v3 + cuda stream</code> 跑推理，<b>模拟 C++ 车端的调用方式</b>。</p>
+
+<p>两个核心用途：</p>
+<ol class="compact">
+<li><b>cal_offboard_tensor</b>：用 offboard 真值数据跑 PyTorch 模型，把 pre_process 输入和 post_process 输出都录成 JSON；</li>
+<li><b>replay_onboard_tensor</b>：把车端 C++ 录的 pre_process tensor 喂进模型（PyTorch 或 TRT），输出 post_process tensor，<b>用来 diff 车端和离线的中间 tensor 是否一致</b>。</li>
+</ol>
+
+<div class="evd">
+<code>src/cli/tensor_recorder.py:23-83</code> <code>TensorRTEngine</code>：<code>deserialize_cuda_engine</code>、<code>create_execution_context</code>、<code>set_tensor_address</code>、<code>execute_async_v3</code>，车端 C++ 的 python 复刻；<br>
+<code>:266-323</code> <code>cal_offboard_tensor</code>：<code>net.pre_process(data) → 存 JSON</code>；<code>net(data_in) → net.post_process → 存 JSON</code>；<br>
+<code>:344-410</code> <code>replay_onboard_tensor</code>：<code>load_preprocess_tensor</code> 读车端录的 JSON，喂模型，存 <code>post_process_onboard</code>；<br>
+<code>:195-240</code> <code>replace_key</code> 把 <code>ONBOARD_*</code> 前缀的键名（车端命名）映射成模型输入键名 —— 车端/离线键名对齐的桥。
+</div>
+
+<aside class="why">
+车端 C++ pipeline 和离线 PyTorch pipeline 是<b>两套独立实现</b>，任何一处的预处理差异（图像归一化常数、坐标系约定、dtype、padding 顺序）都会让 ONNX 输入不一致，导致车端输出和离线对不上。<b>tensor 录制回放是「端到端对齐」的唯一可靠手段</b>：把两边的中间 tensor 都落盘，逐帧 diff。反事实：如果不做这个对齐，可能出现「离线 ADE 很好、上车就跑偏」的幽灵 bug，且无法定位 —— 因为你看不到车端到底喂了什么进模型。<code>TensorRTEngine</code> 类存在的意义就是「用 python 复刻车端推理路径」，让 diff 可执行。
+</aside>
+
+<aside class="note">
+PM 要建立的核心因果：「<b>端到端模型上车</b>」不是把 <code>.onnx</code> 扔给车端就完事，而是一条「<b>预处理对齐 → 中间 tensor 对齐 → 输出对齐</b>」的三段式验证链。<code>tensor_recorder.py</code> 就是这条链的工具化。<code>replace_key</code> 那段（<code>ONBOARD_AGENT_FEATURE → agent_feature</code> 等）揭示了车端和离线的键名都不一样 —— 细节多到必须用工具系统化对齐。
+</aside>
+
+<h3>6.10 预测结果落盘与可视化调试</h3>
+<p><code>evaluator.save_pred=True</code> 时，<code>JoyDriverEvaluator.evaluate</code> 会把每个 seq 的完整预测 + 真值 + record_info 序列化成 dict，经 <code>_compress_numpy_to_float32</code>（float64 → float32、保留 2 位小数）压缩，再 <code>zstandard level=3</code> 压缩成 <code>.zst</code> 落盘到 <code>eval_res/</code>。这些 <code>.zst</code> 同时是 <code>benchmark.py</code> 的输入（开闭环指标）和 <code>visualize.py</code> 的输入（画图调试）。落盘前有个关键变换 <code>local_coordinate_transform</code>：把模型输出的「局部坐标轨迹」经旋转矩阵转回全局坐标。</p>
+
+<div class="evd">
+<code>src/eval/evaluator.py:228-291</code> <code>local_coordinate_transform</code>：标准 2D 旋转矩阵 <code>[[cos,-sin],[sin,cos]]</code>，把局部 <code>(x,y)</code> 转 global；<br>
+<code>:187-224</code> <code>_compress_numpy_to_float32</code> 注释明说 float32 比 list 节省 50-60% 空间；<br>
+<code>:305-408</code> <code>save_pred</code> 分支：把 ego/agent 的 pos/vel/ang/target_point/BEV_MAP/extrinsic 全塞进 save_dict，<code>:398</code> 压缩，<code>:401-408</code> zstandard 压缩成 <code>.zst</code>。
+</div>
+
+<aside class="note">
+PM 容易把「落盘」当成 IO 细节忽略，但它其实是<b>数据闭环的物理体现</b>：模型输出 → 标准化资产 → 评测/可视化/数据挖掘三个消费者。<code>_compress_numpy_to_float32</code> 和 zst 的取舍、坐标变换的正确性，都是「让闭环能转起来」的硬约束。
+</aside>
+
+<h3>6.11 评测 + ONNX + onboard 部署全链路（mermaid）</h3>
+
+<pre class="mermaid">
+flowchart TD
+  CK["checkpoint .tar"] --> EXP["export_joydriver_v0_onnx.py<br/>build_dummy_inputs + forward_with_core"]
+  EXP --> ONNX["ONNX 模型<br/>opset 20, memory 显式化"]
+  ONNX --> VAL["ONNXModelAdapter 验证<br/>复用 pre/post_process + 自管 memory"]
+  VAL --> EQ{"全 val 集<br/>ADE/FDE 对齐?"}
+  EQ -->|"是"| TRT["TensorRT engine 编译"]
+  EQ -->|"否"| EXP
+  TRT --> CAR["车端 C++ 推理"]
+  CAR --> REPLAY["tensor_recorder replay<br/>onboard tensor diff"]
+  REPLAY --> ALIGN{"中间 tensor<br/>对齐?"}
+  ALIGN -->|"否"| CAR
+  ALIGN -->|"是"| DONE["上线"]
+</pre>
+
+<pre class="mermaid">
+flowchart LR
+  V["val 集"] --> P["pre_process → forward → post_process"]
+  P --> E["JoyDriverEvaluator<br/>ADE/FDE 内联算"]
+  P --> S["save_pred: 坐标变换+压缩<br/>落 .zst"]
+  S --> B["benchmark.py<br/>18 个场景 metric"]
+  S --> VIS["visualize.py<br/>BEV 画图"]
+  E -->|"rank_metric 选 epoch"| CKPT["落地 checkpoint"]
+</pre>
+
+</section>
+
+<section class="chapter" id="ch7">
+<h2><span class="ch-tag">CH 07</span>实战路径：data → train → eval → export → onboard 命令级</h2>
+
+<div class="lead">
+这一章给「从 0 跑通」的可执行命令序列。读者按顺序执行就能把整个闭环走一遍。每条命令标注来源脚本和关键参数，配合前面章节理解「为什么这么调」。
+</div>
+
+<h3>7.1 阶段一：数据预处理（record → zst）</h3>
+<div class="cmd">
+<span class="cmt"># 1.1 对一个 record 跑 11 步预处理管线</span>
+INPUT_ROOT=/data/records/<span class="var">${RECORD_ID}</span> \
+MODE=offboard \
+bash scripts/run_data_pipeline.sh
+
+<span class="cmt"># 产物：features/&lt;seq_dir&gt;/e2e_data/*.zst (每个 zst 一帧)</span>
+<span class="cmt"># 状态回调：data-pipeline.jd.com (preprocess.py:295)</span>
+
+<span class="cmt"># 1.2 扫描 zst 产出 manifest.pkl (文件名清单)</span>
+python -m src.dataset.build_manifest \
+    --data_root /data/features \
+    --output manifests/raw.pkl \
+    --check_img
+</div>
+
+<aside class="note">
+关键参数：<code>MODE=offboard</code> 用高精地图算 TARGET_AREA（更准但要离线算）；<code>MODE=onboard</code> 复现车端 routing 实时算的逻辑。<b>训练用的 TARGET_AREA 必须和车端推理时能拿到的 routing 同源</b>，否则训推不一致。<code>--check_img</code> 把 zst 时间戳与 <code>front_8m_image</code> 下的 jpg 时间戳做交集，丢弃缺图的帧。
+</aside>
+
+<h3>7.2 阶段二：数据挖掘（manifest → allinfo → clean manifest）</h3>
+<div class="cmd">
+<span class="cmt"># 2.1 并行挖掘: 给每帧贴场景标签 + 算连续指标</span>
+torchrun -m src.tools.data_mining.data_mining \
+    --manifest manifests/raw.pkl \
+    --mining_type TargetAreaSignedLateralDistance \
+    --output manifests/mining/
+
+<span class="cmt"># 产物: filter_manifest_*_allinfo_batchN.pkl</span>
+<span class="cmt"># (status_code + distance_60 + anchor_xy + ...)</span>
+
+<span class="cmt"># 2.2 剪枝非居中样本 (precision 导向)</span>
+python scripts/clean_center_after25_from_target_area_distance_allinfo.py \
+    --allinfo manifests/mining/allinfo.pkl \
+    --output manifests/clean_centering.pkl
+
+<span class="cmt"># 2.3 召回变道起步样本 (recall 导向, 补回 clean 误杀)</span>
+python scripts/recall_lanechange_initiation25_from_target_area_distance_allinfo.py \
+    --allinfo manifests/mining/allinfo.pkl \
+    --output manifests/recall_lc.pkl
+
+<span class="cmt"># 2.4 删早期外摆样本</span>
+python scripts/drop_outside_swing35.py \
+    --input manifests/clean_centering.pkl \
+    --output manifests/clean_v2.pkl
+
+<span class="cmt"># 最终: 把 manifests/recall_lc.pkl 合进 clean_v2.pkl,</span>
+<span class="cmt">#       这就是这一版训练用的 manifest</span>
+</div>
+
+<h3>7.3 阶段三：训练（本地 CLI 调试 + 集群 Determined）</h3>
+<div class="cmd">
+<span class="cmt"># 3.1 本地单卡调试 (验证 cfg / 数据格式)</span>
+joydriver-train --mode train \
+    --cfg_path configs/joydriver_v0_cfg.py \
+    --workspace /tmp/joydriver_debug
+
+<span class="cmt"># 3.2 集群 8 卡训练 (生产路径)</span>
+<span class="cmt"># 在 det.yaml 里改资源/priority, 然后:</span>
+det experiment create det.yaml .
+
+<span class="cmt"># Determined 实际启动 (DETERMINED_ZH.md:358-368):</span>
+<span class="cmt">#   python -m torch.distributed.run --nproc_per_node 8 -m train.run</span>
+<span class="cmt"># 单机 8 卡 DDP + NCCL all-reduce (经 InfiniBand RDMA)</span>
+<span class="cmt"># 真正训练步数由 cfg.TRAIN_ITERS=1_000_000 决定, 不是 det.yaml 的 searcher</span>
+
+<span class="cmt"># 3.3 仅验证 (跑完一个 ckpt 后评估)</span>
+joydriver-train --mode val \
+    --cfg_path configs/joydriver_v0_cfg.py \
+    --checkpoint /path/to/JoyDriverV0_ddp_ckpt_epoch17.tar
+<span class="cmt"># val 结束自动调起 benchmark.py (run.py:1474-1480)</span>
+</div>
+
+<aside class="note">
+<b>资源调度细节：</b><code>det.yaml:4</code> <code>slots_per_trial:8</code>（8 卡）；<code>:25</code> <code>shm_size</code> 约 1TB（防 dataloader bus error，因为 DataLoader 的 worker 共享内存）；<code>:7-24</code> 挂载 InfiniBand <code>uverbs0-5</code> 设备（RDMA 通信）；<code>:26</code> <code>priority</code>（数字越小越优先，调度排队用）。
+</aside>
+
+<h3>7.4 阶段四：ONNX 导出（生产脚本）</h3>
+<div class="cmd">
+<span class="cmt"># 4.1 生产导出 (scripts/export_onnx.sh 调用的就是这个)</span>
+python scripts/export_joydriver_v0_onnx.py \
+    --checkpoint /path/to/JoyDriverV0_ddp_ckpt_epoch17.tar \
+    --cfg_path configs/joydriver_v0_cfg.py \
+    --output /path/to/joydriver.onnx \
+    --export_core  <span class="cmt"># 无状态 core, 不是 stateful wrapper</span>
+
+<span class="cmt"># 关键点 (见 6.5):</span>
+<span class="cmt">#   - opset_version=20</span>
+<span class="cmt">#   - do_constant_folding=True (PyTorch 原生常量折叠, 不调 onnxsim)</span>
+<span class="cmt">#   - img NHWC 在 forward 内 permute 到 NCHW (让 ONNX trace 这一步)</span>
+<span class="cmt">#   - 6 个 memory 张量作为显式输入输出</span>
+</div>
+
+<aside class="counter">
+<b>不要照着 <code>src/cli/export.py</code> 学 ONNX 导出！</b>那是历史包袱（HiVT/Argoverse 图模型，输入是 <code>actors/actor_idcs/lanes/rpe</code>，opset 13，调 onnxsim），和当前 <code>JoyDriverV0</code> 完全无关。生产链路走 <code>scripts/export_joydriver_v0_onnx.py</code>，由 <code>scripts/export_onnx.sh</code> 调用。<code>src/export/</code> 目录只有一个空 <code>__init__.py</code>（注释 <i>'SIMPL $sub package'</i>），是更早的遗留。
+</aside>
+
+<h3>7.5 阶段五：ONNX 等价性验证</h3>
+<div class="cmd">
+<span class="cmt"># 5.1 用 ONNXModelAdapter 跑全 val 集, 比对 PyTorch 指标</span>
+GPUS_PER_NODE=1 bash scripts/validate_onnx.sh \
+    --cfg_path configs/joydriver_v0_cfg.py \
+    --onnx_path /path/to/joydriver.onnx
+
+<span class="cmt"># 内部等价于:</span>
+<span class="cmt">#   joydriver-train --mode val --use_onnx --onnx_path ...</span>
+<span class="cmt"># loader.py:251-283 强制 val_batch_size=1, world_size=1</span>
+
+<span class="cmt"># 5.2 看指标是否对齐 (PyTorch vs ONNX)</span>
+<span class="cmt">#   - 全 val 集 ADE/FDE 差异应在数值噪声范围内</span>
+<span class="cmt">#   - 若不对齐: 先查 dtype (onnx_adapter.py:130-149 _to_numpy),</span>
+<span class="cmt">#               再查 clip_length 配置, 再查 NHWC/NCHW 顺序</span>
+</div>
+
+<h3>7.6 阶段六：车端 tensor 对齐（tensor_recorder）</h3>
+<div class="cmd">
+<span class="cmt"># 6.1 离线侧: 用 offboard 真值数据录中间 tensor</span>
+python -m src.cli.tensor_recorder cal_offboard_tensor \
+    --cfg_path configs/joydriver_v0_cfg.py \
+    --checkpoint /path/to/ckpt.tar \
+    --output /tmp/offboard_tensors/
+
+<span class="cmt"># 6.2 车端侧: C++ 推理服务录 pre_process 输入 (JSON)</span>
+<span class="cmt">#   车端代码自己实现, 录成 ONBOARD_*.json</span>
+
+<span class="cmt"># 6.3 回放: 把车端录的 tensor 喂模型, diff 输出</span>
+bash scripts/tensor_recoder.sh \
+    --onboard_tensor_path /data/onboard_preprocess/
+
+<span class="cmt"># 产物: post_process_onboard/, 与 offboard_tensors/ 逐帧 diff</span>
+<span class="cmt">#   不对齐 = 上车必爆; 对齐 = 可上车</span>
+</div>
+
+<h3>7.7 全流程总览（一张图）</h3>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph D["数据侧"]
+    R["record"] --> P["preprocess 11步"]
+    P --> ZST[".zst 帧"]
+    ZST --> MAN["manifest.pkl"]
+    MAN --> MINE["挖掘 allinfo"]
+    MINE --> CLEAN["clean/recall/drop"]
+    CLEAN --> CLEAN_MAN["clean manifest"]
+  end
+  subgraph T["训练侧"]
+    CLEAN_MAN --> TR["torchrun 8卡 DDP<br/>1M iter"]
+    TR --> CK["checkpoint"]
+  end
+  subgraph E["评测/部署侧"]
+    CK --> VAL["val: ADE/FDE + benchmark"]
+    CK --> EXP["export ONNX<br/>(opset 20, stateless core)"]
+    EXP --> VONNX["validate_onnx<br/>(全val集对齐)"]
+    VONNX --> TRT["TensorRT engine"]
+    TRT --> CAR["车端 C++ 推理"]
+    CAR --> DIFF["tensor_recorder replay<br/>(车端/离线 tensor diff)"]
+  end
+  VAL -.失败场景.-> MINE
+  DIFF -.不对齐.-> CAR
+</pre>
+
+</section>
+
+<section class="chapter" id="ch8">
+<h2><span class="ch-tag">CH 08</span>学习路径：读文件顺序（模型先行）</h2>
+
+<div class="lead">
+遵循「<b>模型先行 / 两遍法</b>」的学习契约：第一遍建立总图（只读 forward + 关键 cfg），第二遍逐层深入。下面是按 5 视角素材整理的<b>推荐阅读顺序</b>，每条都标注「读什么 + 为什么」。
+</div>
+
+<h3>8.1 第一遍：建立总图（半天）</h3>
+<ol>
+<li><code>/home/cheche/Workspaces/Learning/JoyDriver/pyproject.toml</code>（5 分钟）<br>
+看入口和依赖，<b>注意 <code>name=simpl</code> 的血缘痕迹</b>。
+</li>
+<li><code>/home/cheche/Workspaces/Learning/JoyDriver/configs/joydriver_v0_cfg.py</code><br>
+先扫 <code>get_net_cfg</code>（<code>:231-293</code>）看模型结构；再扫 <code>get_dataset_cfg</code>（<code>:70-229</code>）看 manifest 闭环。
+</li>
+<li><code>/home/cheche/Workspaces/Learning/JoyDriver/src/models/joydriver_v0.py</code><br>
+<b>重点读 <code>forward</code>（<code>:970-1044</code> 5 个 Stage）</b>和 <code>_generate_predictions</code>（<code>:907-968</code>），其余类定义按需。
+</li>
+</ol>
+
+<h3>8.2 第二遍：逐层深入（2-3 天）</h3>
+
+<h4>架构层</h4>
+<ol>
+<li><code>src/models/joydriver_v0.py:425-568</code>（<code>__init__</code>）<br>看所有模块如何按 cfg 拼装、哪些是开关。</li>
+<li><code>src/models/joydriver_v0.py:710-906</code>（四个 <code>_apply/_encode</code> 私有方法）<br>看数据怎么在阶段间流。</li>
+<li><code>src/models/streampetr/img_encoder.py:54-60</code> + <code>src/models/streampetr/position_embedding_3d.py:37-78</code><br>图像 → 3D 特征的物理基础，先 img_encoder 再 PE3D。</li>
+<li><code>src/models/backbones/regnet.py:271-282</code> + <code>src/models/necks/cp_fpn.py:143-170</code><br>骨干 + 颈 forward，理解降采样与多尺度。</li>
+<li><code>src/models/streampetr/head.py:373-476</code>（<code>StreamPETRHeadCore.forward</code>）<br>看感知 transformer 的时序记忆三步。</li>
+<li><code>src/models/streampetr/head.py:167-371</code>（pre / alignment / post 三纯函数）<br>吃透运动补偿与时序对齐的因果。</li>
+<li><code>src/models/streampetr/decoder.py:206-298</code> + <code>src/models/streampetr/transformer.py:87-164</code><br>decoder 层的 self/cross attn 细节。</li>
+<li><code>src/models/joydriver_v0.py:69-283</code>（<code>AgentEncoder</code> + <code>TrajectoryHead</code>）<br>理解 query 来源与运动学积分。</li>
+<li><code>src/models/joydriver_v0.py:344-422</code>（<code>TrajectoryRefineHead</code>）<br>看 coarse-to-fine 精修。</li>
+<li><code>src/models/transformer.py:154-233</code>（<code>AttentionBlock</code>）<br>规划侧 transformer 的实现。</li>
+<li><code>src/models/streampetr/head.py:479-636</code>（<code>StreamPETRHead</code> wrapper）<br>对比有状态/无状态。</li>
+<li><code>src/models/joydriver_v0.py:1144-1225</code>（<code>forward_with_core</code>）<br>ONNX 导出入口。</li>
+<li><code>src/models/onnx_adapter.py:15-322</code>（<code>ONNXModelAdapter</code>）<br>车端部署形态。</li>
+<li><code>src/models/joydriver_v0.py:570-708</code>（<code>load_state_dict</code> + 时序状态管理）<br>理解迭代兼容性与 reset 逻辑。</li>
+</ol>
+
+<h4>训练层</h4>
+<ol>
+<li><code>src/train/run.py:72-173</code>（<code>parse_arguments</code>）</li>
+<li><code>src/train/run.py:681</code> 起（<code>train_one_epoch</code>）<br>看 DDP/AMP/异常 skip 工程细节。</li>
+<li><code>DETERMINED_ZH.md</code> 第 6-7 章<br>理解 <code>det.yaml</code> 各字段含义和「searcher 占位」的关键事实。</li>
+</ol>
+
+<h4>数据层</h4>
+<ol>
+<li><code>src/dataset/build_manifest.py</code>（清单生成入口）</li>
+<li><code>src/dataset/dataset.py:1148-1330</code>（<code>load_data / __getitem__</code>）<br>再回看 <code>:774-1118</code> 的 <code>__init__/_split_clip</code>。</li>
+<li><code>src/dataset/utils.py</code>（<code>MMapSamples</code> + 坐标归一化）</li>
+<li><code>src/dataset/sampler.py</code>（<code>DistClipSampler</code>）</li>
+<li><code>src/dataset/augmentations.py</code> + <code>img_augmentations.py</code>（两条增广通路）</li>
+<li><code>scripts/run_data_pipeline.sh</code> → <code>src/preprocess/preprocess.py</code>（预处理 11 步全景）</li>
+<li><code>src/preprocess/steps/feature_generator.py:370-404</code><br>看 TARGET_AREA 在哪一步真正写进 zst。</li>
+<li><code>src/preprocess/target_area/offboard_core.py</code> + <code>service.py</code><br><b>TARGET_AREA 算法因果，最难也最值</b>。</li>
+<li><code>src/tools/data_mining/data_mining.py</code>（挖掘并行框架）</li>
+<li><code>src/tools/data_mining/tags/target_area_distance.py</code>（挖掘的核心 filter）</li>
+<li><code>scripts/clean_center_after25_*.py</code> + <code>scripts/recall_lanechange_initiation25_*.py</code><br>看 allinfo 如何回链成新 manifest，<b>闭环最后一公里</b>。</li>
+<li><code>src/tools/mmap/create_mmap.py</code>（规模化内存优化，选读）</li>
+</ol>
+
+<h4>评测/部署层</h4>
+<ol>
+<li><code>src/eval/metrics.py</code> → <code>src/eval/evaluator.py</code></li>
+<li><code>src/train/run.py</code>（validate + val_only_mode benchmark 自动调起）</li>
+<li><code>src/models/joydriver_v0.py</code>（<code>forward / forward_with_core / update_temporal_state / pre_process</code>）<br>stateful vs stateless 的源头。</li>
+<li><code>scripts/export_joydriver_v0_onnx.py</code>（生产导出脚本，<code>JoyDriverCoreOnnxWrapper</code>）</li>
+<li><code>scripts/export_onnx.sh</code>（确认生产走哪个脚本）</li>
+<li><code>src/cli/export.py</code>（<b>历史包袱</b>，对照阅读理解 onnxsim）</li>
+<li><code>src/models/onnx_adapter.py</code>（ONNX 接入训练验证流水线的桥）</li>
+<li><code>scripts/validate_onnx.sh</code> + <code>src/train/loader.py:236-312</code>（use_onnx 装配点）</li>
+<li><code>src/cli/tensor_recorder.py</code>（<code>TensorRTEngine</code> + onboard/offboard tensor 对齐）</li>
+<li><code>src/cli/visualize.py</code>（可视化调试入口）</li>
+<li><code>src/tools/benchmark/benchmark.py</code> + <code>metric/</code> 目录（闭环驾驶能力评测）</li>
+</ol>
+
+</section>
+
+<section class="chapter" id="ch9">
+<h2><span class="ch-tag">CH 09</span>关键设计 rationale + 反事实合集</h2>
+
+<div class="lead">
+本章把前面散落各章的「为什么这么设计」和「不这么设计会怎样」集中成<b>可检索的决策表</b>。读者读完前 8 章后，可以用这一章做「自我测试」—— 看着 rationale 能不能回忆起对应的代码位置和反事实。
+</div>
+
+<h3>9.1 模型设计决策</h3>
+<table>
+<thead><tr><th>决策</th><th>rationale</th><th>反事实（不这么做的后果）</th><th>证据</th></tr></thead>
+<tbody>
+<tr>
+<td>输出 acc/omega 再积分，不直接回归 xy</td>
+<td>把「自行车模型」作为硬先验嵌入网络，输出轨迹天然可执行；物理约束（acc/速度上限）可 clamp</td>
+<td>直接回归 xy 不满足运动学约束，网络可能学到侧滑/瞬移的非法轨迹；下游控制器无法直接执行，还得反解 acc/omega 引入数值误差</td>
+<td><code>joydriver_v0.py:174-283</code></td>
+</tr>
+<tr>
+<td>多模态输出 6 条轨迹 + 概率</td>
+<td>未来本质不确定（路口可左转可直行），模型必须输出分布而非单点</td>
+<td>单模态遇到本质多解场景，模型被迫取平均，输出一条「直穿绿化带的平均轨迹」</td>
+<td><code>joydriver_v0.py:216-229</code></td>
+</tr>
+<tr>
+<td>StreamPETR 时序融合 + ego-motion 补偿</td>
+<td>单帧无法判断「这辆车会不会动」，时序记忆隐式学速度/遮挡恢复/ID 一致性</td>
+<td>纯单帧 PETR 被遮挡车辆每帧重新检测，速度估计噪声极大，规划端看到「跳变」轨迹；不做运动补偿，自车一转弯旧记忆指向错误世界点</td>
+<td><code>streampetr/head.py:167-371</code></td>
+</tr>
+<tr>
+<td>ego token 放 index 0</td>
+<td>给 trajectory_head 一个隐式约定，方便「只取 ego token」</td>
+<td>约定被破坏，<code>ego_traj_pred</code> 取错 token，整个规划输出错位</td>
+<td><code>joydriver_v0.py:710-753</code></td>
+</tr>
+<tr>
+<td>TrajectoryHead 积分用 fp32（autocast disable）</td>
+<td>cumsum 在 fp16 下误差被放大，6 秒位置预测可能漂几米</td>
+<td>AMP 训练时积分爆炸</td>
+<td><code>joydriver_v0.py:231</code></td>
+</tr>
+<tr>
+<td>coarse_steps = n_step//5</td>
+<td>只预测 12 个粗步再插值到 60 步，降参 5 倍且防过拟合</td>
+<td>参数量爆炸 + 过拟合</td>
+<td><code>joydriver_v0.py:275-283</code></td>
+</tr>
+<tr>
+<td>PositionEmbedding3D 注入 3D 位置</td>
+<td>单目图像丢了深度维度，PETR 用假设深度反投影让 transformer 隐式挑正确深度</td>
+<td>纯 2D DETR 的 cross-attention 只能学到「图像里有车」，无法学到「车在 3D 哪里」</td>
+<td><code>streampetr/position_embedding_3d.py:37-78</code></td>
+</tr>
+<tr>
+<td>ego-only map cross-attn</td>
+<td>他车不需要读自车坐标系的高精地图（语义不符），只 ego 读即可，省算力</td>
+<td>他车读自车坐标系地图会学错；全 agent 读地图算力翻倍无收益</td>
+<td><code>joydriver_v0.py:893-896</code></td>
+</tr>
+<tr>
+<td>mask_ego_history（训练时随机遮蔽自车历史）</td>
+<td>数据增广防捷径学习，强迫模型从图像找自车位置</td>
+<td>模型只依赖历史位置外推，遮挡时崩</td>
+<td><code>joydriver_v0.py:731-735</code></td>
+</tr>
+</tbody>
+</table>
+
+<h3>9.2 部署工程决策</h3>
+<table>
+<thead><tr><th>决策</th><th>rationale</th><th>反事实</th><th>证据</th></tr></thead>
+<tbody>
+<tr>
+<td>stateful wrapper / stateless core 双形态</td>
+<td>训练框架（PyTorch）和部署框架（ONNX/TRT）表达能力不对称，时序状态必须外置成显式 I/O 张量</td>
+<td>硬导出 stateful wrapper，ONNX 图固化导出那一刻的 memory，每帧推理都用同一份初始 memory，相当于「失忆」，时序 transformer 退化成单帧模型，精度暴跌</td>
+<td><code>streampetr/head.py:26-46</code>, <code>joydriver_v0.py:1144-1225</code></td>
+</tr>
+<tr>
+<td>NHWC→NCHW permute 放进 forward 内部</td>
+<td>让 ONNX trace 能记录这个算子，C++ 端的相机 buffer（天然 NHWC）能直接喂进来，省一次宿主侧拷贝</td>
+<td>放在 pre_process（python 侧），ONNX 图假设输入是 NCHW，C++ 端必须先 permute 再喂，多一次拷贝且容易写错维度顺序</td>
+<td><code>joydriver_v0.py:987-992</code></td>
+</tr>
+<tr>
+<td>生产导出不用 onnxsim</td>
+<td>JoyDriverV0 导出固定 batch=1、纯 tensor 输入，图本来干净，<code>do_constant_folding=True</code> 已做大部分常量折叠</td>
+<td>盲目套 onnxsim 触发 <code>check=False</code>（简化后数值不等），debug 成本高于收益</td>
+<td><code>scripts/export_joydriver_v0_onnx.py:434</code></td>
+</tr>
+<tr>
+<td>ONNX 验证复用 val 流水线（ONNXModelAdapter）</td>
+<td>零额外代码拿到「ONNX 模型在全 val 集上的 ADE/FDE」，比单样本数值 diff 强得多</td>
+<td>只用 dummy 样本数值 diff，覆盖不到 memory 跨帧累积差异，上车后才发现精度漂移</td>
+<td><code>onnx_adapter.py:280-332</code>, <code>loader.py:251-283</code></td>
+</tr>
+<tr>
+<td>clip_length=8 + force_reset 训练/部署两侧一致</td>
+<td>训练按 8 帧片段 BPTT，部署每 8 帧清零，保证两边状态机一致</td>
+<td>不一致会出现「训练精度高、上车就崩」的诡异 bug；单样本验证看不出来，只有长序列 val 暴露</td>
+<td><code>joydriver_v0.py:1113-1121</code>, <code>onnx_adapter.py:303-308</code></td>
+</tr>
+<tr>
+<td>tensor_recorder 录制 onboard/offboard tensor</td>
+<td>车端 C++ 和离线 PyTorch 是两套独立实现，预处理差异必现，tensor 落盘逐帧 diff 是唯一可靠对齐手段</td>
+<td>不做对齐，出现「离线 ADE 很好、上车就跑偏」的幽灵 bug，且无法定位</td>
+<td><code>cli/tensor_recorder.py:23-410</code></td>
+</tr>
+<tr>
+<td>锁死 onnxruntime==1.19.2 / av2==0.3.5 / tensorrt==10.13</td>
+<td>算子集合要对齐车端 TensorRT；数据格式契约（av2 tensor 布局）不能动</td>
+<td>升级 onnxruntime 导出 onnx 用新算子，车端 TRT 转换失败；av2 换版本破坏序列化兼容性</td>
+<td><code>pyproject.toml:10-21</code>, <code>requirements.txt:13</code></td>
+</tr>
+</tbody>
+</table>
+
+<h3>9.3 数据闭环决策</h3>
+<table>
+<thead><tr><th>决策</th><th>rationale</th><th>反事实</th><th>证据</th></tr></thead>
+<tbody>
+<tr>
+<td>manifest = list[str] 文件名清单（非数据）</td>
+<td>清单小（百 MB）可频繁增删改，数据大（TB）只读，迭代周期从天级降到小时级</td>
+<td>manifest 内联整帧，每次挖掘筛选都要重写 TB 数据，长尾场景根本迭代不动</td>
+<td><code>build_manifest.py:55-92</code></td>
+</tr>
+<tr>
+<td>TARGET_AREA 是「导航指令栅格」（preprocess 算）</td>
+<td>把高精地图车道面 + 参考线 + 路口识别压缩成「车该往哪片区域开」的二值图，模型能表达「这片都可走」的柔性</td>
+<td>只给 REFER_PATH 连续坐标，跨城市/路口泛化差，模型在车道边界抖动</td>
+<td><code>preprocess/target_area/offboard_core.py:908-998</code></td>
+</tr>
+<tr>
+<td>挖掘用 TARGET_AREA 反向量自车（target_area_distance_allinfo）</td>
+<td>用模型训练时同一个 TARGET_AREA 反向量，分布完全自洽，等于「用模型的世界观筛模型的数据」</td>
+<td>用人工标注居中真值，成本高且与训练 target_area 不一致</td>
+<td><code>tools/data_mining/tags/target_area_distance.py:196-301</code></td>
+</tr>
+<tr>
+<td>clean_* + recall_* 双向闭环</td>
+<td>clean 是 precision 导向（删坏样本保准确率），recall 是 recall 导向（补回误删的好样本保覆盖）</td>
+<td>只 clean 不 recall，长尾场景（变道起步）被误杀覆盖不足；只 recall 不 clean，准确率下降</td>
+<td><code>scripts/clean_center_after25_*.py</code>, <code>scripts/recall_lanechange_initiation25_*.py</code></td>
+</tr>
+<tr>
+<td>DistClipSampler 保证同 batch 同 clip</td>
+<td>时序模型需要连续帧维护 memory，clip 是最小可训练单元；多卡时 batch 内 clip 对齐才能正确同步</td>
+<td>普通随机采样打乱时序，模型每帧从零 init memory，退化成单帧；多卡 clip 不对齐，梯度聚合混入不同 clip memory，训练发散</td>
+<td><code>sampler.py:48-75</code></td>
+</tr>
+<tr>
+<td>BEV 旋转增广同步轨迹和地图</td>
+<td>解决急弯数据不平衡，让模型见到更多朝向组合</td>
+<td>不同步 = 给模型喂错标签，比不增广更糟</td>
+<td><code>augmentations.py:21-108</code></td>
+</tr>
+<tr>
+<td>评测前过滤有效 agent（<code>_valid_agent_indices</code>）</td>
+<td>数据有大量 padding 假车（max_agents=128 但实际 5 辆），不过滤会被零误差 padding 稀释</td>
+<td>模型「学会」少预测真车多预测 padding 来刷分，训练目标被污染</td>
+<td><code>eval/evaluator.py:24-36</code></td>
+</tr>
+<tr>
+<td>MMap 让千万级清单零 RAM 常驻</td>
+<td>清单规模与 RAM 占用解耦，支撑百 TB 级数据集</td>
+<td>8 卡每卡复制一份清单，内存爆炸；每次启动重算 _split_clip 要十几分钟，迭代速度崩塌</td>
+<td><code>tools/mmap/create_mmap.py</code>, <code>dataset/utils.py:118-156</code></td>
+</tr>
+</tbody>
+</table>
+
+<h3>9.4 三个最深的设计决策（详细讲解）</h3>
+
+<h4>决策一：为什么是「stateful 训练 / stateless 部署」的双形态，而不是统一一种</h4>
+<p>这是整个 JoyDriver 工程里<b>最深、也最反直觉</b>的设计。表面看，维护两套 forward（<code>forward</code> 走 wrapper、<code>forward_with_core</code> 走 core）是重复代码，为什么不统一？</p>
+
+<p>根因在于<b>训练框架和部署框架的表达能力不对称</b>：PyTorch 是动态图，能写任意 Python 对象状态（<code>self._temporal_state</code> 跨 batch 持有），训练时 wrapper 模式让代码简洁（<code>update_temporal_state</code> 一个调用就更新记忆）。但 ONNX/TensorRT 是<b>静态计算图</b>，一次推理一个确定输入 → 一个确定输出，<b>图里不能有跨调用的成员变量</b> —— 任何跨帧状态都必须拍扁成图的输入输出。</p>
+
+<p>所以双形态的真正价值是：<b>让训练代码的简洁性和部署的可行性各得其所</b>。如果只保留 stateless core，训练时每个 batch 都要手动传 6 个 memory 张量、手动写回，代码冗长易错；如果只保留 stateful wrapper，导不出 ONNX（stateful 部分无法 trace），上不了车。<code>StreamPETRHeadCore</code> 是无状态纯函数（<code>head.py:26-46</code>），<code>StreamPETRHead</code> 是有状态 wrapper（<code>:479-496</code>）调 <code>.core</code>，<code>ONNXModelAdapter</code> 在车端用 numpy 维护 6 个记忆张量（<code>onnx_adapter.py:100-128</code>）。<b>同一份权重，三种「活法」</b>，分别对应「训练便利」「ONNX 可导」「车端可执行」三个互相冲突的目标。</p>
+
+<p>这套设计还把「何时 reset 记忆」这个<b>产品决策</b>留给了部署侧（<code>force_reset</code> 由数据集 <code>clip_start</code> 决定），训练和部署解耦。ONNX 输出后 6 个张量是新记忆而非在模型内原地更新，是因为 <b>ONNX 计算图没有「副作用」语义</b>。</p>
+
+<h4>决策二：为什么用 TARGET_AREA 反向量自车（target_area_distance_allinfo），而不是单独标注居中真值</h4>
+<p>这是数据闭环里<b>最巧妙的「自洽」设计</b>。表面看，要衡量「自车是否居中」，最直觉的做法是让人工标注车道中心线作为真值。但 JoyDriver 偏偏用<b>训练时模型看的同一个 TARGET_AREA</b>反过来当尺子量自车偏移。</p>
+
+<p>根因是<b>分布自洽</b>：模型训练时见到的 TARGET_AREA 是 preprocess 用地图 + 参考线算出来的「驾驶意图栅格」，模型学到的「居中」概念是相对这个栅格的中心线。如果挖掘时用<b>另一套</b>真值（人工标注的车道中心），就会出现「挖掘说这帧不居中、模型说它居中」的矛盾 —— 因为两者用的「中心」不是同一个。用 TARGET_AREA 反向量，等于<b>用模型的世界观筛模型的数据</b>，挖掘的判据和模型的优化目标完全对齐。</p>
+
+<p>具体算法（<code>target_area_distance.py:196-301</code>）：对 target_area 做连通域分析提取中心线，在自车当前 x 处插值出中心线 y 作为 <code>anchor_center_y</code>，算 <code>signed_lateral_distance_60 = 未来 60 帧自车 y 减 anchor_center_y</code> 的序列。这 60 个数刻画「未来 6 秒自车会偏离目标车道中心多少」，既是挖掘的指标，也是 clean_*/recall_* 脚本剪枝/召回的依据。配合 <code>start_frame=25</code>、<code>recovery_ratio=0.70</code>、<code>median 0.20</code> 这些<b>从数据分布调出来的超参</b>（不是模型超参），整个闭环的判据都和模型训练目标对齐。</p>
+
+<h4>决策三：为什么 TrajectoryHead 输出 acc/omega 再积分，而不是直接回归 xy 位置</h4>
+<p>这是端到端模型里<b>影响最大</b>的设计决策之一。表面看，模型的最终输出是轨迹（xy 位置序列），为什么不直接回归 xy，反而绕一圈回归 acc/omega 再积分？</p>
+
+<p>根因有两个。第一，<b>运动学合法性</b>：车辆是 nonholonomic 系统（不能横向平移），直接回归 xy 网络可能学到物理上不可能的轨迹（侧滑、瞬移）。回归 acc（加速度）和 omega（偏航角速度）再积分，等价于把「自行车模型」作为<b>硬先验</b>嵌入网络 —— 输出的轨迹天然满足运动学约束。而且 acc/omega 是受约束的物理量（可 clamp 到 <code>acc_min/acc_max</code>），网络不会预测出物理不可能的控制量。</p>
+
+<p>第二，<b>误差结构</b>：直接回归 xy，长程误差随时间累积放大（未来第 6 秒的位置误差远大于第 1 秒），loss 被末期误差主导，训练困难。回归 acc/omega 后，loss 是定义在「控制量」上的，<b>速度对了，位置就跟得上</b>，误差结构更合理。代价是 cumsum 在 fp16 下数值不稳定，所以 <code>joydriver_v0.py:231</code> 显式 <code>autocast(enabled=False)</code> 用 fp32 积分。</p>
+
+<p>这个设计还有个下游红利：输出 acc/omega <b>可以直接喂给下游控制器</b>（转向/油门），不需要反解。如果直接回归 xy，控制器还得反解 acc/omega，引入数值误差。多模态输出 6 条候选 + 概率，则对应「未来本质上不确定」的建模假设 —— planner 从 6 条里选最优或加权。</p>
+
+</section>
+
+<footer class="ext">
+<h2>延伸阅读</h2>
+<ul>
+<li><b>StreamPETR 论文与代码</b>：StreamPETR 是 PETR 家族的时序 3D 检测方法，JoyDriver 直接复用了它的 temporal transformer + memory bank 设计。读论文理解 <code>_compute_updated_memory_pre</code> 的 ego-motion 补偿数学。</li>
+<li><b>PETR / PETRv2</b>：理解 <code>PositionEmbedding3D</code> 的 3D 位置编码原理，以及 LID（Linear Increasing Discretization）深度采样为什么用二次函数 bin_size。</li>
+<li><b>端到端自动驾驶综述</b>：UniAD、AD-MLP、Para-Drive 等。对比「感知-预测-规划级联」vs「E2E 共享 backbone」两种范式，理解 JoyDriver 在谱系里的位置（偏向 E2E，但保留了 agent 历史向量的显式编码作为 query 先验）。</li>
+<li><b>SIMPL / Argoverse 2 轨迹预测</b>：理解 JoyDriver 的血缘起点。<code>av2==0.3.5</code> 锁死是因为数据格式契约；<code>bezier</code> 是 SIMPL 用贝塞尔曲线参数化轨迹的遗留。</li>
+<li><b>Determined AI 文档</b>：理解 <code>det.yaml</code> 的 searcher/slots_per_trial/shm_size/priority 字段；为什么 searcher.max_length.batches=1 是占位（真正步数由 cfg.TRAIN_ITERS 决定）；max_restarts 怎么从 checkpoint 恢复。</li>
+<li><b>PyTorch DDP + NCCL + InfiniBand</b>：理解 all-reduce 梯度同步、RDMA 为什么比 TCP 快 10 倍、为什么 det.yaml 要挂载 uverbs 设备。</li>
+<li><b>ONNX / onnxsim / TensorRT 文档</b>：理解 <code>torch.onnx.export</code> 的 opset/do_constant_folding 参数、onnxsim 的常量折叠适用场景、ONNX → TensorRT engine 的编译链路、为什么 ONNX 计算图没有「副作用」语义。</li>
+<li><b>行为克隆（BC）vs 强化学习（RL）</b>：理解 JoyDriver 走 IL/BC 的务实选择（数据工程绕开 RL 算力难题），以及 covariate shift 是 IL 的最大软肋、JoyDriver 用数据闭环 + mask_ego_history 缓解。</li>
+<li><b>自行车模型（bicycle model）</b>：理解 TrajectoryHead 的运动学积分链 <code>acc→speed→angle→heading→vel→pos</code>，为什么车辆是 nonholonomic 系统。</li>
+</ul>
+<p style="margin-top:18px; font-size:13px; color:var(--muted);">本教材基于 JoyDriver 仓库 5 视角素材整理。所有论断均带 <code>file:line</code> 证据，读者可对照源码验证。</p>
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#ddf4ff',
+      primaryTextColor: '#0d2c54',
+      primaryBorderColor: '#54aeff',
+      lineColor: '#57606a',
+      secondaryColor: '#fff8c5',
+      tertiaryColor: '#f6f8fa',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
+      fontSize: '14px'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    securityLevel: 'loose'
+  });
+</script>
+
+</body>
+</html>
