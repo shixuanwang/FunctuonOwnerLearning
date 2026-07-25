@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnBoard 实时性能监测平台 · Launch-Review PRD 终版</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --ok:#1e7a3a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:1020px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  blockquote.risk {
+    border-left:3px solid var(--danger); background:#fdecea;
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.risk::before { content:"风险与挑战｜"; font-weight:600; color:var(--danger); }
+  .danger { color:var(--danger); font-weight:600; }
+  .ok { color:var(--ok); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--border); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:11.5px;
+    padding:2px 8px; border-radius:10px; margin-right:5px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.danger { background:var(--danger); }
+  .tag.ok { background:var(--ok); }
+  .tag.warn { background:#d4a017; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:18px 0; }
+  .kpi-card { border:1px solid var(--border); border-radius:8px; padding:12px 14px; background:var(--bg-soft); }
+  .kpi-card .label { font-size:12px; color:var(--evidence); margin-bottom:4px; }
+  .kpi-card .value { font-size:18px; font-weight:600; color:var(--accent); }
+  .kpi-card .note { font-size:11.5px; color:var(--evidence); margin-top:4px; }
+  @media (max-width:700px) { .kpi-grid { grid-template-columns:repeat(2,1fr); } }
+  .verdict { border-left:4px solid var(--accent); background:var(--accent-soft); padding:12px 18px; margin:18px 0; border-radius:0 8px 8px 0; }
+  .verdict.danger { border-left-color:var(--danger); background:#fdecea; }
+  .verdict.ok { border-left-color:var(--ok); background:#e8f5e9; }
+  .verdict.warn { border-left-color:#d4a017; background:var(--note-bg); }
+  .grade { display:inline-block; font-size:13px; font-weight:600; padding:2px 10px; border-radius:4px; background:#fff; color:var(--accent); border:1px solid var(--accent); margin-left:8px;}
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · PRD 终版</h2>
+<ol>
+  <li><a href="#sec-0">0. 执行摘要：定位 / 价值 / 北极星（重定义）</a></li>
+  <li><a href="#sec-1">1. 业务背景与全生命周期模型
+    <div class="sub">
+      <a href="#s1-1">1.1 4 阶段模型</a> · <a href="#s1-2">算法包状态机</a> ·<br>
+      <a href="#s1-3">阶段①研发中</a> · <a href="#s1-4">阶段②QA 准出</a> ·<br>
+      <a href="#s1-5">阶段③发版准出</a> · <a href="#s1-6">阶段④运营实时</a> ·<br>
+      <a href="#s1-7">生命周期矩阵</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">2. 五大闭环设计（2.5 已闭合 + 2.5 P1 闭合）</a></li>
+  <li><a href="#sec-3">3. 产品架构：IA / 对象 / 状态机 / 用户流 / RBAC（双层）</a></li>
+  <li><a href="#sec-4">4. 技术架构：拓扑 / 调用链 / 选型 / NFR</a></li>
+  <li><a href="#sec-5">5. 数据架构：分层 / Flink / CK-PG / 血缘 / 保留</a></li>
+  <li><a href="#sec-6">6. 指标体系：A/B 分层 / P99 口径矩阵 / SLA</a></li>
+  <li><a href="#sec-7">7. 发版准出 Gate（Override + 灰度 + 样本约束 + 阈值治理）</a></li>
+  <li><a href="#sec-8">8. 运营实时告警与回灌（降级产品行为）</a></li>
+  <li><a href="#sec-9">9. 风险登记册（带代码证据，含管理层风险）</a></li>
+  <li><a href="#sec-10">10. 路线图：P0 前置里程碑 + P0/P1/P2 重排</a></li>
+  <li><a href="#sec-11">11. 附录：术语 / 数据字典（含 Quality Gate 三表） / 接口</a></li>
+  <li><a href="#sec-12">12. 审核修订记录（v1 → 终版）</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>OnBoard 实时性能监测平台 · Launch-Review PRD 终版</h1>
+<p class="lede">基于 PRD v1（初版）+ 首席变更清单 + 三方专家评审（资深产品架构师 / 资深数据基建架构师 / 资深自动驾驶负责人）+ 五角色 launch-review 问答（算法工程师 / 系统架构 / 质控 QA / 数据研发 / SRE / 部门负责人）综合收敛。沿用 v1 的 12 节骨架，但内容全面升级：北极星从单一指标改为 lagging+leading+可观测复合指标；Quality Gate 补齐 Override + 灰度三阶段 + 样本/产能约束 + 阈值 catalog 治理 + 操作级 RBAC；P99 口径修复为 quantileExact；SLA 改为多段承诺 + 延迟预算分解；5 闭环叙事诚实化为"2.5 已闭合 + 2.5 P1 闭合"；新增 P0 前置里程碑 + AlgoPackage 核心对象 + 闭环反推依赖矩阵。每条论断带 <code>file:line</code>。</p>
+<p class="meta">仓库：<code>/home/cheche/Workspaces/Learning/HilPerformancePlatform</code> · 编写日期：2026-07-26 · 文档级别：launch-review 终版（v1 评级 B+，本版冲 A-）</p>
+
+<div class="verdict warn"><strong>总评（三方 + 首席综合）</strong>：v1 工程完成度与诚实度远超 v1 水准，三方一致 Conditional Pass/GO，但作为 launch-review 提案存在 4 类结构性硬伤（北极星 0/NaN、Gate 0 override/RBAC、P99 口径三方矛盾、5 闭环叙事落差）+ 首席补三方共同盲点（generation_publish execution=disabled 让"不可变权威"从 strength 退化为 design-only）。本版闭合全部 P0 项 + 解决管理层签字前置风险，可进 launch-review 评审。</div>
+
+<blockquote class="why">这份终版 PRD 把 OnBoard 平台从"被动接收台架报告的看板"重定位为"<strong>无人车软件版本发布前最后一道性能质量闸口</strong>"——以发版准出 Gate 为终态倒推四阶段、五大闭环、指标体系、技术架构与数据架构。<strong>所有"现在做到什么程度"的论断钉到 <code>file:line</code>，"应该做到什么程度"用 rationale + 反事实呈现，"哪些条件不满足则 P0 不启动"用前置里程碑呈现。</strong></blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">0. 执行摘要：定位 / 价值 / 北极星指标（重定义）</h2>
+
+<h3>0.1 一句话定位</h3>
+<p>OnBoard 是一套面向自动驾驶<strong>测试 + 运维团队</strong>的"HiL 台架性能 + 实车稳定性 + 故障码分析 + 实车性能（CPU/内存/E2E/控制误差）四合一"性能监测与发版准出平台。它解决的不是"如何跑一次测试"，而是<strong>"一个算法包从研发中 → QA → 发版准出 → 实车运营的整条性能生命周期，能否在同一个平台上一路追踪、并对发版给出 PASS/FAIL 的硬结论"</strong>。</p>
+<ul>
+  <li><code>docs/PROJECT.html:35-36</code>：一句话定位"面向自动驾驶测试+运维团队的 HiL 台架性能+实车稳定性+故障码分析可视化平台"。</li>
+  <li><code>docs/PROJECT.html:38-45</code>：三条业务线 + 第四条 OnBoard 实车性能线。</li>
+  <li><code>docs/ARCHITECTURE.html</code> §3.3-§3.4：4 阶段 × 4 角色闭环矩阵。</li>
+</ul>
+
+<h3>0.2 业务价值（三段因果链）</h3>
+<table>
+<thead><tr><th>用户</th><th>核心痛点</th><th>OnBoard 给的价值</th><th>现状交付度</th></tr></thead>
+<tbody>
+<tr><td>算法工程师（MR 自检）</td><td>"我刚提 MR，新功能在场景里真的触发了吗？性能有没有退化？"</td><td>一键发起对比：base vs 我的 MR，触发标签 + P99/回归判定</td><td><span class="tag warn">部分</span> Compare/Trends 已有但需人工切页、缺 dataminer 触发标签、缺自动回归判定</td></tr>
+<tr><td>QA / DRI（发版准出）</td><td>"这版能不能发？阈值达成没有？"</td><td>Quality Gate 阻塞合入：指标×场景集×阈值 → PASS/FAIL</td><td><span class="tag danger">未交付</span> 阈值配置有，但无判定引擎、无门禁卡点、无准出报告</td></tr>
+<tr><td>DRI / Leader（daily 监控）</td><td>"昨晚数据有没有异常？哪个 VIN / 模块？"</td><td>被动告警 + 日报推送 + 异常自动标记</td><td><span class="tag warn">部分</span> Trends 看板有但靠肉眼看图，无被动告警、无日报</td></tr>
+<tr><td>车端架构 / SRE（实车运营）</td><td>"上了车之后表现如何？跟台架对得上吗？"</td><td>实车性能线（CK DWS）+ 台架↔实车对照视图</td><td><span class="tag warn">部分</span> <strong>实车性能线 prod-shadow 已上但 formal 生产链路阻断未解除</strong>，台架↔实车无自动对照</td></tr>
+<tr><td>Function Owner / 管理层</td><td>"测试覆盖度多少？算法包到了哪个阶段？"</td><td>治理元数据 + 算法包端到端追踪视图</td><td><span class="tag danger">未交付</span> algo_package 填写率 2/88，端到端追踪视图缺失</td></tr>
+</tbody>
+</table>
+
+<h3>0.3 北极星指标（终版重定义：lagging + leading + 可观测性 + 业务代理量）</h3>
+
+<p>v1 把北极星定为单一"准出报告自动覆盖率"，三方专家 + 首席一致指出两个致命问题：(1) 分母"算法包发版总数"在仓库内 grep <code>release_at/released_at/release_ts/version release/发版记录/release log</code> <strong>全 0 命中</strong>（已核实），平台当前没有、P0 路线图也没有"记录算法包发版事件"的源系统，分母不可量；(2) 分子依赖一个尚未存在的 Quality Gate 引擎。结果：北极星指标在 P0 完成前恒等于 0/NaN，无法在 launch 后任何季度证明平台价值增长。</p>
+
+<p>终版改为<strong>复合北极星</strong>：</p>
+
+<table>
+<thead><tr><th>层级</th><th>指标</th><th>当前值</th><th>12 个月目标</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td><strong>Leading（12 个月主目标，可季度观测）</strong></td><td>Quality Gate 规则被算法 owner 引用 / 月</td><td>0（无引擎）</td><td>≥ 30 条/月</td><td>衡量"被研发流程采用度"，类比 SonarQube 早期北极星"项目接入数"而非"阻塞率"</td></tr>
+<tr><td></td><td>平台覆盖的算法包生命周期阶段数</td><td>2/4（①研发中部分 + ④灰度运营部分）</td><td>4/4</td><td>阶段计数即"平台价值面"，量化生命周期闭环</td></tr>
+<tr><td><strong>Lagging（延后到 18 个月，依赖 Gate + 流程落地）</strong></td><td>准出报告自动覆盖率 = (OnBoard 自动产 PASS/FAIL 的准出报告数) / (同期算法包发版事件数)</td><td>0/NaN（分母无源、分子无引擎）</td><td>18 个月 ≥ 80%<br>阶梯：T+3 月可观测 → T+6 月 ≥30% → T+12 月 ≥80%</td><td>真终态指标，但需先建分母源系统</td></tr>
+<tr><td><strong>业务结果代理量</strong></td><td>回归逃逸率下降 %（从 ErrorCodeAnalysis 版本维度反推）</td><td>无基线</td><td>同比下降 ≥ 50%</td><td>业务终态的代理量，量化"Gate 拦截回归"的业务价值</td></tr>
+</tbody>
+</table>
+
+<div class="verdict danger"><strong>P0 必须新增"算法包发版事件源"</strong>：对接 GitLab release API / Jenkins 发版流水线 / 京东 ERP，把分母做出来——否则北极星永远 0/NaN。这是前置 milestone 第 ① 项的硬条件（见 §10.0）。</div>
+
+<h4>次级北极星（数据闭环健康度，全面诚实化）</h4>
+<div class="kpi-grid">
+  <div class="kpi-card"><div class="label">DWS 看板 SLA（端到端延迟）</div><div class="value">目标 ≤5min / 实测未知</div><div class="note">v1 写"≤15min"与 runtime config（window=30min + 5min Cron + 2min watermark ≈ 37min）数学冲突。终版拆三段独立承诺 + 延迟预算分解（见 §5.8），15min 改为"忽略 late-window 的乐观值"。</div></div>
+  <div class="kpi-card"><div class="label">DQ Gate 通过率</div><div class="value">100%（设计态）</div><div class="note">32 DQ Gate 全过才允许 REPLACE PARTITION。<strong>注：generation_publish_v2.sql execution=disabled（已核实），DQ gate 从未在生产压力下跑过，P0 接生产调度前需压测通过率基线</strong>。</div></div>
+  <div class="kpi-card"><div class="label">HiL 报告完整性</div><div class="value">≥ 99%</div><div class="note">expected-vs-actual 任务报告比率（当前无自动校验）</div></div>
+  <div class="kpi-card"><div class="label">平台可用性</div><div class="value">99.5% <span class="danger">（当前不达成）</span></div><div class="note">单机三容器部署，宕机即全平台不可用（R-02）。年宕机预算 43.8h，一次 force-recreate 即超支（R-17 已发生）。</div></div>
+</div>
+
+<blockquote class="why">北极星指标的第一性原则是<strong>"可量、可短期观测、与业务终态强相关"</strong>。v1 单一终态指标违反前两条。SonarQube 早期北极星是"项目接入数"而非"阻塞率"，等接入率高了才转"阻塞率"。本平台直接选了终态指标但跳过了"采用度"阶段——终版用 leading 指标（Gate 引用/月 + 阶段覆盖数）补齐"采用度"，lagging 保留终态但延后到 18 个月。</blockquote>
+
+<aside class="note"><strong>北极星 leading 指标的最大不可控项是管理层政治意愿</strong>：Quality Gate 的硬约束力来自"管理层签字把 Gate FAIL 纳入合入硬约束"。这是组织决策不是技术决策，PRD 无法保证。若管理层不签字，所有 P0 Gate 工作（引擎+override+RBAC）做完也沦为参考工具，北极星 leading 指标（Gate 引用次数/月）可能长期低位。终版把这条列为 P0 前置 milestone ① 的硬阻塞（见 §10.0），未达成则整个 Gate 工作不上马。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">1. 业务背景与全生命周期模型</h2>
+
+<h3 id="s1-1">1.1 全生命周期模型：4 阶段 × 4 角色</h3>
+<p>平台的核心心智模型是把自动驾驶软件研发切成 <strong>4 个生命周期阶段</strong>，每个阶段对应不同角色的真实工作场景与不同阶段的指标口径。同一算法包从 ① 到 ④ 应该在平台上一路追踪，数据端到端流通——这是"<strong>真正的工作流闭环</strong>"的定义（<code>docs/ARCHITECTURE.html</code> §3.3）。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph S1["① 算法开发 / MR 自检"]
+    A1["算法工程师提 MR"]
+    A2["发起 HiL 对比<br/>base vs my-MR"]
+    A3["看触发标签 + 性能趋势"]
+    A1 --> A2 --> A3
+  end
+  subgraph S2["② QA 准出验证"]
+    B1["QA 选场景集"]
+    B2["HiL 任务执行（真实台架）"]
+    B3["Quality Gate 阈值判定"]
+    B1 --> B2 --> B3
+  end
+  subgraph S3["③ 发版准出门禁"]
+    C1["算法包级 release gate"]
+    C2["Gate FAIL = 阻塞 / Override"]
+    C3["Gate PASS = 准出报告"]
+    C1 --> C2
+    C1 --> C3
+  end
+  subgraph S4["④ 灰度运营 / 实车"]
+    D1["OnBoard CK DWS 实车性能<br/>(prod-shadow 当前态)"]
+    D2["台架 ↔ 实车对照（M5）"]
+    D3["异常告警 + 回归定位"]
+    D1 --> D2 --> D3
+  end
+  S1 -->|"同一算法包"| S2
+  S2 -->|"同算法包"| S3
+  S3 -->|"算法包上灰度"| S4
+  S4 -.->|"P2 目标态<br/>运营问题反推（当前不可实现）"| S1
+  linkStyle 7 stroke:#b3261e,stroke-width:2px,stroke-dasharray:5 5;
+</pre>
+
+<blockquote class="why">用"4 阶段"切而不是按"HiL / 实车 / 故障码"数据维度切，是因为真实用户的工作场景是<strong>按时间推进的算法包生命周期</strong>，不是按数据源。PRODUCT_AUDIT §7 已诊断："UI 按数据维度组织但用户按工作场景组织，导致体验割裂"（<code>docs/PRODUCT_AUDIT.html</code> L204-207）。</blockquote>
+
+<h3 id="s1-2">1.2 算法包（AlgoPackage）核心对象 + 状态机<span class="tag danger">v1 漏判，终版补齐</span></h3>
+
+<p>v1 把 <code>algo_package</code> 当作 HilJob 的一个字段处理，是架构层级错位。<strong>算法包是连接 4 阶段生命周期主键、Quality Gate 判定主体、HiL ↔ 实车对照 join key</strong>（代码核实：HiL 走 PG，Onboard 走 CK，algo_package 是唯一可能的 join key，但当前填写率 2/88，<code>docs/PRODUCT_AUDIT.html</code> §2）。它是平台核心主键，必须有显式状态机——Quality Gate 的"阻塞"本质就是阻塞这个状态机的转换。</p>
+
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> 研发中: 创建算法包版本
+  研发中 --> QA验证: QA 提测
+  QA验证 --> 准出: Quality Gate PASS<br/>(Advisory 阶段不阻塞)
+  准出 --> 灰度: 发版负责人签字
+  灰度 --> 全量: 灰度观察期无异常
+  灰度 --> 回滚: 异常率超标
+  全量 --> 退役: 下版本替代
+  回滚 --> 研发中: 修复
+  note right of 准出
+    Gate FAIL 阻塞此转换
+    Soft Gate: DRI Override + reason + 事后回归工单
+    Hard Gate: 不可 Override（仅 P0 算法包）
+  end note
+</pre>
+
+<h4>算法包版本 ↔ 实车软件版本映射表<span class="tag danger">v1 缺失，HiL↔实车无 join 路径</span></h4>
+<table>
+<thead><tr><th>键</th><th>来源</th><th>用途</th><th>当前状态</th></tr></thead>
+<tbody>
+<tr><td>algo_package</td><td>HiL 侧 hil_jobs.algoPackage（PG）</td><td>HiL 任务主键、Quality Gate 判定主体、M5 join key</td><td><span class="tag danger">2/88 填写率</span></td></tr>
+<tr><td>software_version</td><td>实车 ADS 分组维度（CK）</td><td>OnboardPerformance 实车性能分组</td><td>有</td></tr>
+<tr><td>perception_version</td><td>实车 ADS 分组维度（CK）</td><td>感知模块版本分组</td><td>有</td></tr>
+<tr><td>mapping（待建）</td><td>新表 algo_package_version_map</td><td>HiL algo_package × version ↔ 实车 software_version 映射</td><td><span class="tag danger">未建</span>（HilRoadComparison 表 0 命中）</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>algo_package 强制填写是 Quality Gate 与 M5 的硬前置</strong>。R-06 在 v1 排 P1，但 §2.4 自己说"回归判定与 Gate 共享 catalog，应在 P0 一起做"，且 §7.4 N≥10 统计依赖 algo_package 配对——三件串行排不开。终版把 <strong>algo_package 强制填写 + hil-push 接口校验从 P1 提到 P0</strong>（见 §10.1）。</aside>
+
+<h3 id="s1-3">1.3 阶段 ① 研发中 / MR 自检</h3>
+<table>
+<thead><tr><th>维度</th><th>定义</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>算法工程师在提 MR 时能"一键看到我的改动相对 base 是否引入性能退化，新功能是否在指定场景真的被触发"</td></tr>
+<tr><td>核心用户</td><td>算法工程师（每个模块约 10-30 人）</td></tr>
+<tr><td>关键场景</td><td>(a) 提 MR 前自检 (b) review 别人 MR 时看性能 (c) 上线后看自己模块趋势</td></tr>
+<tr><td>关键指标</td><td>Compare 任务发起次数、MR 自检平均响应时长、新功能触发标签覆盖率</td></tr>
+<tr><td>现状</td><td><span class="tag warn">部分</span>：Trends / Compare / TaskList / TaskView 已交付，但用户需在 TaskList → TaskView → Compare 三页来回切。缺 dataminer 触发标签、缺自动回归判定、TaskDetail 路由注册但 0 处链接（死代码）。</td></tr>
+<tr><td>核心证据</td><td><code>frontend/src/pages/Trends/index.tsx</code> L1-492；<code>docs/PRODUCT_AUDIT.html</code> L128-135；<code>docs/INDUSTRY_RESEARCH.html</code> L145-149</td></tr>
+</tbody>
+</table>
+
+<h3 id="s1-4">1.4 阶段 ② QA 准出验证</h3>
+<table>
+<thead><tr><th>维度</th><th>定义</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>QA 在平台上看该算法包是否跑过指定场景集 + 全部达到 Quality Gate 阈值，未通过则上报问题</td></tr>
+<tr><td>核心用户</td><td>QA 工程师、DRI</td></tr>
+<tr><td>关键场景</td><td>(a) 选场景集 + 跑 HiL 任务 (b) 看每场景 P99/回归 (c) 异常情况登记为质量问题</td></tr>
+<tr><td>关键指标</td><td>场景集执行覆盖率、Quality Gate 阈值达成率、QA 平均判定时长</td></tr>
+<tr><td>现状</td><td><span class="tag warn">部分</span>：HiL 任务发起闭环（M1）已有 14 个接口、HilConsole 6 子页，但 <strong>externalDispatch=false 全预览态</strong>（<code>frontend/src/pages/HilConsole/index.tsx</code> L299/L319/L610/L946/L999），真实台架下发 / 编译 / DSL 采集需 feature flag 灰度。无自动阈值判定，QA 靠肉眼看图。</td></tr>
+<tr><td>核心证据</td><td><code>backend/src/routes/hil.ts</code>；<code>docs/HIL_SCENARIO_TASK_LOOP_ARCHITECTURE_20260706.html</code> L78-86</td></tr>
+</tbody>
+</table>
+
+<h3 id="s1-5">1.5 阶段 ③ 发版准出门禁（Quality Gate）<span class="tag danger">最大缺口</span></h3>
+<table>
+<thead><tr><th>维度</th><th>定义</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>算法包发版前必须通过 OnBoard 的 Quality Gate：指标 × 场景集 × 阈值 → PASS/FAIL，FAIL 阻塞合入（Soft Gate 可 DRI Override + reason + 事后回归工单；Hard Gate 不可 Override，仅 P0 算法包）</td></tr>
+<tr><td>核心用户</td><td>QA Lead、DRI、发版负责人、Function Owner</td></tr>
+<tr><td>关键场景</td><td>(a) 配置 Quality Gate 规则（指标 / 场景集 / 阈值 / 阻塞或告警）(b) 发版前查看 release gate 报告 (c) MR 合入流水线对接（webhook 卡点，需 webhook 签名验证 + 操作者身份绑定）</td></tr>
+<tr><td>关键指标</td><td>Quality Gate 阻塞率、Override 率、假阳性率、假阴性率、平均判定时长、发版回归逃逸率</td></tr>
+<tr><td>现状</td><td><span class="tag danger">未交付</span>：阈值配置（<code>perf_threshold_config</code>）有 warn/critical 双阈值，版本对比（<code>compare.ts</code>）能算 baselineValue 差值，但<strong>没有任何接口把"判定结果"转成"门禁决策"</strong>——grep "quality gate/准出/阻塞合入/block merge" 业务代码 0 命中；grep "override/紧急放行/bypass/force pass/exempt" 全 0（连概念都没有）。判定逻辑仅 compare.ts:186 first-vs-last p90 差值（无 P99 进判定、无配对 join）。</td></tr>
+<tr><td>核心证据</td><td><code>backend/src/services/thresholdService.ts</code> L13（只读阈值供看板着色）；<code>backend/src/routes/compare.ts</code> L186（first-vs-last p90 差值，无阈值判定、无 P99）；<code>docs/INDUSTRY_RESEARCH.html</code> L272-279</td></tr>
+</tbody>
+</table>
+
+<h3 id="s1-6">1.6 阶段 ④ 灰度运营 / 实车实时（v1 自夸，终版诚实化）</h3>
+<table>
+<thead><tr><th>维度</th><th>定义</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>算法包上灰度车后，实时监测 CPU / 内存 / E2E / 控制误差表现，发现异常自动告警 + 与台架测试结果对照</td></tr>
+<tr><td>核心用户</td><td>车端架构师、SRE、Function Owner</td></tr>
+<tr><td>关键场景</td><td>(a) Fleet 总览（活跃车辆 / 异常 VIN）(b) 单车详情下钻 (c) 异常告警 (d) 台架 ↔ 实车对照</td></tr>
+<tr><td>关键指标</td><td>Fleet 异常车辆率、P99 实车 E2E、控制误差超标率、台架-实车性能偏差</td></tr>
+<tr><td>现状（终版诚实化）</td><td><span class="tag warn">部分</span>：OnboardPerformance 总览 + VehicleDetail 单车详情已上。<strong>v1 标"55% 代码落地度"，终版拆两行</strong>：<br>• 代码落地度 55%（Flink 三作业 + ODS/DWD/DWS/ADS 四层 + 32 DQ Gate + generation 原子发布 + canary stop-loss 全部工程化完成）<br>• <strong>生产可达度 0%</strong>（formal 生产 JMQ 链路阻断未解除：新 JAR 发布 + prod-shadow ODS DDL 建表 + flink_sink_isolation_ready=true 三件事未做，<code>docs/PROD_TOPIC_CAPACITY_AND_COLD_STORAGE.html</code> L131）。当前 dashboard 上所有"实车性能"数字来自 prod-shadow 影子表灌进来的灰度车数据（50-100 辆量级），<strong>不是全量 5600 车</strong>。<code>backend/src/services/onboardPerfService.ts</code> L1869 显式要求 prod-shadow 否则抛 SOURCE_MODE_UNSUPPORTED。</td></tr>
+<tr><td>核心证据</td><td><code>backend/src/services/onboardPerfService.ts</code> L29-37/L44-46/L1869；<code>docs/PROD_TOPIC_CAPACITY_AND_COLD_STORAGE.html</code> L120-131</td></tr>
+</tbody>
+</table>
+
+<h3 id="s1-7">1.7 生命周期覆盖度对照矩阵（终版诚实化）</h3>
+<table>
+<thead><tr><th>阶段</th><th>代码落地度</th><th>生产可达度</th><th>关键缺口</th><th>代码证据</th></tr></thead>
+<tbody>
+<tr><td>① 研发中 / MR 自检</td><td><span class="tag warn">60%</span></td><td>—</td><td>无 dataminer 触发标签、无自动回归判定、TaskView/Compare 切页割裂</td><td><code>docs/PRODUCT_AUDIT.html</code> §5.1</td></tr>
+<tr><td>② QA 准出验证</td><td><span class="tag warn">40%</span></td><td>—</td><td>HilConsole M1 全预览态（externalDispatch=false），真实台架下发未通</td><td><code>frontend/src/pages/HilConsole/index.tsx</code> L299</td></tr>
+<tr><td>③ 发版准出门禁</td><td><span class="tag danger">0%</span></td><td>—</td><td>无判定引擎 / 无门禁卡点 / 无准出报告 / 无 Override / 无 RBAC</td><td><code>backend/src/services/thresholdService.ts</code> L13；<code>backend/src/routes/compare.ts</code> L186</td></tr>
+<tr><td>④ 灰度运营 / 实车</td><td><span class="tag warn">55%</span></td><td><span class="tag danger">0%</span><br>（formal 三阻断未解除）</td><td>读 prod-shadow 未 promoted、无被动告警、无台架-实车对照、HilRoadComparison 表 0 命中</td><td><code>backend/src/services/onboardPerfService.ts</code> L1869</td></tr>
+<tr><td>M5 HiL ↔ 实车对照<span class="tag danger">阻塞端到端闭环叙事</span></td><td><span class="tag danger">0%</span></td><td>—</td><td>algo_package × scenario × version join 路径未建、散点对照视图未建</td><td>HilRoadComparison 表 0 命中</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why">这张矩阵是 launch-review 评审最该争论的一页。<strong>③ 发版准出 = 0% 是结构性问题</strong>：现有平台只是"工具"不是"流程基础设施"。同时 v1 把 ④ 标"55%"会误导评审以为实车线已生产可用，<strong>终版拆"代码落地度"和"生产可达度"</strong>——评审席看到"代码 55% / 生产 0%"会更信任这份 PRD，而不是被"55% 部分交付"的措辞打脸。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">2. 五大闭环设计（终版诚实化：2.5 已闭合 + 2.5 P1 闭合）</h2>
+
+<p>平台由 5 个相对独立的闭环构成。每个闭环遵循 <strong>"触发 → 数据 → 判断 → 处置 → 回流"</strong> 五段式。v1 用 mermaid 把 5 闭环都画成完整闭环，但代码核实只有 A（HiL）和 B（实时性能）两段真闭合，C/D/E 三段后段断裂。终版明确<strong>P0 launch 交付边界</strong>：A + B 闭合，D（回归判定引擎）P0 落地，C（故障处置）+ E（数据告警回流）P0 仅告警中心 L2-L3。<strong>对外叙事改为"2.5 闭环已闭合 + 2.5 闭环 P1 闭合"</strong>（保守承诺 2.5+2.5，留出评审信任冗余，但 P0 实际落地 D 后是 3.5 闭环工作）。</p>
+
+<h3 id="s2-1">2.1 HiL 任务闭环（A 线最强段）<span class="tag ok">已有</span></h3>
+
+<p><strong>触发</strong>：算法工程师 / QA / DRI 在 JobNew 页面发起任务 → 落 <code>hil_jobs</code>（status=queued）<br>
+<strong>数据</strong>：台架 pull queue 拉取（status=dispatched）→ 台架执行（status=running）→ 台架推 HIL_PUSH_V2 报告（1 JSON + 2 Parquet）<br>
+<strong>判断</strong>：报告带 jobUuid 时反向关联到 job（<code>UPDATE hil_jobs SET report_task_id, status='finished'</code>）<br>
+<strong>处置</strong>：任务失败 → rerun 创建新 job 并 retried_from 指向旧 job（追溯链）；任务完成 → 在 Compare/Trends 看结果<br>
+<strong>回流</strong>：报告入库 → hil_module_metrics / hil_memory_metrics / hil_planning_stats → hil_daily_aggregation 趋势看板</p>
+
+<pre class="mermaid">
+flowchart LR
+  U["算法/QA 发起"] -->|"POST /jobs"| J["hil_jobs<br/>queued"]
+  J -->|"台架 pull queue"| D["dispatched"]
+  D -->|"台架执行"| R["running"]
+  R -->|"台架推 HIL_PUSH_V2<br/>1 JSON + 2 Parquet"| U2["POST /upload/hil-push-v2"]
+  U2 -->|"linkReportToJob<br/>UPDATE status=finished"| F["finished"]
+  F --> PG1["hil_module_metrics<br/>hil_memory_metrics<br/>hil_planning_stats"]
+  PG1 --> DA["hil_daily_aggregation<br/>趋势看板"]
+  F -.->|"失败时"| RR["rerun<br/>retried_from→old<br/>(max_rerun_per_gate=1)"]
+  RR --> J
+</pre>
+
+<ul>
+  <li><code>backend/src/routes/jobs.ts:11</code>：状态机 queued→dispatched→running→finished/failed；queued 可 cancelled。</li>
+  <li><code>backend/src/routes/jobs.ts:300</code>：<code>POST /jobs/:uuid/rerun</code> 创建新 job 并 retried_from 指向旧 job。<strong>终版新增约束：max_rerun_per_gate=1 硬上限 + 在 quality_gate_report 记录 rerun 链</strong>（v1 代码无任何 rerun 限制，已核实）。</li>
+  <li><code>backend/src/routes/upload.ts:385</code>：<code>linkReportToJob()</code> 报告反向关联闭环的关键函数。</li>
+</ul>
+
+<h3 id="s2-2">2.2 实时性能数据闭环（pre-launch 阶段，v1 自夸终版降级）<span class="tag warn">写入链路 ok / 运营告警未交付（R-05）/ generation publish execution=disabled</span></h3>
+
+<p>v1 把这条闭环标为"已达生产级 launch-review 成熟度"。三方专家 + 首席一致指出措辞夸大：Flink at-least-once（<code>PerfStatsFlinkJob.java:104</code> 当前只 enableCheckpointing(60s)，已核实无 CheckpointingMode）、PG 单容器（<code>docker-compose postgres:15-alpine</code> 单实例无主从无 PITR）、运营告警 R-05 未交付。<strong>首席补三方共同盲点</strong>：<code>warehouse/etl/onboard_qc_1s_generation_publish_v2.sql</code> 第 1 行注释明写 "v2 generation publication skeleton. Repository-only; execution is disabled."，且 grep 全 ops/ deploy/ scripts/ 无任何 cron/Argo/workflow 调用此 SQL——<strong>数据架构师盛赞的"32 DQ Gate publication-blocking + PG fence + 6 表 REPLACE PARTITION + immutable trigger + sha256 CHECK 不可变权威"是设计态非运行态</strong>。</p>
+
+<p>终版改写："<strong>实时链路已达 pre-launch 阶段（写入链路 at-least-once + 下游去重），exactly-once + PG HA + generation 实际执行为 P0 前置</strong>"。双标签：<strong>写入链路 ok / 运营告警未交付（R-05）</strong>——一个凌晨出问题第二天才知道的链路不能叫"生产级"。</p>
+
+<p><strong>触发</strong>：车端 1Hz 上报 JMQ 消息（StatisticsData protobuf）<br>
+<strong>数据</strong>：JRC Flink 3 个作业（perf-stats / boot-event / onboard-context）连续 intake/decode/写 ODS（Source 并行度锁 1，batchSize 2000 / interval 5s）→ ClickHouse DWD 分钟聚合 → Argo CronWorkflow 每 5 分钟调度 current-day refresh<br>
+<strong>判断</strong>：DQ Gate 在 publication 前<strong>阻断</strong>（32 个 gate）→ PG fence 抢占 publishing → REPLACE PARTITION 原子发布 6 张 ADS 表<br>
+<strong>处置</strong>：canary 单 VIN 验证 → 异常自动 stop-loss 回滚（只删精确 fragment 对 + 清洗同源 generation）<br>
+<strong>回流</strong>：reader 通过独立 PG activation 切换可见性 → 后端读 ADS 给前端</p>
+
+<pre class="mermaid">
+flowchart LR
+  V["车端 1Hz<br/>StatisticsData protobuf"] -->|"JMQ topic"| JMQ["京东 JMQ"]
+  JMQ --> F1["Flink perf-stats-consumer<br/>并行度=1<br/>(at-least-once, P0 升 exactly-once)"]
+  JMQ --> F2["Flink boot-event-consumer<br/>KeyedStateTTL 去重 7d"]
+  JMQ --> F3["Flink onboard-context-consumer<br/>双写 raw + DWD"]
+  F1 --> ODS1["CK ods_sys_perf_local<br/>ods_dag_e2e_local<br/>ods_control_cmd_local"]
+  F1 & F2 & F3 --> CK["ClickHouse DWD/DWS/ADS 四层<br/>+ prod-shadow 双轨"]
+  CK --> DWS["DWS dws_perf_vehicle_daily"]
+  DWS --> ADS["ADS ads_onboard_*<br/>generation 分区"]
+  ADS -.->|"REPLACE PARTITION<br/>6 表原子发布<br/>(execution=disabled, P0 接生产调度)"| ADS
+  subgraph Gate["DQ + 发布闸门（设计态）"]
+    DQ["32 DQ Gates<br/>publication-blocking<br/>(execution=disabled)"]
+    PG["PG fence<br/>onboard_percentile_fragment_evidence_v3<br/>sha256 CHECK + immutable trigger<br/>(当前单实例, P0 升主从+PITR)"]
+    CAN["canary 单 VIN"]
+    STOP["stop-loss 回滚"]
+    DQ --> PG --> CAN --> STOP
+  end
+  DWS -.-> Gate
+  Gate -->|"reader activation"| ADS
+</pre>
+
+<ul>
+  <li><code>warehouse/dq/onboard_qc_dq_gate_schema.v1.json</code>：32 个 expected_gates + 13 个 metadata_fields。</li>
+  <li><code>warehouse/dq/onboard_full_fleet_percentile_current_day_fragment_dq_v3.sql:1</code>：注释明示 "All result columns are publication-blocking"。</li>
+  <li><code>warehouse/ddl/onboard_full_fleet_percentile_current_day_authority_pg_v3.sql</code> L7-14, L48-56：pgcrypto UUID + sha256 CHECK + immutable trigger。</li>
+  <li><code>warehouse/etl/onboard_qc_1s_generation_publish_v2.sql</code> <strong>L1 注释 "Repository-only; execution is disabled"</strong>——这是首席补的三方共同盲点。</li>
+  <li><code>flink-jobs/perf-stats-consumer/.../PerfStatsFlinkJob.java</code> L104-106：checkpoint 60s（<strong>无 CheckpointingMode.EXACTLY_ONCE，P0 显式声明</strong>）；L113：Source setParallelism(1)。</li>
+  <li><code>deploy/docker-compose.yml</code>：<strong>postgres:15-alpine 单容器无主从无 PITR</strong>。</li>
+</ul>
+
+<aside class="note"><strong>P99 vs 均值的统计意义</strong>：自动驾驶性能数据是重尾分布，均值会掩盖偶发尖刺。P99 反映"最差 1% 的用户体验"，更接近功能安全事件的早期预警。<strong>v1 标语宣称"DWS P99 从 ODS quantileExact 精确回算"——但 ETL 实际 quantileTDigest + least(max)（perf_stats_etl_v1.sql:428/442/179-182 已核实），DDL 注释误标精确。</strong>即 PRD + DDL + ETL 三方口径自相矛盾。北极星是"准出报告"，准出报告权威根基是 P99 精度——TDigest 在 P99 相对误差 1-3%，落在 Quality Gate warn/crit 阈值差之间时会把真实 P99=102ms 的包判成 &lt;100ms PASS，回归逃逸上线。终版把这条列为 launch 前置 gate（见 §6.1 P99 口径修复）。</aside>
+
+<h3 id="s2-3">2.3 故障-处置闭环（处置工单缺失，仅 P0 落告警中心）<span class="tag warn">部分</span></h3>
+
+<p><strong>触发</strong>：车端故障码上报 / 异常停车 / 模块超时<br>
+<strong>数据</strong>：errorData 三层 ETL（error_events_ods → error_items_dwd → error_daily_dws → error_code_dim），实车稳定性走 dws_vehicle_mileage_period 分母<br>
+<strong>判断</strong>：<code>classifyModuleAdvanced()</code> 归因到模块 / 子模块；Boot 异常 3.5min 超时 / 30min 奇点定义<br>
+<strong>处置</strong>：<span class="tag warn">部分</span> boot 有 marks（人工 note/tags 标注），veh_events <strong>单向从 Joyspace 拉取无反向回写</strong>（<code>backend/src/routes/vehicleSync.ts</code> 仅 POST / 触发拉取，grep writeback/回写 0 命中）<br>
+<strong>回流</strong>：<span class="tag danger">未交付</span> 缺故障处置工单状态机（open/in_progress/resolved/verified）、缺派单通知、缺处置结果回写数据源</p>
+
+<p><strong>P0 launch 仅交付告警中心 L2-L3</strong>（数据 DQ / 业务性能异常告警通道），故障工单状态机排 P1。</p>
+
+<h3 id="s2-4">2.4 模型回归闭环（v1 P1，终版进 P0——解决 §2.4 vs §10 内部矛盾）<span class="tag warn">部分（P0 落地回归引擎）</span></h3>
+
+<p><strong>触发</strong>：HiL 任务完成 / 算法包发版<br>
+<strong>数据</strong>：<span class="tag ok">已有</span> Compare 算 baselineValue 差值（但 compare.ts:186 只是 first-vs-last p90 差值，无 P99、无配对 join、无阈值判定）<br>
+<strong>判断</strong>：<span class="tag danger">未交付</span> 无回归判定引擎（指标 × 阈值 × 场景 → 回归 Y/N）<br>
+<strong>处置</strong>：<span class="tag danger">未交付</span> 无回归 commit 关联<br>
+<strong>回流</strong>：<span class="tag danger">未交付</span> 无 daily 趋势异常自动标记</p>
+
+<blockquote class="why"><strong>冲突 1 决断（首席）</strong>：v1 §2.4 自己写"两者共享 catalog 应在 P0 一起做"，但 §10.2 把回归判定排 P1——同一 PRD 内部直接矛盾。决断：<strong>进 P0</strong>。§2.4 论据正确（回归判定与 Quality Gate 共享同一套阈值 catalog 与判定逻辑），是 §10 排期错。终版已修正：§10.1 把"回归判定引擎"从 P1 提到 P0，与 Gate 引擎共用 catalog。新建 <code>backend/src/services/regressionJudge.ts</code>（标 compare.ts 为 deprecated）：<br>(1) 显式以 base_algo_package / algo_package 配对 join，禁止靠数组顺序；<br>(2) P90 和 P99 都进判定，默认门禁用 P99，P90 仅告警；<br>(3) 单场景最少 N≥10 runs 才参与判定，样本不足直接 WARN 不 FAIL；<br>(4) FAIL 自动 rerun 一次（max_rerun_per_gate=1），复用 retried_from 链。</blockquote>
+
+<h3 id="s2-5">2.5 数据质量闭环（DQ Gate 极完整但 execution=disabled，运营告警未 operationalize）<span class="tag warn">部分</span></h3>
+
+<p><strong>触发</strong>：每个 5 分钟 fragment 生成 / 每日 closed-day 发布<br>
+<strong>数据</strong>：<span class="tag ok">已有（设计态）</span> 32 个 DQ Gate + 13 metadata_fields（schema 契约层）。<strong>但 generation_publish execution=disabled（已核实），32 DQ gate 从未在生产压力下批量执行过</strong>。<br>
+<strong>判断</strong>：<span class="tag ok">已有（设计态）</span> percentile_order_valid / sample_count_conserved / identity_conflicts_accounted / publication_conflicts_recorded 等门在 publication 前 blocking<br>
+<strong>处置</strong>：<span class="tag warn">部分</span> prod-shadow readiness 6 项硬指标校验，但 stop-loss 自动回滚只覆盖单一 workflow<br>
+<strong>回流</strong>：<span class="tag danger">未交付</strong> DQ / lag / watermark / mutation 异常无自动告警通道（health-monitor.sh grep 数据层关键词 0 命中）</p>
+
+<pre class="mermaid">
+flowchart TD
+  subgraph Detect["检测（设计态）"]
+    G1["32 DQ Gates<br/>publication-blocking<br/>(execution=disabled, P0 接生产调度)"]
+    G2["prod-shadow readiness<br/>6 项硬指标"]
+    G3["onboard_p99_completeness_dq<br/>post-publication audit"]
+  end
+  subgraph Block["阻断（设计态）"]
+    B1["REPLACE PARTITION 拒绝"]
+    B2["PG fence 抢占失败"]
+  end
+  subgraph Resolve["处置（部分）"]
+    R1["canary stop-loss"]
+    R2["T+1 校准 backfill"]
+    R3["manual rollback"]
+  end
+  subgraph Alert["告警回流（未交付 R-05）"]
+    A1["DQ 异常"]
+    A2["DWD lag > 10min"]
+    A3["watermark 异常"]
+    A4["mutation failed"]
+    A1 -.->|"无通道"| X["❌ health-monitor.sh<br/>只盯容器健康"]
+  end
+  Detect --> Block --> Resolve
+  Detect -.-> Alert
+</pre>
+
+<aside class="note"><strong>降级产品行为（v1 未定义，终版补齐）</strong>：contracts lifecycle=PROVISIONAL + fail_closed_no_legacy_percentile + closed-day 发布要求 missing_window_count=0 → 当某 5min fragment 因 DQ 失败时当天 OnboardPerformance 看板<strong>整天空白</strong>。终版明确定义产品行为：(1) dashboard 显示占位提示"今日数据 DQ 失败，正在重算，参考 T-1 数据"；(2) 触发 L3 告警通知 DRI；(3) 提供"按场景回退 T-1 数据"开关。<strong>P0 阶段还要在 prod-shadow 压测 DQ gate 通过率基线</strong>，再决定是否启用 publication-blocking——否则首次执行大量 fragment fail_closed 触发 DRI 信任危机。</aside>
+
+<aside class="note"><strong>generation publish 接生产调度后的 DQ gate 失败激增风险（首席补）</strong>：当前 execution=disabled 意味着 32 DQ gate 从未在生产压力下批量执行过。一旦 P0 接到生产调度，5600 车 1Hz 数据下的 DQ gate 通过率未知——可能首次执行就有大量 fragment 因 DQ 失败被 fail_closed。需 P0 阶段先在 prod-shadow 压测 DQ gate 通过率基线。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">3. 产品架构：IA / 核心对象 / 状态机 / 用户流 / RBAC（双层）</h2>
+
+<h3>3.1 信息架构（IA）重排：从"按数据维度"到"按工作场景"</h3>
+<p>当前 IA 切 3 组（HiL / Diagnostics / Onboard）+ 1 配置中心，是按数据维度组织的——PRODUCT_AUDIT §7 已诊断这导致体验割裂（<code>docs/PRODUCT_AUDIT.html</code> L204-207）。INDUSTRY_RESEARCH L266-268 提出修正：IA 应重排为 <strong>任务诊断 / 全局监控 / 场景管理 / 实车</strong> 四组。本 PRD 采纳此修正。</p>
+
+<table>
+<thead><tr><th>新 IA 组</th><th>对应用户场景</th><th>当前页面映射</th></tr></thead>
+<tbody>
+<tr><td>① 任务诊断（HiL 任务闭环）</td><td>MR 自检 / QA 跑 HiL / 报告深查</td><td>Trends / Compare / TaskList / TaskView / HilConsole（9 子页收敛到任务诊断组）</td></tr>
+<tr><td>② 全局监控（Daily / 告警）</td><td>DRI daily 监控 / 异常排查</td><td>Trends（趋势） + 待新建的 Daily 报告 / 告警中心</td></tr>
+<tr><td>③ 场景管理（资产 + 配置）</td><td>QA 配置场景集 / Function Owner 治理</td><td>HilConsole scenarios / Config（阈值 + 车辆维度）</td></tr>
+<tr><td>④ 实车（性能 + 故障 + 稳定性）</td><td>车端架构 / SRE 实车运营</td><td>OnboardPerformance / VehicleStability / ErrorCodeAnalysis / BootError</td></tr>
+</tbody>
+</table>
+
+<h3>3.2 平台产品架构（工作区 / 域）总览</h3>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph TOP["顶栏导航（IA 重排后）"]
+    T1["① 任务诊断"]
+    T2["② 全局监控"]
+    T3["③ 场景管理"]
+    T4["④ 实车"]
+  end
+  subgraph P1["任务诊断（HiL 闭环）"]
+    P1a["Trends 趋势看板"]
+    P1b["Compare 版本对比"]
+    P1c["TaskList/TaskView"]
+    P1d["HilConsole 工作台<br/>overview/scenarios/capture/<br/>plans/benches/runs"]
+  end
+  subgraph P2["全局监控"]
+    P2a["Trends → Daily 仪表盘"]
+    P2b["待建：告警中心 L1-L4"]
+    P2c["待建：Daily 日报"]
+  end
+  subgraph P3["场景管理"]
+    P3a["场景集 catalog（可配置）"]
+    P3b["配置中心<br/>阈值 catalog + 车辆维度表"]
+    P3c["DSL 采集草稿"]
+  end
+  subgraph P4["实车"]
+    P4a["OnboardPerformance 总览<br/>(prod-shadow 当前态, 永久水印)"]
+    P4b["VehicleDetail 单车详情"]
+    P4c["VehicleStability 稳定性"]
+    P4d["ErrorCodeAnalysis 故障码"]
+    P4e["BootError 开机异常"]
+  end
+  T1 --> P1
+  T2 --> P2
+  T3 --> P3
+  T4 --> P4
+</pre>
+
+<aside class="note"><strong>dashboard 永久水印</strong>（首席补，解决决策层误读风险）：当前所有 OnboardPerformance 看板读的是 prod-shadow 影子表，不是 formal 生产数据。终版要求 dashboard <strong>永久标注"SHADOW 数据，非生产口径"水印</strong>，避免决策层误读为全量 5600 车数据。</aside>
+
+<h3>3.3 核心对象与状态机（终版补 AlgoPackage 核心对象）</h3>
+<table>
+<thead><tr><th>对象</th><th>状态机</th><th>权威表</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td><strong>AlgoPackage（v1 漏，终版补）</strong></td><td>研发中 → QA验证 → 准出 → 灰度 → 全量 → 退役（见 §1.2）</td><td>PG algo_package_version_map（待建）</td><td>4 阶段主键 + Gate 判定主体 + M5 join key</td></tr>
+<tr><td>HilJob</td><td>queued → dispatched → running → finished/failed; queued 可 cancelled</td><td>PG hil_jobs</td><td><code>backend/src/routes/jobs.ts:11</code></td></tr>
+<tr><td>HilReport（任务报告）</td><td>报告与 job 1:1，linkReportToJob 反向关联</td><td>PG hil_module_metrics / hil_memory_metrics / hil_planning_stats</td><td><code>backend/src/routes/upload.ts:385</code></td></tr>
+<tr><td>ScenarioAsset / ScenarioSet / Bench / Case / TestPlan / Run</td><td>DDD 聚合，M1 已落管理态</td><td>PG hil_scenario_templates_raw / hil_scenario_assets / hil_benches / hil_scenario_sets / hil_task_plans_m1</td><td><code>deploy/init-db/13_hil_m1_management.sql</code></td></tr>
+<tr><td>HilRun → HilRunStep → HilArtifact → HilDiagnosisEvent</td><td>执行态聚合（M2+ 未落）</td><td>未落</td><td><code>docs/HIL_SCENARIO_TASK_LOOP_ARCHITECTURE_20260706.html</code> L62-76</td></tr>
+<tr><td>OnboardPercentileGeneration</td><td>PLANNED → STAGING → PUBLISHED → RETIRED；不可变</td><td>PG onboard_full_fleet_percentile_generation_v2（fence）+ onboard_percentile_fragment_evidence_v3（血缘）</td><td><code>warehouse/ddl/onboard_full_fleet_percentile_activation_pg_v2.sql</code> L112-120</td></tr>
+<tr><td><strong>QualityGateRule（待建）</strong></td><td>draft → active → retired</td><td>PG quality_gate_rule（待建，表结构见 §11.2）</td><td>本 PRD §7</td></tr>
+<tr><td><strong>QualityGateReport（待建）</strong></td><td>pending → running → pass/fail/warn/insufficient_samples</td><td>PG quality_gate_report（待建，表结构见 §11.2）</td><td>本 PRD §7</td></tr>
+<tr><td><strong>QualityGateOverrideAudit（待建）</strong></td><td>requested → approved → executed → post_regression_tracked</td><td>PG quality_gate_override_audit（待建，表结构见 §11.2）</td><td>本 PRD §7.5</td></tr>
+<tr><td>ErrorEvent</td><td>三层 ETL：ODS → DWD → DWS</td><td>PG error_events_ods / error_items_dwd / error_daily_dws / error_code_dim</td><td><code>backend/src/services/errorEtl.ts:48</code></td></tr>
+</tbody>
+</table>
+
+<h3>3.4 核心用户流（3 类工作场景 × 4 角色）</h3>
+<p><strong>用户流 ① 算法工程师 MR 自检（最割裂的现状）</strong></p>
+<ol>
+  <li>提 MR → 在 TaskList 翻找 base 任务记下 id</li>
+  <li>再翻找自己 MR 任务记下 id</li>
+  <li>跳到 Compare 输 task_id 对比 → 看差值</li>
+  <li>（理想态：TaskView 一键"发起对比"入口缺）</li>
+</ol>
+<p><strong>用户流 ② DRI daily 监控（被动监控肉眼）</strong></p>
+<ol>
+  <li>每天早上打开 Trends → 肉眼看图找拐点</li>
+  <li>（理想态：被动告警 + 日报推送 + 异常自动标记，全缺）</li>
+</ol>
+<p><strong>用户流 ③ QA 报告深查（新做试用中）</strong></p>
+<ol>
+  <li>TaskView 渲染 JSON 报告 → 6 步排查抽屉</li>
+  <li>（理想态：MR 新功能触发标签 + Quality Gate 自动判定，全缺）</li>
+</ol>
+
+<h3>3.5 RBAC（终版拆双层：操作级 P0 + 视图级 P1）</h3>
+
+<p>v1 提议"视图级 RBAC 而非数据级 RBAC"，理由是"ERP 用户体系未打通 creator 2/88"。但 §7 Quality Gate 要求"对接 MR webhook 卡点写入合入流水线"——webhook 卡点本质要求"谁的 MR 谁负责、FAIL 时归因到人"，<strong>没有数据级 RBAC 和强身份，webhook 卡点根本无法实现（任何人都能 override 任何 MR）</strong>。代码核实：backend grep <code>requireAuth/JWT/passport/session/currentUser</code> 全 0 命中，CORS=*，<strong>连认证都没有</strong>。</p>
+
+<p>终版决断（冲突 4 决断）：拆两层——<strong>操作级 RBAC（P0）+ 视图级 RBAC（P1）</strong>。两边论据都对，问题在 v1 把它们当成二选一。</p>
+
+<table>
+<thead><tr><th>层级</th><th>覆盖范围</th><th>实施方式</th><th>优先级</th></tr></thead>
+<tbody>
+<tr><td><strong>操作级 RBAC（P0）</strong></td><td>Quality Gate 的 3 个关键动作：config-gate / mark-pass-fail / force-merge-override</td><td>SSO 对接京东 ERP / 京ME 扫码 + 数据级 RBAC 至少做到 algo_package owner 字段强制 + MR webhook 签名验证（GitHub/ERP webhook 自带签名，不需要全量 ERP）</td><td><span class="tag danger">P0</span></td></tr>
+<tr><td><strong>视图级 RBAC（P1）</strong></td><td>看板默认视图按角色场景优化</td><td>按角色（算法/DRI/QA/SRE/Function Owner）声明"默认视图"而非"数据权限"</td><td><span class="tag warn">P1</span></td></tr>
+</tbody>
+</table>
+
+<blockquote class="why">Quality Gate 的本质是把"人判断"换成"机器判断 + 流水线阻塞"。但"机器判断"的合法性来自可审计的 actor 链——<strong>没有操作级 RBAC，gate 会被随意 override，门禁形同虚设</strong>。gate 的每一次判定/override 必须写审计（actor + timestamp + rule + result），审计表参考 generation fragment evidence 的 immutable trigger 模式。<strong>§7.3 合入卡点组件加"webhook 签名验证 + 操作者身份绑定"依赖，明确写"无认证则 Gate 不可上线"</strong>。SonarQube 能做合入门禁的前提是它有完整身份体系。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">4. 技术架构：服务拓扑 / 调用链 / 选型 / 非功能</h2>
+
+<h3>4.1 总体栈与运行时</h3>
+<p>平台是"<strong>京东云原生 + 双模数仓 + 三条 Flink 实时 + Express 单体后端 + Vite/React + Nginx</strong>"的混合架构。语言分层刻意取舍：Node.js + TypeScript（服务/产品层）、Java Flink（数据摄入层，锁 1.14.6，JRC 仅支持 1.14/1.16）、Python（离线 ETL，锁 3.11 + clickhouse-driver 0.2.10）。三者通过 ClickHouse 统一存储解耦。</p>
+
+<h3>4.2 服务拓扑</h3>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 数据面["数据面（JRC/Flink 流式）"]
+    JMQ["京东 JMQ<br/>1Hz 实车遥测"]
+    FK1["Flink perf-stats-consumer"]
+    FK2["Flink boot-event-consumer<br/>KeyedStateTTL 去重"]
+    FK3["Flink onboard-context-consumer"]
+    JMQ --> FK1 & FK2 & FK3
+  end
+  subgraph 数仓面["数仓面（K8s + Argo 控制面）"]
+    K8s["JKE K8s 集群<br/>2×4C8G worker"]
+    ARGO["Argo Workflows v4.0.6<br/>current-day/closed-day/reissue/backfill"]
+    PY["Python ETL<br/>warehouse-tools 镜像<br/>sha256 digest 锁定"]
+    K8s --> ARGO --> PY
+  end
+  subgraph 存储面["存储面"]
+    CK["ClickHouse 25.3<br/>x_performance 库<br/>ODS/DWD/DWS/ADS 四层<br/>prod + prod-shadow 双轨<br/>(allow_experimental_analyzer=0<br/>P0 升查询级兜底)"]
+    PG["PostgreSQL 15<br/>(当前单实例无 PITR<br/>P0 升 WAL 归档+每日 basebackup+主从)"]
+    OSS["京东云 OSS<br/>parquet 冷数据"]
+  end
+  subgraph 应用面["应用面（单台 Docker 服务器）"]
+    NX["Nginx 1.25 :8080<br/>VIP 443→8080"]
+    BE["Express 4 单体后端<br/>20 路由 /api/v1<br/>(P0 加 SSO+操作级 RBAC+审计)"]
+    FE["Vite/React SPA"]
+    NX --> BE
+    NX --> FE
+  end
+  FK1 & FK2 & FK3 --> CK
+  PY --> CK
+  PY --> PG
+  BE --> PG
+  BE --> CK
+  BE --> OSS
+  FE -.->|"API"| NX
+</pre>
+
+<ul>
+  <li><code>backend/src/index.ts:29-31</code>：同一进程引入 dbPool(PG) 与 clickhouse client。</li>
+  <li><code>backend/src/index.ts:61-79</code>：20 个路由挂载点统一前缀 /api/v1。</li>
+  <li><code>deploy/docker-compose.yml</code>：三容器 postgres15-alpine + node18-alpine backend + nginx1.25-alpine。</li>
+</ul>
+
+<h3>4.3 调用链：实车性能看板一条请求的完整路径</h3>
+
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as 用户浏览器
+    participant N as Nginx :8080
+    participant B as Express backend
+    participant P as PostgreSQL
+    participant C as ClickHouse (prod-shadow)
+    U->>N: GET /onboard/performance
+    N->>B: GET /api/v1/onboard-perf/overview
+    B->>P: SELECT * FROM perf_threshold_config (阈值)
+    B->>B: useProdShadow() 检查 ONBOARD_PERF_SOURCE==='prod-shadow'
+    B->>C: SELECT ... FROM x_performance.ads_onboard_*_prod_shadow_local
+    Note over C: HTTP 协议 + allow_experimental_analyzer=0<br/>(P0 改为查询级 settings 覆盖)
+    C-->>B: 聚合结果
+    B->>P: SELECT * FROM vehicle_meta (车辆维度)
+    B-->>U: JSON (KPI/趋势/车辆列表) + SHADOW 水印
+</pre>
+
+<h3>4.4 关键选型 rationale（终版升级技术债优先级）</h3>
+
+<h4>选型 #1：ClickHouse 用 HTTP 协议 + 关闭新 analyzer + SQL 写全库前缀<span class="tag danger">R-09 升 P0</span></h4>
+<p>升级 CK 25.3.6.56 后，新版 analyzer 对 ReplicatedMergeTree 跨库 SELECT 解析报 Code:60 UNKNOWN_TABLE。<strong>v1 把全局关 analyzer 标 P1，数据架构师指出这是用一行配置砍掉 CK 一整代优化能力</strong>，万车队规模（§4.5 目标）下旧 analyzer 全分区扫描会让 dashboard P95 恶化直接冲击 DWS P95≤2s。终版升级为 <strong>P0 技术债</strong>：</p>
+<ol>
+  <li>P0 先把 Code:60 bug 上游 case 化：用最小复现（ReplicatedMergeTree + HTTP database 参数 + 跨库 SELECT）提 ClickHouse issue；</li>
+  <li>临时方案改为<strong>按查询级 settings 覆盖</strong>仅在触发 Code:60 的特定查询关 analyzer，而非全局永久关；</li>
+  <li>设上游修复 deadline（3 个月无修复则切查询级兜底）。</li>
+</ol>
+<ul><li><code>backend/src/config/clickhouse.ts:35-44</code>（analyzer=0）；<code>docs/DECISIONS.html</code> L214-244。</li></ul>
+
+<h4>选型 #2：prod-shadow 影子表双轨 + 永久水印</h4>
+<p>实时链路切生产不可回滚，维护 _prod_shadow_local 影子宽表，后端通过 ONBOARD_PERF_SOURCE==='prod-shadow' 切到读影子表。<strong>技术债</strong>：双倍 CK 存储 + 切换是环境变量级（需重启进程）+ 切流决策无金标准自动比对。<strong>终版新增：dashboard 永久水印"SHADOW 数据，非生产口径"</strong>，prod-shadow → formal 切流的 GO 准出未量化（见 §8.3 unresolved risk）。</p>
+<ul><li><code>backend/src/services/onboardPerfService.ts</code> L29-37/L44-46/L1869；<code>ops/argo/onboard-percentile-v3-current-day-cron.yaml</code> L34。</li></ul>
+
+<h4>选型 #3：warehouse-tools 镜像 SCA / provenance 强约束</h4>
+<p>基镜像必须带 sha256 digest（拒绝 tag）、目标 tag 不得 latest、worktree 必须干净、<code>--network=none</code> 离线构建。镜像内 ENTRYPOINT 前 python 校验四元一致才放行。技术债：只覆盖 warehouse-tools，backend/nginx 无 provenance 约束。</p>
+<ul><li><code>deploy/build-warehouse-tools.sh</code> L13-20/L27-30/L51-63；<code>deploy/Dockerfile.warehouse-tools</code> L23/L25。</li></ul>
+
+<h4>选型 #4：Flink fat JAR 自带 JMQ SDK + rover 官方 proto JAR</h4>
+<p>京东 JRC 平台运行时只提供 Flink 核心依赖、不带 JMQ 客户端，车端报文是京东 rover 协议的 protobuf。把 JMQ SDK + flink-connector-jdbc 打进 fat JAR，直接依赖官方 rover-server-proto:1.1.61。</p>
+<ul><li><code>flink-jobs/perf-stats-consumer/pom.xml</code> L56-69/L85-90/L127-145。</li></ul>
+
+<h3>4.5 非功能性需求（NFR）现状 + 终版升级</h3>
+<table>
+<thead><tr><th>维度</th><th>目标</th><th>现状</th><th>缺口 / 升级</th></tr></thead>
+<tbody>
+<tr><td>可用性</td><td>99.5%</td><td><span class="tag danger">单点</span> 单台服务器 / 单 PG 容器 / 单 backend 容器</td><td>无 HA、无主从、无 PITR 自动化。<strong>年宕机预算 43.8h，一次 force-recreate 即超支（R-17 已发生）</strong>。</td></tr>
+<tr><td>性能</td><td>DWS 看板 P95 ≤ 2s</td><td><span class="tag warn">未测</span> 无基线压测数据</td><td>万车阶梯 CK 容量与查询性能基线缺失，无法判断扩缩容目标可行。</td></tr>
+<tr><td>可观测</td><td>RED + USE 指标 + 分布式追踪</td><td><span class="tag danger">缺失</span> 无 Prometheus / Grafana / DCGM / OTel</td><td>backend grep prom-client/otel/metrics 0 命中，最大 launch 缺口。</td></tr>
+<tr><td>安全</td><td>RBAC + 凭据治理</td><td><span class="tag danger">缺失</span> CORS=* + 凭据硬编码 health-monitor.sh</td><td><strong>R-03 升 launch 前置 blocker</strong>：JME_APP_SECRET 明文已入 git history（<code>deploy/health-monitor.sh:20</code> 已核实）。任何 clone 仓库者可冒充京ME 机器人向 ALERT_ERPS 发伪造告警掩盖事故。</td></tr>
+<tr><td>扩缩容</td><td>CK 节点 / backend 副本可扩</td><td><span class="tag warn">受限</span> docker-compose 单机，K8s 仅 2×4C8G</td><td>5600→万车阶梯未实测，<strong>R-13 Flink Source 并行度锁 1 是串联单点（P0 升 P1）</strong>。</td></tr>
+<tr><td>CI/CD</td><td>自动化流水线</td><td><span class="tag danger">缺失</span> 无 .github/workflows / Jenkinsfile</td><td>靠 deploy-quick.sh 本地 build+scp。</td></tr>
+<tr><td><strong>Gate 引擎自身 SLA（v1 缺，终版补）</strong></td><td>判定时长 ≤ 30min / 引擎可用性 ≥ 99%</td><td>—</td><td>影响 MR 合入响应时长；Gate 挂了 MR 是放行还是阻塞需在 §7 决策。</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">5. 数据架构：分层 / Flink / CK-PG / 血缘 / 保留 / SLA 延迟预算</h2>
+
+<h3>5.1 分层模型（ODS / DWD / DWS / ADS）+ P99 口径修复</h3>
+<p>性能数据按频率与受众分四层。每层存在对应一个明确的查询代价权衡。</p>
+<table>
+<thead><tr><th>层</th><th>用途</th><th>TTL</th><th>分位口径</th><th>关键表</th></tr></thead>
+<tbody>
+<tr><td>ODS</td><td>JMQ 消息近原样落库（含 jmq_offset/msg_receive_time/seq_num 溯源列）</td><td>7 天</td><td>分位回算真值基准</td><td>ods_dag_e2e_local / ods_control_cmd_local / ods_sys_perf_local</td></tr>
+<tr><td>DWD</td><td>分钟级第一层聚合，dashboard 实时趋势查询主力</td><td>30 天</td><td><strong>v1 标语"quantileExact 精确 P99"，ETL 实为 quantileTDigest（perf_stats_etl_v1.sql:428/442 已核实），P0 改 quantileExact</strong></td><td>dwd_perf_sys_proc_minute / dwd_perf_dag_e2e_minute</td></tr>
+<tr><td>DWS</td><td>日级宽表，单车详情页与 TopN 稳定入口</td><td>180 / 400 天</td><td><strong>v1 标语"P99 从 ODS quantileExact 回算"，ETL 实为 quantileTDigest + least(max)（perf_stats_etl_v1.sql:179-182/428/442 已核实）——数学上无业务含义、小样本分钟桶退化为 max、dashboard 出现不可解释尖刺</strong>。P0 改 quantileExact + 去 least</td><td>dws_perf_vehicle_daily / dws_perf_proc_daily / dws_perf_dag_e2e_module_day</td></tr>
+<tr><td>ADS</td><td>面向全车队百分位发布层</td><td>14-180 天</td><td>quantilesTDigest state + generation 分区原子发布（<strong>execution=disabled, P0 接生产调度</strong>）</td><td>ads_onboard_dag_latency_1s_v2 / ads_onboard_metric_minute_state_v2</td></tr>
+</tbody>
+</table>
+
+<blockquote class="risk"><strong>P99 口径三方矛盾（首席补，最危险硬伤）</strong>：PRD §5.1/§2.2 aside 反复强调"DWS P99 从 ODS quantileExact 精确回算"并称"本数仓最关键口径决策"，但 ETL 实际 quantileTDigest+least(max)（<code>perf_stats_etl_v1.sql:428/442/179-182</code> 已核实），DDL 注释也错误标"精确"（<code>perf_stats_dwd_dws_design_v1.sql</code> L206-226）。即 PRD+DDL+ETL 三方自相矛盾。北极星是"准出报告"，准出报告权威根基是 P99 精度——<strong>TDigest 在 P99 相对误差 1-3%，落在 Quality Gate warn/crit 阈值差之间时会把真实 P99=102ms 的包判成 &lt;100ms PASS，回归逃逸上线</strong>。PRD 自己 aside 写的反事实正是当前代码真实行为：文档对、代码错。</blockquote>
+
+<h4>P99 口径修复 P0 计划</h4>
+<ol>
+  <li>立即在 launch 前用一行 SQL 自检暴露偏差：<code>SELECT quantileExact(0.99)(end_to_end_ms), quantileTDigest(0.99)(end_to_end_ms) FROM ods_dag_e2e WHERE toDate(msg_receive_time)=today()</code>，量化两者差距；</li>
+  <li>修 <code>perf_stats_etl_v1.sql:428-442</code> 把 quantileTDigest(0.99) 改为 quantileExactIf/quantileExact，或显式 JOIN 回 ODS 原始样本回算（ODS 7d 窗口足够）；同时修 L429/430 control 的 lon/heading 同样问题；</li>
+  <li>移除 L179-182 DWD E2E 分位的 <code>least(quantileTDigest(0.X), max)</code> 包装；</li>
+  <li>同步修正 <code>perf_stats_dwd_dws_design_v1.sql</code> L206-226 的"精确 P99(ODS 原始样本)"误标注；</li>
+  <li>§6.1 新增"P99 口径一致性矩阵"表。</li>
+</ol>
+
+<aside class="note"><strong>P99 口径修复后的基线重算治理（首席补，三方共同盲点）</strong>：把 ETL 从 quantileTDigest 改为 quantileExact 后，历史 DWD/DWS/ADS 数据需重新回算（已发布 generation 的 P99 值会变），这会触发 generation 版本号变更和 reader activation 重新发布。若历史数据回算后某些算法包历史 P99 从 PASS 变 FAIL，会引发"历史发版是否需要追溯"的治理问题。终版决断：<strong>口径修复只对未来发版生效，历史不追溯</strong>——否则会陷入无止境的历史回算。</aside>
+
+<h3>5.2 指标体系分层（数据流视角）</h3>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph L0["ODS 原始样本（7d）"]
+    O1["1Hz 性能快照<br/>end_to_end_ms / cpu_usage / mem_usage<br/>lat_error / lon_error / heading_error / speed_delta"]
+  end
+  subgraph L1["DWD 分钟聚合（30d）"]
+    D1["avg / p50 / p90 / p95 / p99<br/>slow_100/200/500_count<br/>P99 P0 改 quantileExact"]
+    D2["sys_perf proc total / module_cpu_detail / rover"]
+  end
+  subgraph L2["DWS 日级宽表（180-400d）"]
+    W1["P99 P0 改 quantileExact 回算<br/>去 least(max) 包装"]
+    W2["active_minutes / slow_minutes<br/>业务化高水位计数"]
+  end
+  subgraph L3["ADS 全车队百分位（14-180d）"]
+    A1["按 driving_mode/software_version/<br/>perception_version 分组<br/>quantilesTDigest state"]
+    A2["generation 原子发布<br/>(execution=disabled, P0 接生产调度)"]
+  end
+  O1 --> D1 & D2
+  D1 --> W1
+  D2 --> W2
+  W1 --> A1
+  W2 --> A1
+  A1 --> A2
+</pre>
+
+<h3>5.3 实时 Flink 作业链路（R-13 升 P1）</h3>
+<p>三个 Flink 作业都自己实现 RichSourceFunction 直接对接 com.jd.jmq 原生 SDK（JMQ 是京东自研协议，非 Kafka 兼容），消息体是 protobuf wire format。</p>
+<table>
+<thead><tr><th>作业</th><th>输入</th><th>处理</th><th>输出</th><th>关键设计</th></tr></thead>
+<tbody>
+<tr><td>perf-stats-consumer</td><td>JMQ perf topic</td><td>wire format 手动解析外层 BusDTO → flatMap 成三路 ODS 流</td><td>CK ods_dag_e2e_local / ods_control_cmd_local / ods_sys_perf_local</td><td>并行度锁 1，batchSize 2000/interval 5s/maxRetries 3，<strong>无 Flink 侧去重（P0 加 KeyedStateTTL，对齐 boot 7d），P0 显式 CheckpointingMode.EXACTLY_ONCE + unaligned checkpoint</strong></td></tr>
+<tr><td>boot-event-consumer</td><td>JMQ boot topic</td><td>keyed-state TTL 去重（OdsBootModuleDedupFilter，TTL 7 天对齐 ODS retention）</td><td>CK boot ODS</td><td>JMQ 会重复上报进行中模块快照</td></tr>
+<tr><td>onboard-context-consumer</td><td>JMQ guardian topic</td><td>双写 raw holding ODS + 解码后 DWD</td><td>CK ods_upstream_guardian_raw + DWD</td><td>rawEnabled 双写设计便于回放</td></tr>
+</tbody>
+</table>
+
+<ul>
+  <li><code>flink-jobs/perf-stats-consumer/.../PerfStatsFlinkJob.java</code> L104-106（checkpoint 60s）；L113（Source setParallelism(1)）。</li>
+  <li><code>flink-jobs/boot-event-consumer/.../dedupe/OdsBootModuleDedupFilter.java</code> L27-33（StateTtlConfig 7 天 + NeverReturnExpired）。</li>
+</ul>
+
+<aside class="note"><strong>R-13 升 P1（首席决断）</strong>：单 Source 是整个实时链路的串联单点，万车（≈10500 行/s）一定到 backpressure，PRD 把它降为 P2 与"已达生产级"定位自相矛盾。P0 路线图增加"5600→万车队阶梯压测"硬 gate：单 Source=1 在 N 车 M 行/s 下 backpressure/lag/restart 实测基线；评估 JMQ 是否支持分区消费，不支持则在 Flink 内 rebalance 后多并行 decode/sink。同时 <strong>P0 先把 Flink lag + backpressure + numRecordsInPerSec 三个 metric 接进 Prometheus</strong>（R-04 子集），否则 5600→万车扩容是盲扩。</aside>
+
+<aside class="note"><strong>perf/control 链路重复消息对 P99 的偏斜影响（系统架构师追问，首席补）</strong>：JMQ 重投往往是因为慢消息/超时重试，所以恰恰是<strong>"慢样本"被重复的概率更高</strong>——那 P99 会被往慢的方向系统性偏高。这是 worst case。P0 修复路径：在 ODS→DWS 精确 P99 回算的 SQL 里，<strong>先按 dag_identity argMax 去重再 quantileExact</strong>，成本几乎为零；中期给 perf/control 也加 Flink 侧 dedup（复用 boot 的 KeyedStateTTL 模式），TTL 对齐 ODS 7 天 retention。</aside>
+
+<h3>5.4 CK-PG 双库分工 + HiL 进 CK 镜像（M5 前置）</h3>
+<table>
+<thead><tr><th>PG 用途</th><th>权威表</th><th>为什么 PG 而非 CK</th></tr></thead>
+<tbody>
+<tr><td>generation/fence 权威</td><td>onboard_percentile_fragment_evidence_v3 / onboard_full_fleet_percentile_generation_v2</td><td>需要不可变权威 + sha256 CHECK 约束 + immutable trigger，CK 不擅长强一致事务</td></tr>
+<tr><td>HiL 报告元数据</td><td>hil_report_metadata / hil_tag_dictionary / hil_report_tag_bindings / hil_report_meta_audit</td><td>可变产品标签的 SoR 与审计</td></tr>
+<tr><td>HiL 测试指标原始库</td><td>hil_tasks / hil_module_metrics / hil_memory_metrics / hil_daily_aggregation</td><td>低频 PG 足够；<strong>但 M5 对照视图需同步到 CK 镜像层（P1 前置）</strong></td></tr>
+<tr><td>故障码三层</td><td>error_events_ods / error_items_dwd / error_daily_dws / error_code_dim</td><td>低频业务事实，PG 足够</td></tr>
+<tr><td>配置 / 阈值 / 车辆维度</td><td>perf_threshold_config / vehicle_meta / <strong>algo_package_version_map（待建）</strong></td><td>低频读写、强一致性</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>HiL→CK 镜像层（数据研发负责人追问，首席补）</strong>：v1 §5.4 把"HiL 在 PG、实车在 CK"当合理选型，但 P1 的 M5 对照视图要在 CK 跑 PG 撑不住全车队×全场景笛卡尔。<strong>P1 启动 HiL↔实车对照视图之前，数据组必须先做 HiL→CK 镜像层</strong>（HiL 报告元数据仍在 PG 作 SoR/审计，但指标明细同步一份到 CK 的 dws_hil_* 表，按 algo_package × scenario × vin 建分片键）。用 PG→CK 的轻量 CDC（每日全量 + 增量）即可，不需要 Flink。同步时机正好把 hil_daily_aggregation 无自动调度（已知债）一起做掉。</aside>
+
+<h3>5.5 数据血缘与契约（设计已落地）</h3>
+<p>onboard 百分位的正确性高度依赖"物理源冻结 + 业务身份键 + DQ 闸门"。这套数仓把血缘做成了显式可审计的 JSON 契约：</p>
+<ul>
+  <li><strong>source_registry v1</strong>：每个 profile 的物理表名、时间戳单位、身份键（dag_identity_key 含 seq_num 投递元数据 vs dag_business_identity_key_v2 纯业务键）；replay vs 真实冲突的可解释去重（<code>onboard_qc_1s_ads_etl_v2.sql</code> L17-46 用 any() + payload_versions 冲突检测）。</li>
+  <li><strong>contracts JSON</strong>：消费契约（schemaVersion / sourceProfile / populationVersion / lifecycle PROVISIONAL / fallback fail_closed）。</li>
+  <li><strong>DQ gate schema JSON</strong>：闸门结构（32 gates + 13 metadata）。</li>
+</ul>
+
+<h3>5.6 原子发布与 generation 机制（设计已落地，执行未启用）<span class="tag danger">v1 自夸，终版诚实化</span></h3>
+<p>v1 §5.5/§5.6 把"32 DQ Gate publication-blocking + PG fence + 6 表 REPLACE PARTITION + immutable trigger + sha256 CHECK"列为 strengths 第一条称"行业领先、实打实落地不是 PPT 血缘"。<strong>首席核实 <code>warehouse/etl/onboard_qc_1s_generation_publish_v2.sql</code> 第 1 行注释明写 "Repository-only; execution is disabled."，且 grep 全 ops/ deploy/ scripts/ 无任何 cron/Argo/workflow 调用此 SQL</strong>——即数据架构师盛赞的不可变权威发布机制<strong>从未在生产跑过</strong>。这等同于 §8.3 的 prod-shadow 问题但更隐蔽（DDL 在仓库 ≠ 已执行）。</p>
+
+<p>终版改写为：<strong>"血缘契约 DDL 已设计并 immutable trigger + sha256 CHECK 落表，但 generation publish execution=disabled 且 ops/ 无任何调度——即'设计已落地、执行未启用'。P0 必须把原子发布真正接到生产 ETL 调度上，否则 32 DQ Gate publication-blocking 是设计态非运行态。"</strong></p>
+
+<h3>5.7 数据保留策略</h3>
+<table>
+<thead><tr><th>数据类</th><th>TTL</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>性能 ODS（1Hz 原始）</td><td>7 天</td><td>回溯窗口 + 回算真值；日量近 1TB 不长期留 CK</td></tr>
+<tr><td>性能 DWD（分钟级）</td><td>30 天</td><td>dashboard 实时趋势主力</td></tr>
+<tr><td>性能 DWS（日级）</td><td>180 / 400 天</td><td>单车详情页稳定入口</td></tr>
+<tr><td>性能 ADS（1s state）</td><td>14 天</td><td>高基数 state 不长留</td></tr>
+<tr><td>故障码 / 开机异常 ODS</td><td>30 天</td><td>低频但需排查窗口</td></tr>
+<tr><td>vehicle_schedule / mileage</td><td>365 天</td><td>低频业务事实长留</td></tr>
+<tr><td>HiL 报告元数据（PG）</td><td>无限</td><td>SoR + 审计</td></tr>
+<tr><td>generation fragment evidence（PG）</td><td>无限（immutable）</td><td>血缘权威</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>ODS 实际未落 OSS（数据研发负责人追问，首席补）</strong>：v1 §5.7/§4.1/§5.1 写"性能 ODS 1Hz 不落 CK 改落 OSS parquet 按天分区"是 2026-06-10 关键架构修正，但实际 <code>warehouse/ddl/perf_stats_ods_ddl_v1.sql</code> 和 <code>perf_stats_prod_shadow_ods_ddl_v1.sql</code> 全部仍是 ReplicatedMergeTree + TTL 7 DAY 落在 CK 上（已核实）。capacity_plan 自己也算出 ODS 7d = 6.1TB 与 MVP 双副本 3.8TB 配额矛盾。<strong>终版把 §4.1/§5.1/§5.7 的"已落 OSS"改回"当前在 CK 7 天，OSS 落地是 P1 改造项"</strong>，否则评审意见无效。</aside>
+
+<h3>5.8 SLA 端到端延迟预算分解（v1 笼统 ≤15min 终版拆解）</h3>
+
+<p>v1 §0.3 写"DWS 看板 SLA ≤ 15 min"但 <code>ops/k8s/warehouse-runtime-config.yaml</code> <code>WAREHOUSE_DEFAULT_WINDOW_MINUTES=30 + 5min CronJob + 2min watermark</code>。最坏延迟链路 = 30min(window 回溯) + 5min(Cron 抖动) + 2min(watermark hold) ≈ <strong>37min 远超 15min</strong>。<strong>数学上不可达，是误导性承诺</strong>。</p>
+
+<h4>延迟预算分解表（七段 p99）</h4>
+<table>
+<thead><tr><th>段</th><th>当前预估</th><th>P0 预算</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>(1) 车端 → JMQ</td><td>亚秒级（稳态）/ 4G 隧道断连积压</td><td>≤ 1s p99</td><td>不可控（运营商）</td></tr>
+<tr><td>(2) JMQ → Flink Source</td><td>亚秒级</td><td>≤ 1s p99</td><td>受 Source 并行度=1 限制</td></tr>
+<tr><td>(3) Flink → CK ODS（batchSize 2000 / interval 5s）</td><td>≤ 5s（稳态）/ 高峰由 intervalMs 主导</td><td>≤ 5s p99</td><td>P1 评估 batchSize 动态调整</td></tr>
+<tr><td>(4) ODS → DWD ETL（分钟聚合）</td><td>分钟级窗口，最坏等满 1 分钟</td><td>≤ 60s p99</td><td>分钟窗口本质</td></tr>
+<tr><td>(5) DWD → ADS Cron（fragment 5 + late-window 30）</td><td>≈ 35min（含 late-window）</td><td>≤ 35min p99 / ≤ 5min best-case（无 late-window 路径）</td><td><strong>延迟主体</strong>，window=30 是为收齐乱序消息</td></tr>
+<tr><td>(6) ADS → reader activation（PG fence + REPLACE PARTITION）</td><td>秒级</td><td>≤ 5s p99</td><td>原子发布</td></tr>
+<tr><td>(7) activation → backend 查询</td><td>≤ 2s（NFR 目标 P95）</td><td>≤ 2s p95</td><td>未实测</td></tr>
+</tbody>
+</table>
+
+<h4>SLA 三段独立承诺</h4>
+<table>
+<thead><tr><th>承诺段</th><th>当前</th><th>P0 目标</th></tr></thead>
+<tbody>
+<tr><td>数据新鲜度（车端 → CK ODS）</td><td>未测</td><td>≤ 5min p99（无 late-window）</td></tr>
+<tr><td>ODS → DWS 可见（ETL 触发）</td><td>≈ 35min（window=30 + Cron 抖动）</td><td>≤ 35min p99（含 late-window） / ≤ 15min best-case</td></tr>
+<tr><td>DWS → dashboard（reader activation）</td><td>秒级</td><td>≤ 5s p99</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why"><strong>SLA 必须诚实拆解（数据架构师独有）</strong>：SLA 是对外承诺，当前数字与 runtime config 直接冲突，被算法 owner 拿 window=30min 反问工程可信度受损。更危险：管理层据此把 15min 写进 OKR，团队为凑数调小 window 导致数据抖动，引发准出报告误判。终版把 SLA 拆三段独立承诺 + 每段配独立告警（与告警中心 R-05 一起 operationalize）。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">6. 指标体系：A/B 分层 / P99 口径矩阵 / SLA</h2>
+
+<h3>6.1 核心性能指标字典（A 类功能安全 vs B 类性能体验）</h3>
+
+<p><strong>v1 把 P90/P99 统计延迟与功能安全 Worst-Case 混为一谈</strong>——自动驾驶负责人独有但致命的硬伤：当前 e2e warn=100ms/crit=200ms（<code>onboardConfigSchema.ts:34</code> 已核实）是 P90 阈值，但发版准出要阻塞合入，算法 owner 第一反应必是"100ms 是 P90 还是 worst-case？安全指标为什么和纯性能共用一套 gate？"。ISO 26262 下安全指标验收必须是 worst-case 不是分位，P99 通过不代表那 1% 不触发 hazard。<strong>把两者混在一个 gate 要么误放（性能 spike 触发安全级阻塞被抵制）要么漏放（hazard 逃逸）</strong>。</p>
+
+<table>
+<thead><tr><th>类别</th><th>指标</th><th>分位口径</th><th>SLA / 阈值</th><th>Gate 语义</th></tr></thead>
+<tbody>
+<tr><td rowspan="4"><strong>A 类：功能安全相关（必须 WCET + 0 容忍）</strong></td><td>规控周期超限</td><td>Worst-Case 上界</td><td>任何单次超限即 FAIL</td><td>不取分位、不进 rerun、不进 N=10</td></tr>
+<tr><td>感知 deadline 超限</td><td>Worst-Case 上界</td><td>任何单次超限即 FAIL</td><td>同上</td></tr>
+<tr><td>boot 超时 BOOT_TIMEOUT_MS</td><td>UInt8（&gt; 210s）</td><td><strong>210s（从"工程经验值"升格为 A 类硬约束）</strong>：开机失败=无法进入驾驶态</td><td>同上</td></tr>
+<tr><td>关键模块 crash 计数</td><td>计数</td><td>任何一次即 FAIL</td><td>同上</td></tr>
+<tr><td rowspan="5"><strong>B 类：性能体验类（P90/P99 + 容忍带）</strong></td><td>E2E 延迟 end_to_end_ms</td><td>ODS quantileExact P99（<strong>P0 修复，当前 TDigest</strong>） / DWD quantileTDigest P90/P95</td><td>warn/crit 配置化；slow_100/200/500_count 计数</td><td>取分位、进 N=10、可 rerun</td></tr>
+<tr><td>CPU 使用率</td><td>同上</td><td>cpu_high_minutes &gt;= 80%（<strong>待业务确认 R-10 P0 前置</strong>）</td><td>同上</td></tr>
+<tr><td>内存使用率</td><td>同上</td><td>memory_high_minutes &gt;= 2048MB（<strong>待业务确认 R-10 P0 前置</strong>）</td><td>同上</td></tr>
+<tr><td>横向/纵向/航向误差 abs(lat/lon/heading_error)</td><td>同上</td><td>warn/crit 配置化</td><td>同上</td></tr>
+<tr><td>速度差 abs(speed_delta)</td><td>同上</td><td>warn/crit 配置化</td><td>同上</td></tr>
+</tbody>
+</table>
+
+<h4>P99 口径一致性矩阵（v1 缺，首席补）</h4>
+<table>
+<thead><tr><th>层</th><th>当前 ETL 实现</th><th>是原始样本还是 state merge</th><th>是否有 least() 包装</th><th>P0 目标</th></tr></thead>
+<tbody>
+<tr><td>ODS</td><td>原始样本</td><td>原始</td><td>无</td><td>真值基准不变</td></tr>
+<tr><td>DWD e2e_p50/p90/p95/p99</td><td><strong>quantileTDigest + least(quantileTDigest, max)</strong>（perf_stats_etl_v1.sql:179-182 已核实）</td><td>分钟桶原始样本</td><td><strong>有（小样本退化为 max）</strong></td><td>改 quantileExact + 去 least</td></tr>
+<tr><td>DWS e2e_p99_ms / control_lat/lon/heading_error_p99</td><td><strong>quantileTDigest(0.99)</strong>（perf_stats_etl_v1.sql:428/429/430/442 已核实），DDL 注释误标精确</td><td>state merge（DWD 分钟 state）</td><td>无</td><td>改 quantileExact 回算 + DDL 注释修正</td></tr>
+<tr><td>ADS 全车队百分位</td><td>quantilesTDigest(0.90,0.95,0.99) state</td><td>state merge</td><td>无</td><td>UI 明确标"近似 P99(TDigest)" + 旁路 quantileExact 校验作业误差监控（R-18）</td></tr>
+<tr><td>Quality Gate 判定输入</td><td>未定</td><td>—</td><td>—</td><td><strong>强制走 DWS e2e_p99_ms 精确列，绝不允许 fallback 二次汇总 P95</strong></td></tr>
+</tbody>
+</table>
+
+<blockquote class="why"><strong>boot 210s 升格 A 类硬约束并标注安全依据</strong>：开机失败=无法进入驾驶态，是功能安全级事件。<strong>全文检索 WCET/ISO 26262/ASIL 在 v1 全文 0 命中</strong>（已核实），必须补上功能安全维度的指标分层叙事。算法 owner 提 MR 时一次 spike 触发 FAIL，平台必须能证明这次 spike 不是功能安全 hazard（A 类）还是性能 spike（B 类可 rerun）。</blockquote>
+
+<h3>6.2 Gate 自身健康度指标（v1 缺，首席补）</h3>
+<p>v1 §6 只有性能指标（E2E/CPU/内存），没有"Gate 自身健康度"指标。Gate 上线后若假阳性率高（30%+）会被抵制、override 率高（50%+）说明阈值不准、平均判定时长 &gt; 30min 会拖慢 MR 合入——这些都是 Gate 自身需要监控的健康度。</p>
+<table>
+<thead><tr><th>指标</th><th>定义</th><th>P0 目标</th></tr></thead>
+<tbody>
+<tr><td>Gate 通过率</td><td>PASS 数 / 总判定数</td><td>基线建立后定</td></tr>
+<tr><td>Gate 阻塞率</td><td>FAIL 数 / 总判定数</td><td>≤ 30%（过高说明阈值过严）</td></tr>
+<tr><td>假阳性率 FP</td><td>已知无回归被判 FAIL 的比例（backtest harness 度量）</td><td>≤ 5%</td></tr>
+<tr><td>假阴性率 FN</td><td>已知回归被判 PASS 的比例（回归逃逸）</td><td>≤ 1%</td></tr>
+<tr><td>Override 率</td><td>FAIL 被 DRI Override 的比例</td><td>≤ 20%（过高说明阈值不准）</td></tr>
+<tr><td>平均判定时长</td><td>从请求到出 PASS/FAIL 的时长</td><td>≤ 30min（影响 MR 合入响应）</td></tr>
+</tbody>
+</table>
+
+<h3>6.3 测试覆盖度指标（v1 INDUSTRY_RESEARCH 提出但缺失）</h3>
+<table>
+<thead><tr><th>指标</th><th>定义</th><th>当前状态</th></tr></thead>
+<tbody>
+<tr><td>场景集覆盖率</td><td>(本算法包跑过的场景集数) / (应跑场景集总数)</td><td><span class="tag danger">未交付</span> 场景集是 4 个写死 enum（M2 仍开发中）+ <strong>algo_package 填写率 2/88 让分母算不出</strong>。P0 强制 algo_package 后再启用</td></tr>
+<tr><td>算法包覆盖度</td><td>(每个算法包被多少场景集覆盖)</td><td><span class="tag danger">未交付</span> 同上</td></tr>
+<tr><td>MR 新功能触发率</td><td>(MR 新功能在场景里真的被触发的比例)</td><td><span class="tag danger">未交付</span> 缺 dataminer 触发标签</td></tr>
+<tr><td>HiL 报告完整性</td><td>expected-vs-actual 任务报告比率</td><td><span class="tag danger">未交付</span> 无自动校验</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">7. 发版准出 Gate 设计（终版：Override + 灰度三阶段 + 样本/产能约束 + 阈值 catalog 治理）</h2>
+
+<h3>7.1 设计目标</h3>
+<p>把"算法包发版"从"QA 凭经验判断"升级为"<strong>OnBoard 自动给 PASS/FAIL 结论 + 流水线阻塞合入</strong>"。Quality Gate = SonarQube 式范式：性能阈值从"建议"升格为"流程硬约束"。</p>
+
+<h3>7.2 准出 Gate 流程图（含 Override + 灰度阶段）</h3>
+
+<pre class="mermaid">
+flowchart TD
+  REQ["算法包发版请求<br/>algo_package + scenario_set"] --> GATE["Quality Gate 引擎"]
+  GATE --> Q1{"场景集执行<br/>覆盖率达标?"}
+  Q1 -->|否<br/>(algo_package 未填)| WARN_INSUFFICIENT["INSUFFICIENT_SAMPLES<br/>WARN 不阻塞"]
+  Q1 -->|是| Q2{"A 类功能安全<br/>Worst-Case 达标?"}
+  Q2 -->|否| FAIL_HARD["FAIL Hard Gate<br/>不可 Override"]
+  Q2 -->|是| Q3{"B 类 P99<br/>N>=10 样本达标?"}
+  Q3 -->|否| INSUF["INSUFFICIENT_SAMPLES<br/>要求补样本"]
+  Q3 -->|是| Q4{"P99/控制误差<br/>达标?"}
+  Q4 -->|否| FAIL_SOFT["FAIL Soft Gate"]
+  Q4 -->|是| Q5{"对比 base<br/>无回归?"}
+  Q5 -->|否| FAIL_SOFT
+  Q5 -->|是| Q6{"治理元数据<br/>填写完整?"}
+  Q6 -->|否| WARN["WARN: 不阻塞但记录"]
+  Q6 -->|是| PASS["PASS: 准出报告"]
+  FAIL_SOFT --> RR["自动 rerun 一次<br/>max_rerun_per_gate=1<br/>换台架 pool"]
+  RR -->|"仍 FAIL"| OVERRIDE{"阶段二以上:<br/>DRI Override?"}
+  RR -->|"PASS"| PASS
+  OVERRIDE -->|"是"| AUDIT["quality_gate_override_audit<br/>DRI+reason+approval_chain<br/>+post_regression_id"]
+  OVERRIDE -->|"否"| MANUAL["升级人工"]
+  AUDIT --> WEBHOOK["MR webhook 卡点<br/>(webhook 签名验证 + actor 绑定)"]
+  PASS --> WEBHOOK
+  WARN --> WEBHOOK
+  WARN_INSUFFICIENT --> WEBHOOK
+</pre>
+
+<h3>7.3 核心组件（待建，含 Override 审计 + 操作级 RBAC）</h3>
+<table>
+<thead><tr><th>组件</th><th>职责</th><th>权威表</th><th>依赖</th></tr></thead>
+<tbody>
+<tr><td>Gate Rule Config</td><td>配置 (指标 × 场景集 × 阈值 × A/B 类 × 阻塞或告警 × min_runs × max_rerun)</td><td>PG quality_gate_rule（表结构见 §11.2）</td><td>perf_threshold_config 扩展 + <strong>阈值 catalog 治理流程（见 §7.7）</strong></td></tr>
+<tr><td>判定引擎</td><td>(指标值 × 场景集 × 阈值) → PASS/FAIL/WARN/INSUFFICIENT_SAMPLES</td><td>backend service regressionJudge.ts（待建）</td><td>compare.ts（标 deprecated）/ thresholdService.ts / <strong>P99 强制走 DWS 精确列</strong></td></tr>
+<tr><td>准出报告</td><td>算法包级 release gate 报告（含 trace 至每场景每指标 + P99 source 字段 exact/approx）</td><td>PG quality_gate_report（表结构见 §11.2）</td><td>generation 不可变模式借鉴 + rerun 链（max_rerun_per_gate=1）</td></tr>
+<tr><td>Override 审计</td><td>DRI + reason + approval_chain + post_release_regression_id</td><td>PG quality_gate_override_audit（表结构见 §11.2）</td><td>immutable trigger 模式（参考 fragment_evidence_v3）</td></tr>
+<tr><td><strong>合入卡点（操作级 RBAC 前置）</strong></td><td>对接 MR webhook，PASS/FAIL/Override 写入合入流水线</td><td>外部（GitHub / ERP）</td><td><strong>webhook 签名验证 + 操作者身份绑定 + SSO 对接京ME（无认证则 Gate 不可上线）</strong></td></tr>
+</tbody>
+</table>
+
+<h3>7.4 准出 Gate 的统计意义（A/B 分层 + rerun 区分确定性 vs 抖动）</h3>
+<aside class="note"><strong>Quality Gate 阻塞合入的统计意义</strong>：性能数据是重尾分布，单次 HiL 任务的结果方差大。Gate 判定必须基于<strong>足够样本</strong>（多 scenario × 多 run）+ <strong>分位而非均值</strong>（A 类用 worst-case，B 类用 P99）。规则建议：(1) 单场景至少 N=10 runs 才参与 B 类 Gate 判定；(2) A 类不进 rerun、不进 N=10，任何单次超限即 FAIL；(3) FAIL 时自动 rerun 一次再判（<strong>但 rerun 不是无条件重跑同一份，而是换台架/换时间窗重跑——hil_jobs 有 bench_pool_tag 字段，rerun 强制换 pool，物理隔离硬件抖动</strong>）；(4) rerun 结果和原结果做显著性判定而非简单覆盖——<strong>两次都 FAIL = 确定性回归直接升级人工，一次 FAIL 一次 PASS = 抖动触发"补样本"模式（再跑 3-5 次取统计量），关键 scenario 第一次 FAIL 就升级人工</strong>；(5) WARN 不阻塞但写审计。反事实：若用单次 mean 判定，假阳性会逼算法 owner 反复 rerun，平台被抵制；假阴性会让回归逃逸上线。</aside>
+
+<h4>7.5 Override 与灰度策略（v1 0 override，终版补齐）<span class="tag danger">P0 必补</span></h4>
+
+<p><strong>v1 §7.2 流程图只有 FAIL→rerun→升级人工，0 override</strong>。grep override/紧急放行/bypass/force pass/exempt 全 0（已核实），连概念都没有。SonarQube/GitHub Required Reviews/ERP 发版门禁都有 override 通道——<strong>没有 override 的 Gate 不是产品是政治</strong>，它把"是否放行"的矛盾从流程转移到平台，平台必被废。</p>
+
+<p>Gate 上线分三阶段（Advisory → Soft Gate → Hard Gate）：</p>
+<table>
+<thead><tr><th>阶段</th><th>语义</th><th>FAIL 行为</th><th>启用条件</th><th>持续时长</th></tr></thead>
+<tbody>
+<tr><td><strong>阶段一 Advisory</strong></td><td>收集假阳性数据对齐阈值</td><td>FAIL 只打标不阻塞</td><td>Gate 引擎 + 阈值 catalog 上线</td><td>2-4 周</td></tr>
+<tr><td><strong>阶段二 Soft Gate</strong></td><td>阻塞但可 Override</td><td>FAIL 阻塞合入，但 DRI 一键 Override + 强制填 reason + 自动开事后回归工单（post_release_regression_id）</td><td>Advisory 假阳性率达标 + 管理层签字 + 操作级 RBAC + webhook 签名 + max_rerun_per_gate=1</td><td>1-2 季度</td></tr>
+<tr><td><strong>阶段三 Hard Gate</strong></td><td>FAIL 不可 Override</td><td>仅 P0 算法包 + A 类功能安全指标</td><td>Soft Gate override 率 ≤ 20% + N=10 样本策略签字 + 阈值 catalog 稳定</td><td>长期</td></tr>
+</tbody>
+</table>
+
+<h4>7.6 Gate 判定输入约束与产能预算（v1 N=10 散落，终版串联）</h4>
+
+<p><strong>v1 §7.4 建议 N≥10 但代码 compare.ts 现状 N≥2（已核实 compare.ts:154/179/251/275 全是 length≥2）</strong>。从 N=2 到 N=10 的成本散落各章未串联。终版明确：</p>
+<ul>
+  <li><strong>P0 阶段基于现状 N≥2 做 Soft Gate</strong>（仅告警不阻塞），N≥10 为 Hard Gate 启用条件；</li>
+  <li><strong>台架工时估算</strong>：场景集数 × N × 单 run 时长 / 台架并发数 = 阻塞研发天数。P0 必须与算法 owner/DRI 开"Gate 样本共识会"出产能预算，但产能数据 PRD 当前没有；</li>
+  <li><strong>分级策略</strong>：核心安全场景 N=10、回归 smoke 场景 N=3；</li>
+  <li><strong>jobs.ts:300 的 rerun 加 max_rerun_per_gate=1 硬上限</strong>并在 quality_gate_report 记录 rerun 链（当前代码无任何 rerun 限制，已核实）。</li>
+</ul>
+
+<aside class="note"><strong>台架产能 vs N=10 的产能契约风险</strong>：Gate 的统计稳健性依赖 N≥10 runs/场景，但 R-08 HilConsole M2 真实台架下发当前未通（externalDispatch=false 已核实 5 处），且公司 HiL 台架总产能未知。若产能不足以支撑每天 Gate N 个算法包×场景集×10 runs，则要么降阈值（N&lt;10 假阳性高→被抵制）要么排队（算法包等 Gate 排到下周→研发绕过）。<strong>P0 阶段必须与算法 owner/DRI 开'Gate 样本共识会'并出产能预算</strong>，这是 unresolved risk 第 ② 项。</aside>
+
+<h4>7.7 阈值 catalog 治理流程（v1 §7.4 提但未决断，首席升 P0）</h4>
+
+<p><strong>v1 §6.1 的 perf_stats_dwd_dws_design_v1.sql 的 cpu_high_minutes/memory_high_minutes/e2e_slow_minutes 三处注释都写"阈值待业务确认"（L200/231/266 已核实），意味着阈值连第一版都没定</strong>。Gate 引擎做出来没有阈值 catalog 可读就是空跑。P0 必须把"阈值 catalog 治理流程"与"高水位阈值业务共识签字"绑定，作为 Gate 引擎的前置依赖。</p>
+
+<table>
+<thead><tr><th>治理项</th><th>v1 状态</th><th>终版要求</th></tr></thead>
+<tbody>
+<tr><td>谁有权改阈值</td><td>—</td><td>DRI 提议 → 算法 owner + 管理层签字（source='business_signed'）；未签字的标 source='engineer_guess'，准出报告分开展示</td></tr>
+<tr><td>改阈值要不要评审</td><td>—</td><td>必须评审；触发回归 backtest（套到历史已知好包/回归包上验真阳率/真阴率）</td></tr>
+<tr><td>变更是否触发回归</td><td>—</td><td>是；变更前的 Gate 决策不追溯</td></tr>
+<tr><td>版本管理</td><td>—</td><td>perf_threshold_config 加 source 字段 + version 字段，每次变更锁定版本</td></tr>
+<tr><td>反事实验证</td><td>—</td><td>从历史 88 个包 + 上线后无事故的实车数据反推每个指标的"实际工作分布"（如 CPU 实际 P95 在 65-78% 之间，那 80% warn/85% crit 合理）</td></tr>
+<tr><td>分级</td><td>—</td><td>阈值不是全局常量，按 driving_mode / scenario_set / 算法模块分别定（感知模块和规划模块的 E2E 容忍度不一样）</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why"><strong>Gate vs Alert 的本质区别</strong>：Alert 是事后告警（被动），Gate 是事前阻塞（主动）。SonarQube 范式的工业验证：把静态分析从 IDE 警告升格为合入门禁，才真正改变了代码质量。本平台要做的是同一件事——把性能阈值从"Trends 看板上的颜色"升格为"MR 合入的硬约束"。但前提是<strong>阈值有业务共识</strong>（§7.7）+ <strong>统计稳健</strong>（§7.4）+ <strong>有 Override 通道</strong>（§7.5）+ <strong>有操作级 RBAC</strong>（§3.5），缺一就被抵制。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">8. 运营实时告警与回灌（终版新增降级产品行为 + 反推依赖矩阵）</h2>
+
+<h3>8.1 告警分层</h3>
+<table>
+<thead><tr><th>层</th><th>对象</th><th>阈值示例</th><th>当前状态</th></tr></thead>
+<tbody>
+<tr><td>L1 容器健康</td><td>hil-backend / postgres / nginx</td><td>连续失败 &gt;=2 自动重启，&gt;=3 告警</td><td><span class="tag ok">已有</span> health-monitor.sh</td></tr>
+<tr><td>L2 数据 DQ</td><td>DQ Gate / DWD lag / watermark / mutation</td><td>DWD lag WARN&gt;10min / ERROR&gt;20min 或连续 3 次 WARN</td><td><span class="tag danger">未交付</span> <strong>P0 复用 health-monitor 京ME 通道扩展数据层探针（约 1-2 天，非 1 周）</strong></td></tr>
+<tr><td>L3 业务性能</td><td>Fleet 异常车辆率 / 单 VIN P99 / 控制误差</td><td>异常 VIN 数 &gt;= N 或单 VIN 连续 M 分钟超阈值</td><td><span class="tag danger">未交付</span> 无业务层告警</td></tr>
+<tr><td>L4 准出</td><td>Quality Gate FAIL</td><td>算法包发版前必查</td><td><span class="tag danger">未交付</span> Gate 引擎未建</td></tr>
+</tbody>
+</table>
+
+<blockquote class="risk"><strong>R-05 数据告警通道必须 launch 前夜上线（数据负责人强制）</strong>：DQ 闸门做得极强（阻断 REPLACE PARTITION）但闸门挂了/卡住了没有任何告警。等于家大门装了指纹锁但没装警报器——锁很高级，贼来了你看不见。凌晨一个 DQ gate 卡住，第二天早上才发现 ETL 整夜空跑、dashboard 数据停在昨天。<strong>health-monitor.sh 已经有京ME 机器人通道（JME_APP_KEY/OPEN_TEAM_ID/send_alert 函数都在），扩一条数据层探针：每 5 分钟查 CK DWD 最新 dt 与 now() 差值，lag&gt;10min 连续 3 次 WARN、&gt;20min ERROR，复用现有 send_alert 推京ME</strong>。工作量 1-2 天不是 1 周。排序：R-03（凭据合规）&gt; R-05（告警通道扩数据层，复用京ME，快）&gt; Quality Gate 引擎 &gt; 其余基础设施。</blockquote>
+
+<h3>8.2 运营实时回灌流程（终版诚实化：目标态虚线明确标注）</h3>
+
+<pre class="mermaid">
+flowchart LR
+  V["车端 1Hz 上报"] -->|"Flink 5min"| CK["CK DWD 分钟聚合"]
+  CK -->|"Argo 5min refresh"| DWS["DWS / ADS"]
+  DWS --> DASH["OnboardPerformance 看板<br/>(永久 SHADOW 水印)"]
+  DWS -.->|"P0 待建"| ALERT["告警中心 L2-L3"]
+  ALERT --> JME["京ME 机器人"]
+  ALERT --> DRI["DRI / SRE 告警通道"]
+  DASH -.->|"人工下钻"| VDETAIL["VehicleDetail 单车详情"]
+  VDETAIL -.->|"P1 M5 待建"| HIL["HiL 台架结果<br/>algo_package × scenario × version join"]
+  HIL -.->|"P2 目标态<br/>(当前不可实现)"| SCENE["场景集管理<br/>新增 / 修改场景"]
+  linkStyle 5 stroke:#b3261e,stroke-width:2px,stroke-dasharray:5 5;
+  linkStyle 7 stroke:#b3261e,stroke-width:2px,stroke-dasharray:5 5;
+</pre>
+
+<h3>8.3 车端回灌带宽约束 + prod-shadow → formal 切流 GO 准出</h3>
+<aside class="note"><strong>车端回灌带宽约束</strong>：1Hz × 5600 车 ≈ 6000 行/s 峰值（<code>docs/CK_CAPACITY_PLAN.html</code> L99-105），万车 ≈ 10500 行/s。JMQ 链路可承，但车端 4G/5G 网络在隧道 / 地库会断连，Flink 必须容忍 lag 突增。生产接入强制 shadow 灰度：先 50-100 车 2-4 小时观察。<strong>当前阻断未解除</strong>：生产 shadow 仍卡在新 JAR 发布 + prod-shadow ODS DDL 建表 + flink_sink_isolation_ready=true 三件事（<code>docs/PROD_TOPIC_CAPACITY_AND_COLD_STORAGE.html</code> L120-131）。PRD 不能假设生产链路已通。</aside>
+
+<blockquote class="risk"><strong>prod-shadow → formal 切流的 GO 准出未量化（unresolved risk 第 ⑤ 项）</strong>：v1 §8.3 列了三阻断但没列"何时允许切"的硬 gate。三阻断解除只是必要条件，还需 <strong>DQ 告警通道（R-05）上线 + L2 告警稳定运行 N 周 + formal 数据与 shadow 数据对照 N 天无显著差异</strong>后才允许切。切流本身是不可回滚动作（生产链路切生产不可回滚），<strong>GO 决策谁签、回滚条件是什么，PRD v1 当前未定义</strong>。终版要求 P0 阶段明确切流 GO 准出清单 + 签字 owner。</blockquote>
+
+<h3>8.4 闭环反推路径前置依赖矩阵（v1 缺，首席补）</h3>
+<table>
+<thead><tr><th>虚线段</th><th>依赖的 P0/P1 工作</th><th>当前可行性</th></tr></thead>
+<tbody>
+<tr><td>实车异常 → 告警中心</td><td>R-05 告警通道扩展 + R-04 可观测 MVP</td><td>P0 可落地</td></tr>
+<tr><td>告警 → HiL 台架反推</td><td>M5（algo_package × scenario × version join）+ HiL→CK 镜像层（P1）</td><td>P1 可落地</td></tr>
+<tr><td>HiL → 场景集反推新增场景</td><td>场景集从 4 个 enum 升级为可配置 catalog + 自动反推入口（P2）</td><td>P2 目标态（当前不可实现）</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">9. 风险登记册（带代码证据，终版新增管理层风险 + R-09/R-13 升级 + R-18 凭据审计）</h2>
+
+<table>
+<thead><tr><th>ID</th><th>风险</th><th>影响</th><th>代码证据</th><th>v1 等级</th><th>终版</th></tr></thead>
+<tbody>
+<tr><td>R-01</td><td>Quality Gate 引擎未实现，准出报告自动覆盖率 = 0%</td><td>平台无法升格为研发流程基础设施，北极星永远 = 0</td><td><code>backend/src/services/thresholdService.ts:13</code>；<code>backend/src/routes/compare.ts:186</code>（first-vs-last p90，无 P99/无配对）</td><td>P0</td><td><span class="tag danger">P0</span></td></tr>
+<tr><td>R-02</td><td>应用面单点：单台服务器 / 单 PG 容器 / 单 backend，宕机即全平台不可用</td><td>99.5% SLA 无法达成（年宕机预算 43.8h）</td><td><code>docs/DEPLOY.html</code> L37-43；<code>deploy/docker-compose.yml</code></td><td>P0</td><td><span class="tag danger">P0</span> + 权威层 PITR 提前</td></tr>
+<tr><td>R-03</td><td><strong>凭据泄露（终版升级）</strong>：JME_APP_SECRET=tUQFjHBLm2vh47RfqSUk 明文已入 git history（<code>health-monitor.sh:20</code> 已核实），任何 clone 仓库者可冒充京ME 机器人向 ALERT_ERPS（wangshixuan.8/lijinlong.167/zhangrui308）发伪造告警掩盖事故</td><td>凭据泄露是安全团队一票否决项；京ME 机器人是内部信任通道，被冒充告警让 DRI/SRE 对真实告警麻木，破坏 §8 告警体系全部价值</td><td><code>deploy/health-monitor.sh:17-27</code>（JME_APP_KEY/SECRET/OPEN_TEAM_ID 明文 + ALERT_ERPS 明文）</td><td>P0</td><td><span class="tag danger">launch 前置 blocker</span>（与 PG 单点同优先级，secret 轮换 + git filter-repo 清理 1-2 天立即做）</td></tr>
+<tr><td>R-04</td><td>无运行时可观测：无 Prometheus/Grafana/DCGM/OTel，无 /metrics</td><td>Flink lag / CK 慢查询 / PG 池满均不可观测，故障靠人肉 SSH</td><td>backend grep 'metrics/prom-client/otel' 全空</td><td>P0</td><td><span class="tag danger">P0</span></td></tr>
+<tr><td>R-05</td><td>DQ / lag / watermark / mutation 异常无自动告警通道</td><td>数据异常要等人主动看 status report 才发现</td><td><code>deploy/health-monitor.sh</code> grep 数据层关键词 0 命中（v1 R-05 描述的 0 命中不准——5 命中但全是 'OnBoard' 品牌名/注释，无真实数据层探针）</td><td>P0</td><td><span class="tag danger">P0（launch 前夜上线，1-2 天）</span></td></tr>
+<tr><td>R-06</td><td>algo_package 填写率 2/88，端到端追踪无法实现</td><td>算法包生命周期端到端追踪断裂，HiL↔实车对照无 join key</td><td><code>docs/PRODUCT_AUDIT.html</code> §2</td><td>P1</td><td><span class="tag danger">P0</span>（Gate 主键前置 + M5 join key 前置）</td></tr>
+<tr><td>R-07</td><td>HiL 与 Onboard 数据无耦合、UI 无对比入口</td><td>平台最大结构性缺口</td><td><code>docs/PROJECT.html</code> L40-45；<code>docs/HIL_SCENARIO_TASK_LOOP_ARCHITECTURE_20260706.html</code> L85；HilRoadComparison 表 0 命中</td><td>P1</td><td><span class="tag warn">P1（最小可行版散点对照 P0 内 2-3 周）</span></td></tr>
+<tr><td>R-08</td><td>HilConsole M1 全预览态（externalDispatch=false），真实台架下发未通</td><td>"管理态已建、执行态未通"的半成品；<strong>Gate 判定输入依赖真实台架产出</strong></td><td><code>frontend/src/pages/HilConsole/index.tsx</code> L299/L319/L610/L946/L999</td><td>P1</td><td><span class="tag danger">P0</span>（Gate 判定输入硬前置，解决 §2.4 vs §10 + §7.4 N=10 串联依赖）</td></tr>
+<tr><td>R-09</td><td>CK Code:60 bug 用 allow_experimental_analyzer=0 全局绕过</td><td>用一行配置砍掉 CK 一整代优化能力，万车队规模下旧 analyzer 全分区扫描会让 dashboard P95 恶化冲击 DWS P95≤2s</td><td><code>backend/src/config/clickhouse.ts</code> L35-44；<code>docs/DECISIONS.html</code> L214-244</td><td>P1</td><td><span class="tag danger">P0</span>（先上游 case 化 + 查询级 settings 兜底，3 个月 deadline）</td></tr>
+<tr><td>R-10</td><td>高水位阈值多处"待业务确认"（CPU&gt;=80、memory&gt;=2048MB、boot&gt;210s）</td><td>Quality Gate 做出来仍基于经验值，权威性受挑战</td><td><code>warehouse/ddl/perf_stats_dwd_dws_design_v1.sql</code> L200/231/266</td><td>P1</td><td><span class="tag danger">P0</span>（阈值 catalog 治理 §7.7，业务签字 + 反事实验证）</td></tr>
+<tr><td>R-11</td><td>prod-shadow 双轨切换是环境变量级，无运行时热切</td><td>切流需重启进程，无渐进式按 VIN 灰度</td><td><code>backend/src/services/onboardPerfService.ts</code> L44-46</td><td>P2</td><td><span class="tag soft">P2</span></td></tr>
+<tr><td>R-12</td><td>双轨切换期间 formal 数据 freshness 标注 stale 但 ETL 仍跑</td><td>长期会产生空跑 ETL</td><td><code>warehouse/datapilot/onboard_qc_1s_source_registry.v1.json.example</code> L25-32</td><td>P2</td><td><span class="tag soft">P2</span></td></tr>
+<tr><td>R-13</td><td>Flink Source 并行度锁 1，单分区消费</td><td>万车队下成为 ODS 反压起点，与"生产级"定位自相矛盾</td><td><code>flink-jobs/perf-stats-consumer/.../PerfStatsFlinkJob.java</code> L113</td><td>P2</td><td><span class="tag warn">P1</span>（5600→万车阶梯压测硬 gate + P0 先接 lag/backpressure metric）</td></tr>
+<tr><td>R-14</td><td>additive migration 累积 20+ 文件无合并机制</td><td>新环境部署要按顺序执行全部迁移</td><td><code>warehouse/ddl/</code> additive migration 文件</td><td>P2</td><td><span class="tag soft">P2</span></td></tr>
+<tr><td>R-15</td><td>代码标识符 hil-* 与品牌 OnBoard 不一致</td><td>命名技术债，新人困惑</td><td><code>docs/PROJECT.html</code> L186-192</td><td>P2</td><td><span class="tag soft">P2</span></td></tr>
+<tr><td>R-16</td><td>无 CI/CD 流水线（无 .github/workflows / Jenkinsfile）</td><td>靠 deploy-quick.sh 本地 build+scp，回滚靠 .bak 文件</td><td><code>docs/DEPLOY.html</code> L64-79</td><td>P1</td><td><span class="tag warn">P1</span></td></tr>
+<tr><td>R-17</td><td>2026-07-03 OSS 凭据丢失事故（force-recreate 重建容器丢 env）</td><td>已发生的中断级事件，环境变量与镜像解耦不彻底</td><td><code>docs/DEPLOY.html</code> L82</td><td>P1</td><td><span class="tag warn">P1</span></td></tr>
+<tr><td><strong>R-18</strong></td><td><strong>凭据扩散范围未知 + 全仓库凭据审计缺失（首席补）</strong></td><td>R-03 只覆盖 JME secret，其他凭据（OSS/JMQ token/CK user）是否同样硬编码、仓库是否曾公开/外包可访问、是否有 fork/clone 留存——这些扩散范围 PRD 未盘点。filter-repo 清理只能清本仓库 history，已 clone 副本无法召回</td><td>P0 前置做全仓库 grep secret/key/token/password 模式审计</td><td>—</td><td><span class="tag danger">P0 前置</span>（与 R-03 打包）</td></tr>
+<tr><td><strong>R-19</strong></td><td><strong>Gate 被业务抵制（首席补，v1 缺）</strong></td><td>R-01 只说 Gate 没实现，但没列"Gate 实现后被研发抵制/绕过"这个更大的组织风险（SonarQube 早期最常见的失败模式）</td><td>—</td><td>—</td><td><span class="tag warn">P0 前置 milestone ① 缓解</span></td></tr>
+<tr><td><strong>R-20</strong></td><td><strong>P99 口径修复后历史数据回算治理（首席补，三方共同盲点）</strong></td><td>把 ETL 从 TDigest 改为 quantileExact 后历史 DWD/DWS/ADS 数据需回算，已发布 generation 的 P99 值会变，可能历史 PASS 变 FAIL 引发追溯问题</td><td>—</td><td>—</td><td><span class="tag warn">P0 治理决策：口径修复只对未来发版生效，历史不追溯</span></td></tr>
+</tbody>
+</table>
+
+<h3>9.1 unresolved risks（无法在 P0 闭合的最大风险）</h3>
+<ol>
+  <li><strong>管理层政治意愿风险（最大不可控项）</strong>：Quality Gate 的硬约束力来自"管理层签字把 Gate FAIL 纳入合入硬约束"。这是组织决策不是技术决策，PRD 无法保证。若管理层不签字，所有 P0 Gate 工作（引擎+override+RBAC）做完也沦为参考工具。建议 P0 前置 milestone ① 把它列为硬阻塞，未达成则整个 Gate 工作不上马。</li>
+  <li><strong>台架产能 vs N=10 的产能契约风险</strong>：公司 HiL 台架总产能未知。若产能不足以支撑每天 Gate N 个算法包×场景集×10 runs，则要么降阈值要么排队。<strong>需 P0 阶段与算法 owner/DRI 开'Gate 样本共识会'并出产能预算，但产能数据 PRD 当前没有</strong>。</li>
+  <li><strong>P99 口径修复后的基线重算风险</strong>：把 ETL 从 quantileTDigest 改为 quantileExact 后历史数据回算会触发 generation 版本号变更和 reader activation 重新发布。需 P0 阶段明确"口径修复只对未来发版生效，历史不追溯"的治理决策（已写入 R-20）。</li>
+  <li><strong>generation publish 接生产调度后的 DQ gate 失败激增风险</strong>：当前 execution=disabled，32 DQ gate 从未在生产压力下批量执行过。一旦 P0 接到生产调度，DQ gate 通过率未知——可能首次执行就有大量 fragment fail_closed，导致 dashboard 大面积空白触发 DRI 信任危机。需 P0 阶段先在 prod-shadow 压测 DQ gate 通过率基线。</li>
+  <li><strong>prod-shadow → formal 切流的 GO 准出未量化</strong>：三阻断解除只是必要条件，还需 DQ 告警通道（R-05）上线 + L2 告警稳定运行 N 周 + formal 与 shadow 数据对照 N 天无显著差异后才允许切。<strong>切流本身不可回滚，GO 决策谁签、回滚条件是什么，PRD 当前未定义</strong>。</li>
+  <li><strong>凭据泄露的扩散范围未知</strong>（R-18）：filter-repo 清理只能清本仓库 history，已 clone 的副本无法召回。建议 P0 前置做一次全仓库凭据审计 + 安全团队介入评估影响面。</li>
+</ol>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">10. 路线图：P0 前置里程碑 + P0/P1/P2 重排</h2>
+
+<h3>10.0 P0 前置 milestone（不达成则 P0 不启动）<span class="tag danger">v1 缺，终版补齐结构性缺陷</span></h3>
+
+<p><strong>launch-review 必问"哪些条件不满足 P0 不启动"</strong>——v1 P0 像无条件启动的清单，是结构性缺陷。终版新增 P0 前置 milestone 6 项，未达成则 P0 不启动：</p>
+<ol>
+  <li><strong>① 管理层签字把 Quality Gate 纳入合入流程</strong>（最大不可控项，R-19 缓解）：未达成则整个 Gate 工作不上马，避免工程投入打水漂。同时明确算法包发版事件源对接（GitLab release API / Jenkins / ERP），把北极星分母做出来。</li>
+  <li><strong>② 生产 shadow 三件套阻断解除</strong>：新 JAR 发布 + prod-shadow ODS DDL 建表 + flink_sink_isolation_ready=true。</li>
+  <li><strong>③ 京东 ERP/京ME 用户体系打通</strong>：creator 强制 + algo_package owner 字段强制（algo_package 填写率从 2/88 提到 90%+）。</li>
+  <li><strong>④ 高水位阈值与算法 owner/DRI/管理层达成签字共识</strong>：阈值 catalog 锁定版本（R-10），未签字 Gate 默认 WARN 不阻塞。</li>
+  <li><strong>⑤ Gate 样本策略（N / rerun / P99 vs mean / A 类 vs B 类）签字纪要</strong>：与算法 owner/DRI 开"Gate 样本共识会"。</li>
+  <li><strong>⑥ JME secret 轮换完成</strong>：R-03 + R-18 全仓库凭据审计 + git filter-repo 清理 + 任何 clone 副本召回通知。</li>
+</ol>
+
+<h3>10.1 P0（launch 前置 gate，0-3 个月，含 v1 P1 三项提升）</h3>
+<p><strong>P0 launch 闭环交付边界（冲突 3 决断）</strong>：A（HiL）+ B（实时性能）闭合，D（回归判定）P0 落地（与 Gate 共用 catalog），C（故障处置）+ E（数据告警回流）P0 仅告警中心 L2-L3。对外叙事改为"<strong>2.5 闭环已闭合 + 2.5 闭环 P1 闭合</strong>"（保守承诺，留评审信任冗余，实际 P0 落地 D 后是 3.5 闭环工作）。</p>
+<ol>
+  <li><strong>① P0 前置 milestone 6 项达成</strong>（见 §10.0，最高优先）。</li>
+  <li><strong>Quality Gate 引擎 + 准出报告 + Override 三阶段 + 阈值 catalog 治理（R-01 + R-10 + §7.5 + §7.7）</strong>：Gate Rule Config + 判定引擎（regressionJudge.ts）+ 报告生成 + Override 审计 + MR webhook 卡点（webhook 签名验证 + actor 绑定）。Advisory 阶段先跑 2-4 周收集假阳性数据。</li>
+  <li><strong>回归判定引擎（v1 P1 提到 P0，冲突 1 决断）</strong>：与 Gate 共用 catalog，2-3 周。</li>
+  <li><strong>HilConsole M2 真实台架下发打通（v1 P1 提到 P0，冲突 2 决断）</strong>：解决 R-08，Gate 判定输入依赖真实台架（externalDispatch=false 已核实 5 处），4-6 周。</li>
+  <li><strong>algo_package 强制填写 + hil-push 接口校验（v1 P1 提到 P0）</strong>：是 M5 join key 前置也是 Gate 主键。</li>
+  <li><strong>告警中心 L2-L3（R-05）</strong>：DQ / lag / watermark / mutation / Fleet 异常 / 单 VIN P99 告警通道，复用 health-monitor 京ME 通道，1-2 天。</li>
+  <li><strong>操作级 RBAC + SSO 对接京ME（R-03 配套）</strong>：覆盖 Quality Gate 3 个关键动作，2-3 周。</li>
+  <li><strong>应用面 HA + 凭据治理（R-02 + R-03 + R-17）</strong>：PG WAL 归档 + 每日 basebackup PITR（权威层优先，先于 Quality Gate）+ backend 多副本 + 凭据迁出。</li>
+  <li><strong>P99 口径修复（§6.1）</strong>：ETL quantileTDigest→quantileExact + 去 least(max) + DDL 注释修正，3-5 天（需回归验证）。</li>
+  <li><strong>generation publish 接生产调度</strong>：onboard_qc_1s_generation_publish_v2.sql execution=disabled → enabled + 接 Argo cron，1-2 周。</li>
+  <li><strong>运行时可观测 MVP（R-04）</strong>：Prometheus + Grafana + /metrics + 关键 Flink lag/backpressure 监控。</li>
+  <li><strong>Flink exactly-once（§2.2）</strong>：CheckpointingMode.EXACTLY_ONCE + unaligned checkpoint，1 周。</li>
+  <li><strong>R-09 CK analyzer 查询级兜底 + 上游 case 化</strong>：3 个月 deadline。</li>
+  <li><strong>CI/CD 流水线（R-16 + R-17）</strong>：GitHub Actions / Jenkinsfile + 环境变量与镜像解耦。</li>
+</ol>
+
+<h3>10.2 P1（产品深化，3-9 个月）</h3>
+<ol>
+  <li><strong>HiL ↔ 实车对照视图（M5）+ HiL→CK 镜像层（R-07）</strong>：algo_package × scenario × version join、台架性能 vs 实车性能差异分析；散点对照视图（用现有 2 张表 join）。</li>
+  <li><strong>测试覆盖度指标体系</strong>：场景集覆盖率 / 算法包覆盖度 / MR 新功能触发率（dataminer）/ HiL 报告完整性 + 场景集 catalog 从 4 enum 升级为可配置。</li>
+  <li><strong>Daily 日报 + 异常自动标记</strong>：Quality Gate 子集，daily 监控自动化。</li>
+  <li><strong>故障处置工单状态机</strong>：open/in_progress/resolved/verified + 派单通知 + 处置结果回写 Joyspace（C 闭环的回流段）。</li>
+  <li><strong>R-13 Flink Source 并行度提升</strong>：5600→万车阶梯压测 + JMQ 分区消费评估或 Flink 内 rebalance。</li>
+  <li><strong>视图级 RBAC</strong>（§3.5 第二层）：按角色场景优化默认视图。</li>
+  <li><strong>ODS 落地 OSS parquet</strong>（v1 标语"已落"，实际在 CK 7d，P1 改造）。</li>
+</ol>
+
+<h3>10.3 P2（长期演进，9-18 个月）</h3>
+<ol>
+  <li><strong>prod-shadow 双轨收敛</strong>：formal 退役、retire 时序统一编排、运行时热切 / 按 VIN 灰度（R-11 + R-12）。</li>
+  <li><strong>additive migration 合并基线重置</strong>（R-14）。</li>
+  <li><strong>命名一致化 hil-* → onboard-*</strong>（R-15）。</li>
+  <li><strong>故障注入集成</strong>（joyspace V2.0 roadmap）：与仿真平台联动。</li>
+  <li><strong>SiL / ViL 多执行环境支持</strong>（INDUSTRY_RESEARCH L193）。</li>
+  <li><strong>北极星 lagging 指标达成</strong>：准出报告自动覆盖率 18 个月 ≥ 80%（依赖 Gate 跑通 + 流程惯性）。</li>
+</ol>
+
+<!-- ====================================================== -->
+<h2 id="sec-11">11. 附录：术语 / 数据字典（含 Quality Gate 三表）/ 接口</h2>
+
+<h3>11.1 术语表</h3>
+<table>
+<thead><tr><th>术语</th><th>定义</th></tr></thead>
+<tbody>
+<tr><td>OnBoard</td><td>对外品牌名。代码标识符仍叫 hil-* 是命名技术债</td></tr>
+<tr><td>HiL（Hardware-in-the-Loop）</td><td>硬件在环台架测试，可控环境复现性能问题</td></tr>
+<tr><td>DRI</td><td>Directly Responsible Individual，功能 owner 负责人</td></tr>
+<tr><td>AlgoPackage</td><td>算法包，4 阶段生命周期主键、Gate 判定主体、HiL↔实车 join key</td></tr>
+<tr><td>Quality Gate</td><td>发版准出门禁，SonarQube 式范式。分 Advisory / Soft Gate / Hard Gate 三阶段</td></tr>
+<tr><td>Override</td><td>Soft Gate 阶段 DRI 一键放行 + 强制填 reason + 自动开事后回归工单</td></tr>
+<tr><td>A 类指标</td><td>功能安全相关，Worst-Case + 0 容忍，不进 rerun、不进 N=10</td></tr>
+<tr><td>B 类指标</td><td>性能体验类，P90/P99 + 容忍带，可 rerun、需 N=10</td></tr>
+<tr><td>generation</td><td>ADS 原子发布单元，UUID + 不可变，REPLACE PARTITION 发布</td></tr>
+<tr><td>prod-shadow</td><td>影子表双轨，与 prod 并行写入但 reader 默认不可见</td></tr>
+<tr><td>JMQ</td><td>京东自研消息队列协议（非 Kafka 兼容）</td></tr>
+<tr><td>JRC</td><td>京东实时计算平台（托管 Flink）</td></tr>
+<tr><td>JKE</td><td>京东 K8s 引擎服务</td></tr>
+<tr><td>rover</td><td>京东车端 protobuf 协议</td></tr>
+<tr><td>_fragment</td><td>5 分钟时间片段，是 generation 的最小发布单元</td></tr>
+</tbody>
+</table>
+
+<h3>11.2 核心数据字典（PG）+ Quality Gate 三表草案（v1 缺，终版补齐）</h3>
+
+<h4>Quality Gate 三表草案</h4>
+<pre><code>-- quality_gate_rule: 阈值 catalog + 治理元数据
+CREATE TABLE quality_gate_rule (
+  rule_id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  metric             TEXT NOT NULL,             -- e.g. 'e2e_p99_ms', 'cpu_high_minutes'
+  metric_class       TEXT NOT NULL CHECK (metric_class IN ('A_SAFETY','B_PERFORMANCE')),
+  scenario_set       TEXT NOT NULL,
+  algo_module        TEXT,                       -- NULL = 全局，否则按感知/规划等模块
+  warn_threshold     DOUBLE PRECISION,
+  crit_threshold     DOUBLE PRECISION NOT NULL,
+  min_runs_per_scenario  INTEGER NOT NULL DEFAULT 10,
+  max_rerun_per_gate     INTEGER NOT NULL DEFAULT 1,
+  blocking_mode      TEXT NOT NULL CHECK (blocking_mode IN ('advisory','soft','hard')),
+  source             TEXT NOT NULL CHECK (source IN ('business_signed','engineer_guess')),
+  version            INTEGER NOT NULL,
+  active             BOOLEAN NOT NULL DEFAULT true,
+  created_by         TEXT NOT NULL,              -- actor（操作级 RBAC）
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  approved_by        TEXT,                       -- business_signed 时必填
+  approved_at        TIMESTAMPTZ,
+  CONSTRAINT chk_signed CHECK (source &lt;&gt; 'business_signed' OR approved_by IS NOT NULL)
+);
+
+-- quality_gate_report: 每次判定的不可变记录
+CREATE TABLE quality_gate_report (
+  report_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  algo_package       TEXT NOT NULL,
+  algo_version       TEXT NOT NULL,
+  rule_id            UUID REFERENCES quality_gate_rule(rule_id),
+  scenario_set       TEXT NOT NULL,
+  verdict            TEXT NOT NULL CHECK (verdict IN ('pass','fail_soft','fail_hard','warn','insufficient_samples')),
+  metric_value       DOUBLE PRECISION,
+  p99_source         TEXT NOT NULL CHECK (p99_source IN ('exact_p99_from_ods','approx_p99_from_tdigest')),
+  sample_count       INTEGER,
+  rerun_chain        UUID[],                     -- retried_from 链，max_rerun_per_gate=1
+  actor              TEXT NOT NULL,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  webhook_delivered  BOOLEAN DEFAULT false,
+  post_regression_id UUID                        -- 事后回归工单 id（Soft Gate Override 时填）
+);
+
+-- quality_gate_override_audit: Override 不可变审计（参考 fragment_evidence_v3 immutable trigger 模式）
+CREATE TABLE quality_gate_override_audit (
+  audit_id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  report_id          UUID REFERENCES quality_gate_report(report_id) NOT NULL,
+  override_dri       TEXT NOT NULL,              -- 必须 == algo_package owner
+  reason             TEXT NOT NULL,
+  approval_chain     JSONB NOT NULL,             -- [{actor, approved_at, role}]
+  post_release_regression_id UUID NOT NULL,
+  override_fingerprint_sha256 TEXT GENERATED ALWAYS AS (encode(digest(
+    coalesce(override_dri,'')||'|'||coalesce(reason,'')||'|'||coalesce(approval_chain::text,'')
+  , 'sha256'), 'hex')) STORED CHECK (override_fingerprint_sha256 ~ '^[0-9a-f]{64}$',
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX uniq_override_evidence ON quality_gate_override_audit(override_fingerprint_sha256);</code></pre>
+
+<h4>现有 PG 表</h4>
+<table>
+<thead><tr><th>表</th><th>用途</th><th>关键约束</th></tr></thead>
+<tbody>
+<tr><td>hil_jobs</td><td>HiL 任务队列</td><td>status state machine；<strong>P0 加 algo_package NOT NULL + bench_pool_tag</strong></td></tr>
+<tr><td>hil_module_metrics</td><td>HiL 报告 8 模块 + e2e</td><td>报告反向关联 job_uuid</td></tr>
+<tr><td>hil_memory_metrics</td><td>compute/control 双端内存</td><td>—</td></tr>
+<tr><td>hil_daily_aggregation</td><td>趋势看板预聚合</td><td>无自动调度（已知债，P1 做掉）</td></tr>
+<tr><td>perf_threshold_config</td><td>阈值配置（domain × metric × warn/crit）</td><td><strong>P0 加 source='business_signed'/'engineer_guess' + version</strong></td></tr>
+<tr><td>vehicle_meta</td><td>车辆维度（11 列）</td><td>多数列待数据源</td></tr>
+<tr><td>error_events_ods/items_dwd/daily_dws</td><td>故障码三层</td><td>—</td></tr>
+<tr><td>boot_event_marks_v2</td><td>开机异常人工标注</td><td>写前 assertEventsExist</td></tr>
+<tr><td>onboard_percentile_fragment_evidence_v3</td><td>generation fragment 血缘</td><td>immutable trigger + sha256 CHECK（设计已落地）</td></tr>
+<tr><td>onboard_full_fleet_percentile_generation_v2</td><td>generation fence</td><td>PRIMARY KEY generation UUID</td></tr>
+<tr><td>algo_package_version_map（待建 P0）</td><td>算法包版本 ↔ 实车 software_version 映射</td><td>HiL↔实车 join key</td></tr>
+</tbody>
+</table>
+
+<h3>11.3 核心接口分组（/api/v1）</h3>
+<table>
+<thead><tr><th>分组</th><th>路由文件</th><th>关键接口</th></tr></thead>
+<tbody>
+<tr><td>HiL 任务</td><td>jobs.ts</td><td>POST /jobs / GET /jobs/:uuid / POST /jobs/:uuid/rerun（<strong>max_rerun_per_gate=1</strong>）</td></tr>
+<tr><td>HiL 报告上传</td><td>upload.ts</td><td>POST /upload/hil-push-v2（<strong>P0 加 algo_package NOT NULL 校验</strong>）</td></tr>
+<tr><td>HiL 趋势/对比</td><td>trends.ts / compare.ts（标 deprecated）/ modules.ts</td><td>GET /trends / GET /compare</td></tr>
+<tr><td>HilConsole 闭环</td><td>hil.ts</td><td>14 个 /api/v1/hil/* 接口</td></tr>
+<tr><td>Onboard 性能</td><td>onboardPerf.ts</td><td>GET /overview /vehicles /vehicles/:vin /processes</td></tr>
+<tr><td>配置中心</td><td>config.ts</td><td>7 接口（阈值 + 车辆维度）</td></tr>
+<tr><td>故障码</td><td>errorData.ts</td><td>11 接口 + ODS/DWD/DWS 三层</td></tr>
+<tr><td>Boot 异常</td><td>bootError.ts / bootErrorLogs.ts / bootErrorMarks.ts</td><td>分析 + 日志 + 标注</td></tr>
+<tr><td>实车同步</td><td>vehicleSync.ts（单向无回写）/ vehicleDashboard.ts / vehicleStations.ts</td><td>Joyspace 同步 + 仪表盘 + 站点</td></tr>
+<tr><td>健康检查</td><td>health.ts</td><td>GET / + /detailed</td></tr>
+<tr><td><strong>Quality Gate（待建）</strong></td><td>gate.ts（待建）</td><td>POST /gate/rule / POST /gate/judge / POST /gate/override / GET /gate/report/:id</td></tr>
+</tbody>
+</table>
+
+<h3>11.4 关键部署参数（runtime config）</h3>
+<table>
+<thead><tr><th>参数</th><th>值</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>WAREHOUSE_DEFAULT_WINDOW_MINUTES</td><td>30</td><td>准实时 ETL 扫描数据窗（与 §0.3 SLA≤15min 数学冲突，§5.8 拆段承诺）</td></tr>
+<tr><td>WAREHOUSE_WATERMARK_DELAY_MINUTES</td><td>2</td><td>水印延迟</td></tr>
+<tr><td>WAREHOUSE_TIMEZONE / TZ</td><td>Asia/Shanghai</td><td>展示时区（落库 UTC）</td></tr>
+<tr><td>CK_PORT / CK_HTTP_PORT</td><td>9000 / 8123</td><td>后端强制 HTTP 绕 Code:60</td></tr>
+<tr><td>ONBOARD_PERF_SOURCE</td><td>prod / prod-shadow</td><td>双轨切换开关（环境变量级，无运行时热切 R-11）</td></tr>
+<tr><td>DB_POOL_SIZE</td><td>20</td><td>PG 连接池上限</td></tr>
+<tr><td>HIL_SCENARIO_LIBRARY_ENABLED</td><td>true</td><td>HilConsole feature flag</td></tr>
+<tr><td>HIL_JOB_DRY_RUN_ONLY</td><td>true</td><td>执行态 feature flag</td></tr>
+<tr><td>externalDispatch</td><td>false</td><td>HilConsole M1 安全约束（<strong>P0 升 true</strong>）</td></tr>
+<tr><td>JME_APP_SECRET（R-03）</td><td><strong>明文已入 git history（轮换前置）</strong></td><td>迁 systemd EnvironmentFile=/etc/onboard/monitor.env（0600 root:root）</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-12">12. 审核修订记录（v1 → 终版）</h2>
+
+<h3>12.1 综合评级变化</h3>
+<table>
+<thead><tr><th>维度</th><th>v1</th><th>终版</th></tr></thead>
+<tbody>
+<tr><td>评级</td><td>B+（远超 v1 水准，三方 Conditional Pass/GO）</td><td><strong>冲 A-</strong>（v1 工程诚实度保留 + 4 类结构性硬伤闭合 + 三方共同盲点修正）</td></tr>
+<tr><td>主要 blocker</td><td>①北极星 0/NaN；②Gate 0 override/RBAC；③P99 口径三方矛盾；④5 闭环叙事落差</td><td>①复合北极星（lagging+leading+业务代理）；②Override 三阶段+操作级 RBAC；③P99 口径修复 P0；④2.5+2.5 诚实化叙事</td></tr>
+<tr><td>首席补三方共同盲点</td><td>—</td><td>generation_publish execution=disabled 让"不可变权威"从 strength 退化为 design-only；P99 口径+Gate 统计+worst-case vs 分位串联依赖未建模；降级产品行为未定义；P99 历史回算治理缺失；Gate 健康度指标缺失；阈值 catalog 治理流程缺失</td></tr>
+</tbody>
+</table>
+
+<h3>12.2 13 项 consolidated_changes 应用清单</h3>
+<table>
+<thead><tr><th>#</th><th>变更项</th><th>优先级</th><th>章节</th><th>状态</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>北极星复合指标（lagging+leading+业务代理）+ 发版事件源</td><td>P0</td><td>§0.3</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>2</td><td>Gate §7.5 Override + 灰度三阶段 + §7.6 样本/产能约束 + §7.7 阈值 catalog 治理 + max_rerun_per_gate=1</td><td>P0</td><td>§7.2/7.5/7.6/7.7</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>3</td><td>指标分层 A 类功能安全 vs B 类性能体验</td><td>P0</td><td>§6.1</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>4</td><td>RBAC 拆两层：操作级 P0 + 视图级 P1</td><td>P0</td><td>§3.5</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>5</td><td>P99 口径修复（TDigest→Exact + 去 least）</td><td>P0</td><td>§5.1/§6.1（含一致性矩阵）</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>6</td><td>DWS SLA≤15min 改多段承诺 + 延迟预算分解</td><td>P0</td><td>§0.3/§5.8</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>7</td><td>实时链路与"不可变权威"去"生产级"夸大（at-least-once + 单 PG + generation publish 未执行）</td><td>P0</td><td>§2.2/§5.6</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>8</td><td>R-03 凭据泄露升级 launch-blocker</td><td>P0 前置</td><td>§4.5/§9 R-03/R-18</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>9</td><td>§10 路线图重排：P0 前置 milestone + 回归引擎/HilConsole M2/治理元数据 P1 提到 P0</td><td>P0</td><td>§10.0/§10.1</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>10</td><td>mermaid 与矩阵"目标态 vs 当前态"诚实化</td><td>P1</td><td>§1.5/§1.7/§8.2</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>11</td><td>数据降级产品行为（fail_closed 时 DRI 体验）+ Quality Gate 三表草案</td><td>P1</td><td>§2.5/§11.2</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>12</td><td>新增 AlgoPackage 核心对象 + 状态机 + 版本映射表</td><td>P0</td><td>§1.2/§3.3</td><td><span class="ok">✓ 已应用</span></td></tr>
+<tr><td>13</td><td>R-09 CK analyzer 升 P0 + R-13 Flink Source 升 P1</td><td>P0/P1</td><td>§4.4/§5.3/§9</td><td><span class="ok">✓ 已应用</span></td></tr>
+</tbody>
+</table>
+
+<h3>12.3 6 项 conflicts_resolved 落地</h3>
+<ol>
+  <li><strong>冲突 1</strong>：回归判定引擎排 P0 还是 P1？<strong>决断：进 P0</strong>（§2.4 + §10.1）。§2.4 论据正确（与 Gate 共享 catalog），是 §10 排期错。</li>
+  <li><strong>冲突 2</strong>：HilConsole M2 真实台架排 P0 还是 P1？<strong>决断：进 P0</strong>（§10.1）。Gate 判定输入硬前置。</li>
+  <li><strong>冲突 3</strong>：5 闭环叙事 vs P0 交付边界。<strong>决断：采用 B 核心（D 进 P0）但叙事收敛 2.5+2.5</strong>（§2 + §10.1 P0 闭环交付边界）。</li>
+  <li><strong>冲突 4</strong>：RBAC 视图级 vs 数据级。<strong>决断：拆两层</strong>（§3.5），操作级 P0 + 视图级 P1。</li>
+  <li><strong>冲突 5</strong>：32 DQ Gate publication-blocking 是真实落地还是设计态？<strong>决断：采信代码事实（execution=disabled），改写为"设计已落地、执行未启用"</strong>（§5.6）。首席对三方共同盲点的修正。</li>
+  <li><strong>冲突 6</strong>：R-09 与 R-13 优先级。<strong>决断：R-09 升 P0 技术债（查询级兜底 + 3 月 deadline），R-13 升 P1（5600→万车阶梯压测硬 gate）</strong>（§4.4/§5.3）。</li>
+</ol>
+
+<h3>12.4 6 项 unresolved_risks（P0 内无法闭合，需评审席共担）</h3>
+<ol>
+  <li>管理层政治意愿风险（最大不可控项，R-19）—— P0 前置 milestone ① 缓解；</li>
+  <li>台架产能 vs N=10 产能契约风险 —— P0 阶段开"Gate 样本共识会"出产能预算；</li>
+  <li>P99 口径修复后的基线重算风险 —— 治理决策"只对未来发版生效，历史不追溯"（R-20）；</li>
+  <li>generation publish 接生产调度后 DQ gate 失败激增风险 —— P0 阶段先压测通过率基线；</li>
+  <li>prod-shadow → formal 切流 GO 准出未量化 —— P0 明确切流 GO 准出清单 + 签字 owner；</li>
+  <li>凭据泄露扩散范围未知（R-18）—— P0 前置全仓库凭据审计 + 安全团队介入。</li>
+</ol>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本终版 PRD 基于 v1 + 首席变更清单 + 三方专家评审（产品架构师 / 数据基建架构师 / 自动驾驶负责人）+ 五角色 launch-review 问答（算法工程师 / 系统架构 / 质控 QA / 数据研发 / SRE / 部门负责人）综合收敛。所有论断可在仓库内 <code>file:line</code> grep 验证。下一步：P0 前置 milestone 6 项达成 → 评审席签字 → P0 启动。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
