@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROVER5.0 问题收敛 + 发版黄金路径 · 教材 D</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#161c24; --ink:#e6edf3; --dim:#9aa7b4;
+    --accent:#7ee787; --accent2:#79c0ff; --warn:#f2cc60; --danger:#ff7b72;
+    --line:#2a3340; --code:#1c2230;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;
+    margin:0; padding:0;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:32px 28px 120px}
+  header.hero{
+    border-left:4px solid var(--accent); padding:8px 0 8px 18px; margin-bottom:28px;
+  }
+  header.hero h1{font-size:26px; margin:0 0 6px; letter-spacing:.3px}
+  header.hero .sub{color:var(--dim); font-size:14px}
+  header.hero .meta{color:var(--dim); font-size:12px; margin-top:6px}
+  .thesis{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:16px 20px; margin:20px 0 32px; font-size:15.5px;
+  }
+  .thesis b{color:var(--accent)}
+  nav.toc{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:14px 22px; margin-bottom:36px; font-size:13.5px;
+  }
+  nav.toc h3{margin:0 0 8px; font-size:13px; color:var(--dim); text-transform:uppercase; letter-spacing:1px}
+  nav.toc ol{margin:0; padding-left:18px; columns:2; column-gap:32px}
+  nav.toc li{margin:3px 0; break-inside:avoid}
+  nav.toc a{color:var(--accent2); text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+  section{
+    margin:48px 0; padding-top:24px; border-top:1px solid var(--line);
+  }
+  section > h2{
+    font-size:22px; color:var(--accent); margin:0 0 6px; letter-spacing:.3px;
+  }
+  section .h2-num{color:var(--dim); font-weight:400; margin-right:8px}
+  section > p.lead{color:var(--dim); margin:0 0 18px; font-size:14.5px}
+  h3{
+    font-size:17px; color:var(--accent2); margin:28px 0 10px;
+    padding-left:10px; border-left:3px solid var(--line);
+  }
+  h4{font-size:15px; color:var(--warn); margin:20px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0; padding-left:22px}
+  li{margin:5px 0}
+  strong{color:var(--accent)}
+  em{color:var(--warn); font-style:normal; font-weight:600}
+  code{
+    font-family:"JetBrains Mono","Fira Code",Consolas,monospace; font-size:12.5px;
+    background:var(--code); color:#e6edf3; padding:1.5px 6px; border-radius:3px;
+  }
+  pre{
+    background:var(--code); border:1px solid var(--line); border-radius:6px;
+    padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.55;
+    margin:14px 0;
+  }
+  pre.mermaid{background:transparent; border:none; padding:0; text-align:center}
+  table{
+    border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px;
+  }
+  th,td{border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top}
+  th{background:var(--panel); color:var(--accent2); font-weight:600}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  .evi{
+    background:var(--panel); border-left:3px solid var(--accent2);
+    padding:6px 12px; margin:6px 0; font-size:13px; border-radius:0 4px 4px 0;
+  }
+  .evi .src{color:var(--accent2); font-family:monospace; font-size:11.5px; margin-right:6px}
+  .evi .note{color:var(--dim)}
+  aside.note{
+    background:rgba(242,204,96,.06); border:1px solid rgba(242,204,96,.3);
+    border-radius:6px; padding:12px 16px; margin:16px 0; font-size:13.5px;
+  }
+  aside.note::before{content:"⤵ 难点注解 · "; color:var(--warn); font-weight:600}
+  aside.bad{
+    background:rgba(255,123,114,.07); border:1px solid rgba(255,123,114,.3);
+    border-radius:6px; padding:12px 16px; margin:16px 0; font-size:13.5px;
+  }
+  aside.bad::before{content:"⚠ 当前断点 · "; color:var(--danger); font-weight:600}
+  aside.good{
+    background:rgba(126,231,135,.06); border:1px solid rgba(126,231,135,.3);
+    border-radius:6px; padding:12px 16px; margin:16px 0; font-size:13.5px;
+  }
+  aside.good::before{content:"✓ 杠杆动作 · "; color:var(--accent); font-weight:600}
+  .pill{
+    display:inline-block; font-size:11px; padding:1px 7px; border-radius:10px;
+    border:1px solid var(--line); color:var(--dim); margin:0 4px 4px 0;
+  }
+  .pill.acc{border-color:var(--accent); color:var(--accent)}
+  .pill.warn{border-color:var(--warn); color:var(--warn)}
+  .pill.bad{border-color:var(--danger); color:var(--danger)}
+  .checklist{list-style:none; padding-left:0}
+  .checklist li::before{content:"☐ "; color:var(--accent); font-weight:700}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media(max-width:780px){.grid2{grid-template-columns:1fr} nav.toc ol{columns:1}}
+  footer{margin-top:80px; padding-top:24px; border-top:1px solid var(--line); color:var(--dim); font-size:13px}
+  footer a{color:var(--accent2)}
+  .quote{font-style:italic; color:var(--dim); border-left:3px solid var(--line); padding-left:14px; margin:14px 0}
+  .metric{
+    display:inline-block; background:var(--code); border:1px solid var(--line);
+    border-radius:4px; padding:2px 8px; margin:2px; font-family:monospace; font-size:12px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>ROVER5.0 问题收敛 + 发版黄金路径</h1>
+  <div class="sub">教材 D · 用 MR 体系把"无人车交付 / 需求交付 / 问题收敛 / 代码交付"四条线统一在一个发版骨架上</div>
+  <div class="meta">读者：cheche（4 年数据闭环 PM，目标综合架构师 + Function Owner） · 仓库：ROVER5.0（JD 无人车 C++ 车端栈，Blade 构建） · 日期：2026-07-26</div>
+</header>
+
+<div class="thesis">
+  <p style="margin:0">
+    <b>这本教材要 own 的一件事：</b>在 ROVER5.0 这个车端 C++ 栈上，把"线上出了一个 brake 异常，到底是谁的锅、哪次 MR 带进来的、哪个 tag 验证过、修了没"——这条问题收敛链——从今天"<em>靠人脑记忆和日期盲猜</em>"的状态，改成"<em>机器可读、CI 可挡、git 可反查</em>"的状态。手段是用 MR 体系 + 一个三节点（变更 ↔ 版本 ↔ 包）双向链接的发版骨架，把四条交付线串成闭环。证据来自 git 侦察（<code>_rover-recon.txt</code>）与源码逐行核对，每条论断都标到行。
+  </p>
+</div>
+
+<nav class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#s1">现状诊断：四条线在代码侧基本断链</a></li>
+    <li><a href="#s2">根因：squash 合并 + lightweight tag + 手输 commitId 的三重失效</a></li>
+    <li><a href="#s3">MR 体系最佳实践：分支策略、合并方式、模板、门禁</a></li>
+    <li><a href="#s4">发版流程设计：版本号、release 分支、构建→上传→车端、回滚、灰度</a></li>
+    <li><a href="#s5">问题收敛机制：发现→定位→修复→验证→关闭 的闭环</a></li>
+    <li><a href="#s6">四流对齐：用一个 MR + 发版骨架串起来</a></li>
+    <li><a href="#s7">30 / 60 / 90 天行动计划 + 指标 + 检查清单</a></li>
+    <li><a href="#s8">关键设计 rationale + 反事实</a></li>
+    <li><a href="#s9">延伸阅读</a></li>
+  </ol>
+</nav>
+
+<!-- ============ S1 ============ -->
+<section id="s1">
+<h2><span class="h2-num">①</span>现状诊断：四条线在代码侧基本断链</h2>
+<p class="lead">把部门四条线（无人车交付 / 需求交付 / 问题收敛 / 代码交付）落到 git 这一侧来看，代码交付是唯一有客观留痕的；其余三条线本应通过 commit message 里的关联号、MR 描述里的验收链接、tag 上的发版说明串起来，但 ROVER5.0 在代码侧的留痕只剩"模块前缀"这一根细线，且模块名不受控。下面六段是逐段证据。</p>
+
+<h3>1.1 合并方式：squash / 快进合并，MR 边界在主干上彻底消失</h3>
+<p>因为合并时只把代码差异压平进主干、不产生独立的 <code>Merge branch X into devel</code> 节点，所以从主干 <code>git log</code> 里看不到任何一次 MR 在何时、由谁、合了哪些 commit、关联到哪个需求或缺陷。每条 commit 像被直接 push 到 devel 上一样扁平——产物是线性历史，代价是"MR 作为评审/验收/责任单元"这个最重要的可追溯锚点不见了。</p>
+<div class="evi"><span class="src">recon:1</span><span class="note">"===== 近 30 merge commit =====" 标题下完全空白，作者预期找 merge commit 实际一条都没有</span></div>
+<div class="evi"><span class="src">git log --merges --oneline -200 | wc -l = 0</span><span class="note">本机实跑输出 0 行，独立二次确认近 200 commit 区间无任何 merge commit</span></div>
+<div class="evi"><span class="src">recon:107-109</span><span class="note">branch -r 只有 origin/devel 一个长期分支，无 release/* hotfix/* 等并行分支，主干即一切</span></div>
+<div class="evi"><span class="src">git config --list</span><span class="note">仅 branch.devel.merge=refs/heads/devel，无 pull.ff/merge.ff 配置，ff 是默认行为而非显式策略</span></div>
+<aside class="bad">无 merge commit → MR 边界丢失 → 出线上问题想倒查"这是哪次 MR、哪次评审、哪个需求带进来的"时，主干上没有任何锚点，只能靠 commit message 的人肉记忆或日期推测。这是"问题收敛"在代码侧的最大结构性 gap。</aside>
+<aside class="note">把这条讲给团队时，关键不是争论 squash 好还是 merge commit 好，而是"MR 是部门级的评审/验收/责任单元"——一旦压平，这个单元的责任人、评审记录、关联需求全部从代码史里蒸发。</aside>
+
+<h3>1.2 commit 规范执行度：76% 披着"模块:subject"皮，但模块名大小写/命名三套并存</h3>
+<p>团队约定 commit 第一段用 <code>模块:一句话</code> 开头标明归属，200 条里 152 条遵守了（76%）。但同一个模块写成 <code>Planning / planning / Planning3 / 3d_planning</code> 四种；剩余 48 条完全没有模块前缀。结果：想用 <code>git log --grep</code> 按模块筛问题来源时，必须写 4-5 个变体正则才能勉强捞全。</p>
+<div class="evi"><span class="src">awk 统计</span><span class="note">200 条中 with_colon_prefix=152, no_colon_prefix=48，76% 有前缀</span></div>
+<div class="evi"><span class="src">grep -oiE 模块前缀分布</span><span class="note">planning=58, 3d_planning=13, planning3=9（前三都属规划子系统，但写成 3 个 token），sim=10/simulation=6（同义两写），perc=8/perception=4（同义两写）</span></div>
+<div class="evi"><span class="src">recon:14-19</span><span class="note">样例："Planning:fix_de_e2e_log_wbq" vs "planning: queue by stop distance" vs "3d_planning: forbid sliping..." vs "Routing:ld"——同窗口内已能看见大小写与拼写不统一</span></div>
+<div class="evi"><span class="src">grep 真正 conventional commits</span><span class="note">全 200 条仅 4 条符合 feat/fix/chore(scope):subject 标准格式（2%），其余 198 条都是自创的"模块:subject"家规</span></div>
+<aside class="bad">模块名没有受控词表 → 自动统计"问题/需求按模块收敛情况"时数据失真：Planning 的真实量被拆进 planning+3d_planning+Planning3+Planning 四个 bucket，部门级 dashboard 永远对不齐。</aside>
+<aside class="note">own 这条线的产品动作不是"教大家写 conventional commits"，而是"先冻结模块词表"——把 12 个一级模块名钉死，commit lint 只认这 12 个前缀，否则 CI 拒收。词表是产品可决定的，规范执行是工程可落地的。</aside>
+
+<h3>1.3 可追溯性：零 Jira/issue/MR/PR 关联，靠"_wbq"姓名缩写和文件名做暗号</h3>
+<p>commit message 里通常需要带 issue 号、Jira key、MR 号。ROVER5.0 的 200 条 commit 里<strong>一条这样的关联都没有</strong>（grep issue/jira/MR/PR/refs/#N 全部 0 真实命中，recon 里看到的 17 个匹配全是 inf/protection/prepare 这类英文词里的子串误报）。替代方案是 wangboqian1（wbq）这个人把自己的 8 条 bugfix commit 都加 <code>_wbq</code> 后缀，部分还带日期（<code>_0526</code>）和疑似需求号（<code>_7387/_8447/_0714</code>），形成了一套只在他脑子里能解码的追溯暗号——其他人 0 条这么做。</p>
+<div class="evi"><span class="src">grep -ciE "issue|jira|MR|PR|cr-|refs |#[0-9]|ROVER-"</span><span class="note">返回 17，逐条复核全是误报（Planning:add traj... 的 add、inf protection 的 PR 子串、prepare engine 的 PR 子串等），真实关联 0 条</span></div>
+<div class="evi"><span class="src">git log _wbq 计数</span><span class="note">200 条中 8 条带 _wbq 后缀，作者全部是 wangboqian1，例如 "Planning:fix_7387_uturn_0526_wbq" / "Planning:fix_close_8447_grid_viz_wbq"——7387/8447 疑似需求/缺陷号但无任何系统背书</span></div>
+<div class="evi"><span class="src">git log 作者分布</span><span class="note">近 200 commit 来自 50+ 位提交者，只有 wbq 一人在用"_姓名缩写_需求号_日期"暗号，团队无统一规范</span></div>
+<aside class="bad">无强制 issue 关联 → "问题收敛"无法在代码侧落地：线上出一个 brake 异常，回查只能按"大约那几天的 planning commit"盲猜，无法精确锁定"这是为了修 7387 引入的回归"。_wbq 这种私有暗号反而成了噪声——别人看不懂、检索不到、还容易和新成员重名。</aside>
+<aside class="note">产品 own 的发力点是"把暗号变成显号"：commit message 强制带 Jira key（如 ROVER-7387），CI 卡口校验格式，MR 模板必填"关联问题/验收人/回归用例"三栏。这一步不解决，后面所有问题收敛 dashboard 都是空中楼阁。</aside>
+
+<h3>1.4 发版节奏：278 tag 驱动每日 QA/HIL 构建，但发版流程无 docs 落地</h3>
+<p>团队用 <code>git tag</code> 而不是 release 分支来标记每一次可测构建：278 个 tag 里 HIL 占 176、QA 占 51，命名形如 <code>QA_20260725_daily_trt1013</code>、<code>HIL_20260725061005_617_loop_trt1013</code>，几乎每个工作日一个 daily tag。<code>trt1013</code> 是某条基线/平台标识反复出现。但 <code>docs/</code> 目录下没有任何"分支策略/MR 规范/发版流程/代码评审"文档，<code>readme.md</code> 只甩了三个 Confluence wiki 外链，<code>docs/readme.md</code> 是 0 字节空文件。</p>
+<div class="evi"><span class="src">recon:65-105</span><span class="note">近 40 tag 全是 QA_*_daily_trt1013 形态，密集到几乎每日一版</span></div>
+<div class="evi"><span class="src">git tag | wc -l = 278</span><span class="note">全仓 278 tag，HIL=176 / QA=51，二者占 82%，说明 HIL 仿真门禁 + QA 实车是两条主要发版流水线</span></div>
+<div class="evi"><span class="src">ls docs/</span><span class="note">docs/ 下只有 11 个文件，全为 how_to_install/how_to_run_docker/how_to_use_clang_format 等环境类，无 MR/分支/发版相关文档；grep merge request/分支策略/发版流程/docs/readme.md 全 0 命中</span></div>
+<div class="evi"><span class="src">docs/readme.md</span><span class="note">wc -c = 0，空文件</span></div>
+<aside class="bad">发版流程文档化缺失 → 新人/产品/测试无法从仓库自解释地知道"一个改动要经过哪些门禁、打什么 tag、谁 sign-off 才能上车"，只能去问老人或翻 wiki。部门级 own 的第一步就是把这个流程从 wiki 搬进仓库（CONTRIBUTING.md / RELEASE.md / .gitlab-ci.yml 的 MR 模板）。</aside>
+<aside class="note">278 tag 看着吓人，其实是好事——说明团队已经在用 tag 做 daily build 的强节奏；产品要 own 的不是"减少 tag"，而是"让 tag 命名规范可解析、让 tag→MR→需求→验收人 这条链路在仓库里可查"。</aside>
+
+<h3>1.5 代码评审与门禁：无 commit hook、无 pre-push lint、MR 模板缺失强制力</h3>
+<p>代码改动进主干前的质量门禁通常由三道防线构成：本地 commit-msg/pre-push 钩子做格式校验、CI 流水线跑 lint+单测、MR 模板强制填评审清单。ROVER5.0 这三道里前两道在仓库内几乎不存在：仓库内无 <code>.gitlab-ci.yml/Jenkinsfile</code>（find 全空）；<code>.xci/scripts/</code> 只有 <code>cpplint.sh + proto_check.sh</code>；<code>build.sh</code> 与 <code>ci-scripts_build_upload.sh:71-78</code> 里的 <code>blade test</code> 整段被注释。</p>
+<div class="evi"><span class="src">ls .git/hooks/</span><span class="note">目录下只有默认 *.sample 钩子，无 commit-msg/pre-push/pre-receive 自定义</span></div>
+<div class="evi"><span class="src">build.sh:71-78 / ci-scripts_build_upload.sh:71-78</span><span class="note">blade test 被注释，单测不跑</span></div>
+<div class="evi"><span class="src">find .gitlab-ci/Jenkinsfile/.github → 空</span><span class="note">无声明式 CI 管道</span></div>
+<div class="evi"><span class="src">BLADE_ROOT:30-31</span><span class="note">cc_test_config 配了 gtest 但实际不跑——测试基建配了但门禁未启用</span></div>
+<div class="evi"><span class="src">.gitlab/merge_request_templates/merge_template.md:1-15</span><span class="note">MR 模板已定义 MrModule/FixJira(JDXAD-xxxx)/Dependency/SendTestDetail/simulation.jd.com pass rate——字段基建已存在但无 CI 强制，模板和流程两张皮</span></div>
+<aside class="bad">门禁缺失 → "规范"全靠自觉 → 76% 的模块前缀遵守率已经是不自觉能维持的上限，再想推到 95% 以上必须上 CI 卡口。否则 own 发版流程时，产品会发现"规范发了邮件但没人执行"，因为没有机器拦着。</aside>
+<aside class="note">own 流程 = 规范文档 + 机器门禁，缺一不可。产品可推动的最小动作是"MR 模板 + commit lint CI job"，这俩是低工程成本、高管理收益的杠杆点。MR 模板已经存在，只是没被 CI 挡住——这是最容易撬动的一寸。</aside>
+
+<h3>1.6 四线对齐现状盘点：断链点精确到三处</h3>
+<p>把四条线综合来看，断链点精确到三处：</p>
+<ul>
+  <li><strong>断点 A（问题 → 代码）</strong>：commit 无 issue 关联 + MR 边界丢失，无法从问题查到修复 commit</li>
+  <li><strong>断点 B（代码 → 验证）</strong>：simulation2 validator（71 个）与 evaluator metric handler（11 个）指标双轨，修复 commit 无法自动触发对应回归场景</li>
+  <li><strong>断点 C（验证 → 发版）</strong>：daily tag 发版密集但 tag 命名（QA_yyyymmdd_daily_trt1013）不含修复的问题清单，发版说明靠人记</li>
+</ul>
+<pre class="mermaid">
+flowchart LR
+  subgraph 四线[部门四条线在代码侧的断点]
+    D1[无人车交付<br/>tag/车端版本] ---|可查| D0[(git)]
+    D2[需求交付<br/>Jira] -.->|"commit 不带 key<br/>断链"| D0
+    D3[问题收敛<br/>线上缺陷] -.->|"无 MR 边界<br/>断链"| D0
+    D4[代码交付<br/>commit/MR/tag] ---|唯一留痕| D0
+  end
+</pre>
+
+<aside class="note">这是给"总纲图"用的：画出当前四线在代码侧的断点，再画出修复后的闭环，产品 own 的发力点和优先级就一目了然。</aside>
+</section>
+
+<!-- ============ S2 ============ -->
+<section id="s2">
+<h2><span class="h2-num">②</span>根因：squash 合并 + lightweight tag + 手输 commitId 的三重失效</h2>
+<p class="lead">四条线脱钩不是四个独立问题，而是三个共用节点的三重失效。任何黄金路径设计都必须在这三个节点同时打钉子，只改其中一个（如只加 commit 规范）解决不了交叉追溯。</p>
+
+<h3>2.1 节点 A · 变更：squash 合并把 MR 压成一条 commit</h3>
+<p>N 个 MR 压成 1 条 commit，MR 模板里 FixJira/模块/测试结论全丢。需求线 ② 与问题线 ③ 同时失去 git 锚点。</p>
+<div class="evi"><span class="src">git log --merges -200 = 0</span><span class="note">squash 全局策略，MR 边界在 git 中系统性丢失</span></div>
+<div class="evi"><span class="src">.gitlab/merge_request_templates/merge_template.md:11-15</span><span class="note">NoTestReason/ExpectedResults 字段存在，但因 squash 未进 git，关闭信息无处沉淀</span></div>
+<div class="evi"><span class="src">对比：模板有 FixJira 契约 vs git log body 无 Jira</span><span class="note">证明是流程执行断层而非模板缺失——契约写了但被 squash 冲掉</span></div>
+
+<h3>2.2 节点 B · 版本：lightweight tag + 多对一，tag 是产物标签不是变更标签</h3>
+<p>278 tag 全是 lightweight、不带注释；QA/HIL/daily 多个 tag 同指 b91eb4b2 一个 commit。tag 命名是"场景+日期"而非"变更集"，无人车线 ① 的"版本"与代码线 ④ 的"变更"之间是松耦合，无法做偏序。</p>
+<div class="evi"><span class="src">git cat-file -t QA_20260725_daily_trt1013 = tag（lightweight）</span><span class="note">tag 全是 lightweight 且多对一，证实 tag 是产物标签而非变更标签</span></div>
+<div class="evi"><span class="src">git for-each-ref</span><span class="note">QA_20260725_daily_trt1013、HIL_20260725061001_daily_trt1013、HIL_...603_core 三 tag points=b91eb4b2（Planning:fix_de_e2e_log_wbq），同 commit 多 tag</span></div>
+<div class="evi"><span class="src">git tag | sed 去尾 | uniq -c</span><span class="note">HIL 176 / QA 51 / 603 10 / 617 8 / 604 8，HIL+QA 占 80%+</span></div>
+
+<h3>2.3 节点 C · 包：commitId 手输可跳过，包名不含变更语义</h3>
+<p>binary_upload 的 commitId 字段是 <code>input()</code> 手输且"Press Enter to ignore"可跳过；包名是 <code>erp+时间戳</code>，不含变更 token。代码线 ④ 产出的包无法可信回指变更。</p>
+<div class="evi"><span class="src">binary_upload.py:213</span><span class="note">commit_id = input('Press Enter to ignore') — commitId 可手填可跳过，溯源非强制</span></div>
+<div class="evi"><span class="src">ci-scripts_build_upload.sh:35,80</span><span class="note">commit_id=`git rev-parse --short HEAD` 后 echo 进 version.txt，且 erp 由 read 手输（:38），无 CI 上下文</span></div>
+<div class="evi"><span class="src">binary_upload.py:30-42</span><span class="note">DBClT.insert_binary 把 binary_name/commit_id/bucketName/objectKey 落库返回 id——这是仿真平台追溯'哪个 commit'的唯一线索，但可跳过</span></div>
+
+<h3>2.4 三重失效的合成效果</h3>
+<pre class="mermaid">
+flowchart TB
+  subgraph 变更层[节点A 变更]
+    MR[MR模板<br/>FixJira/模块/测试结论] -->|squash 合并| C[单条 commit<br/>仅 subject]
+  end
+  subgraph 版本层[节点B 版本]
+    C -->|lightweight tag| T1[HIL_xxx_daily]
+    C --> T2[QA_xxx_daily]
+    C --> T3[HIL_xxx_603_core]
+  end
+  subgraph 包层[节点C 包]
+    C -.手输可跳过.-> V[version.txt commit_id]
+    V --> BP[build_release tar.gz]
+    BP --> S3[S3 + simulservices 账本]
+  end
+  subgraph 问题层
+    JIRA[Jira 工单] -.无 git 锚点.-> C
+    JIRA -.无 tag 偏序.-> T1
+  end
+  style MR fill:#fecaca,stroke:#b91c1c
+  style C fill:#fecaca,stroke:#b91c1c
+  style JIRA fill:#fecaca,stroke:#b91c1c
+</pre>
+
+<aside class="note">根因可指向单点：没有强制让"变更（MR/commit）↔ 版本（tag）↔ 包（binary+commitId）↔ 问题（Jira）"建立机器可读的双向链接。最小可行改造 = (1) 保留 merge commit 或强制 commit body 带 <code>Fixes:JDXAD-xxxx</code>；(2) tag 加 annotated 注释含变更摘要或绑定 MR 列表；(3) binary_upload 把 commitId 改为必填且来自 git，包名注入变更 token。</aside>
+</section>
+
+<!-- ============ S3 ============ -->
+<section id="s3">
+<h2><span class="h2-num">③</span>MR 体系最佳实践：分支策略、合并方式、模板、门禁</h2>
+<p class="lead">这一节把"行业怎么做"摆出来，作为下一节"ROVER5.0 该怎么做"的参照系。重点是 trade-off 不是教条——每一项都标注了在车端场景下的取舍。</p>
+
+<h3>3.1 分支策略：Trunk-Based vs Git Flow vs Release Flow</h3>
+<p>车端栈的发布是"日级 daily build + 按 sensor_kit 分包 OTA"，这决定了分支策略不能照搬 SaaS 的 GitHub Flow（一条 main 随时部署），但也不必上重型 Git Flow（5 类分支太重）。推荐 Release Flow 的轻量版：</p>
+
+<table>
+<thead><tr><th>策略</th><th>分支拓扑</th><th>适用场景</th><th>ROVER5.0 适用度</th></tr></thead>
+<tbody>
+<tr><td>Trunk-Based</td><td>仅 main + 短命 feature</td><td>持续部署、强 CI、小团队</td><td><span class="pill warn">部分</span> 现状是 trunk 但无 release 分支</td></tr>
+<tr><td>GitHub Flow</td><td>main + feature，PR 即部署</td><td>SaaS、Web、可回滚</td><td><span class="pill bad">不适合</span> 车端不可秒级回滚</td></tr>
+<tr><td>Git Flow</td><td>main/develop/feature/release/hotfix</td><td>有明确版本发布的产品</td><td><span class="pill warn">太重</span> 5 类分支对 50 人团队过载</td></tr>
+<tr><td><strong>Release Flow（推荐）</strong></td><td>main(devel) + feature + release/* + hotfix/*</td><td>有发布节奏的企业软件</td><td><span class="pill acc">推荐</span> 与日级 daily 节奏匹配</td></tr>
+</tbody>
+</table>
+
+<pre class="mermaid">
+flowchart TD
+  DEV[devel 主干] -->|发版前切出| REL[release/2026.07.25]
+  REL -->|QA/HIL 验收| TAG1[annotated tag<br/>v2026.07.25-rc1<br/>含 MR 清单]
+  TAG1 -->|上车后| MERGE1[merge release back to devel]
+  REL -->|线上出问题| HF[hotfix/JDXAD-1234]
+  HF -->|修完| TAG2[annotated tag<br/>v2026.07.25-hotfix.1<br/>含 Fixes:JDXAD-1234]
+  TAG2 --> MERGE2[merge hotfix to release AND devel]
+  style DEV fill:#bfdbfe,stroke:#1d4ed8
+  style REL fill:#fde68a,stroke:#b45309
+  style HF fill:#fecaca,stroke:#b91c1c
+</pre>
+
+<aside class="note">Release Flow 的关键是 release 分支"冻结代码"——daily tag 不再打在 devel HEAD 上，而是打在 release 分支上。这样线上问题要么走 release 分支的 hotfix（不污染 devel 新功能），要么等下个 release 窗口。这能直接解决 ROVER5.0 "daily 自动 tag 打在 devel HEAD，坏代码第二天就上车"的结构性风险。</aside>
+
+<h3>3.2 squash vs merge commit：可追溯性的核心 trade-off</h3>
+<p>这是产品负责人 own 发版流程时最容易被带偏的一个点。把它讲清楚：</p>
+
+<div class="grid2">
+<div>
+<h4>squash merge（ROVER5.0 当前）</h4>
+<ul>
+  <li>✓ 历史线性、干净，<code>git log</code> 易读</li>
+  <li>✓ 一个 MR = 一条 commit，语义集中</li>
+  <li><span class="pill bad">✗</span> MR 标题/描述/review/CI 状态全部不进 git 图</li>
+  <li><span class="pill bad">✗</span> 出问题无法回溯"哪次 MR、谁审的、关联哪个 issue"</li>
+  <li><span class="pill bad">✗</span> blame 看不到评审上下文，只有最终作者</li>
+</ul>
+</div>
+<div>
+<h4>merge commit --no-ff（推荐用于关键模块）</h4>
+<ul>
+  <li>✓ MR 边界在 git 图上可见，标题即评审单元</li>
+  <li>✓ 可 <code>git log --merges</code> 直接列出所有评审点</li>
+  <li>✓ 出问题可二分定位到引入 MR</li>
+  <li><span class="pill warn">✗</span> 历史非线性，<code>git log</code> 稍乱</li>
+  <li><span class="pill warn">✗</span> 仓库作者需统一接受</li>
+</ul>
+</div>
+</div>
+
+<p><strong>行业惯例折中</strong>：feature 分支用 squash（保留 PR 内多条 commit 的可读性），但 squash 后的 commit <strong>body 强制带 <code>Fixes: JDXAD-xxxx</code> + 评审人 + 模块前缀</strong>。这样既保线性又保追溯。关键在于：squash 不是问题本身，"squash 之后没有任何东西替代 MR 承载追溯信息"才是问题。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 当前[当前: squash/ff 合并]
+    A1[feature 分支<br/>3 条 commit] -->|squash 压平| A2[devel 主干<br/>1 条扁平 commit]
+    A2 -.->|"MR 边界丢失<br/>评审/责任人/需求关联全部蒸发"| A3[(git log 看不到 MR)]
+  end
+  subgraph 目标[目标: squash 但 body 强制带 Fixes]
+    B1[feature 分支<br/>3 条 commit] --> B2[MR!1234<br/>含评审+需求号+验收]
+    B2 -->|squash 但 body 带<br/>Fixes:JDXAD-1234| B3[devel 主干<br/>单 commit 但可反查]
+    B3 --> B4[(可追溯:<br/>commit body → MR → 需求)]
+  end
+</pre>
+
+<aside class="note">给读者点破：squash 不是问题本身，"squash 之后没有任何东西替代 MR 承载追溯信息"才是问题。要么留 merge commit，要么把 FixJira 强制进 commit subject/body。前者追 MR 边界最完整，后者改造成本最低（一个 commit-msg hook + 一个 commitlint 规则）。</aside>
+
+<h3>3.3 MR 模板：从"填了没人看"到"CI 挡得住合入"</h3>
+<p>ROVER5.0 已经有 MR 模板（<code>.gitlab/merge_request_templates/merge_template.md</code>），字段设计甚至很规范：<code>MrModule / TestOrNo / FixJira(JDXAD-xxxx) / Dependency / SendTestDetail / ExpectedResults</code>，还要求贴 simulation.jd.com 的 PNC 通过率对比。问题在于：模板是"建议"不是"契约"，squash 合并又把填写成果冲掉了。</p>
+
+<p>own 这条线的发力点是把模板字段变成 CI 检查项：</p>
+<table>
+<thead><tr><th>模板字段</th><th>当前状态</th><th>own 后状态（CI 强制）</th></tr></thead>
+<tbody>
+<tr><td>FixJira</td><td>填了不进 git</td><td>CI 校验格式 <code>JDXAD-\d+</code>，不通过禁合</td></tr>
+<tr><td>MrModule</td><td>填了不进 git</td><td>CI 校验在 12 个一级模块词表内</td></tr>
+<tr><td>TestOrNo</td><td>填了不进 git</td><td>No 时必填 NoTestReason</td></tr>
+<tr><td>ExpectedResults</td><td>填了不进 git</td><td>必填，且 squash 时强制带进 commit body</td></tr>
+<tr><td>SendTestDetail</td><td>填了不进 git</td><td>必填 simulation.jd.com 任务号，CI 抓 pass rate</td></tr>
+</tbody>
+</table>
+
+<aside class="good">最小动作：先让 CI 校验"FixJira 字段非空 + 格式正确"这一条。这一条就能恢复"需求 ↔ 代码"的双向追溯。其他字段可以分批上。</aside>
+
+<h3>3.4 CI 门禁：三道防线</h3>
+<p>代码改动进主干前通常由三道防线构成，ROVER5.0 三道全缺或半缺：</p>
+<ol>
+  <li><strong>本地钩子（commit-msg / pre-push）</strong>：当前 <code>.git/hooks/</code> 只有 sample。建议加 commit-msg 钩子做 commitlint（模块词表 + Jira key 格式）。这是开发者第一道反馈，秒级。</li>
+  <li><strong>CI 流水线（push/MR 触发）</strong>：当前仓库无 <code>.gitlab-ci.yml</code>，CI 在仓外。建议把 <code>cpplint + blade build + blade test</code>（去掉注释）声明成 <code>.gitlab-ci.yml</code>，MR 必须绿才能合。</li>
+  <li><strong>MR 评审门禁</strong>：当前 review 痕迹不进 git。建议至少 1 个模块 owner approve + 1 个交叉 reviewer approve，关键模块（degradation/fault.conf/control）要求 2 个 owner。</li>
+</ol>
+<div class="evi"><span class="src">build.sh:71-78 / ci-scripts_build_upload.sh:71-78</span><span class="note">blade test 整段被 # 注释 → 单测不跑</span></div>
+<div class="evi"><span class="src">.xci/scripts/ 只有 cpplint.sh + proto_check.sh</span><span class="note">唯一被脚本调用的 CI 检查是 cpplint(风格) 和 proto 校验，无单测门禁</span></div>
+
+<h3>3.5 Conventional Commits + issue 关联：把暗号变显号</h3>
+<p>行业通用的 <code>type(scope): subject</code> 格式 + <code>Fixes: #123</code> footer，是机器可解析的。ROVER5.0 当前 200 条里只有 4 条符合标准格式（2%），其余 198 条都是自创家规。但_own 的发力点不是"教大家写 conventional commits"，而是：</p>
+<ol>
+  <li><strong>先冻结模块词表</strong>：12 个一级模块（Planning/E2E/Control/perc/map/Routing/sim/Degradation/Hardware/chassis/...）钉死，commitlint 只认这 12 个前缀</li>
+  <li><strong>强制带 Jira key</strong>：footer 必须有 <code>Fixes: JDXAD-\d+</code>，否则 CI 拒收</li>
+  <li><strong>type 可选</strong>：feat/fix/chore/refactor 不强制，但鼓励</li>
+</ol>
+<pre>
+# 推荐的 commit 格式（squash 后）
+Planning: fix uturn e2e log
+
+修复 JDXAD-7387 报告的 uturn 场景 e2e 日志缺失问题。
+根因：CloseGridViz 在 narrow road 分支未 flush log buffer。
+
+Fixes: JDXAD-7387
+Reviewed-by: zhangsan
+Module: Planning
+Test: simulation.jd.com/task/12345 pass rate 98.2%
+</pre>
+<aside class="note">type(scope): subject 这种格式对车端栈不是必需的——车端栈以"模块:subject"为主语义，type 是次要的。但"模块词表受控 + Fixes footer"是<strong>必需的</strong>，否则四线断链无法闭合。优先级：词表 > Fixes > type。</aside>
+</section>
+
+<!-- ============ S4 ============ -->
+<section id="s4">
+<h2><span class="h2-num">④</span>发版流程设计：版本号、release 分支、构建→上传→车端、回滚、灰度</h2>
+<p class="lead">这一节把"代码→tag→构建→tar→OSS→OTA→车"这条链路从 ROVER5.0 现状反推清楚，然后给出目标黄金路径。</p>
+
+<h3>4.1 全链路现状：手工脚本驱动 + 双通道上传 + 车端自驱 OTA</h3>
+<pre class="mermaid">
+flowchart TD
+  A[devel 分支 HEAD] -->|git rev-parse --short HEAD| B[commit_id 写入 version.txt]
+  A -->|定时任务 06:2x| T1[tag: QA_date_daily_trt1013]
+  A -->|定时任务 06:5x| T2[tag: HIL_date_06NNNN_daily_trt1013]
+  A -->|车端先锋车自启| T3[tag: OTA_date_TEST_trt1013]
+  T1 -.同一 commit 平行受众.-> T2
+  B --> C1[ci-scripts_build_upload.sh<br/>cpplint→build.sh→build_release.sh sim]
+  B --> C2[binary_upload.py<br/>build.sh→sim_plugin→build_release.sh sim]
+  B --> C3[engine_generation<br/>generate_upload_all_versions.py]
+  C1 -->|scp 11.35.230.84| U1[jdos /export/sim_pack<br/>+ binary_upload_only.py 注册 task_id]
+  C2 -->|S3 sim-data bucket| U2[simulservices.jd.com<br/>/api/binary/put 注册 binary_id]
+  C3 -->|jdcloud.py S3| U3[jdxgateway.jdl.cn<br/>/ota/server/perception_model_push]
+  U3 --> CAR[车端 按 sensor_kit 分包 OTA]
+  classDef tag fill:#fde68a,stroke:#b45309;
+  classDef build fill:#bfdbfe,stroke:#1d4ed8;
+  classDef upload fill:#bbf7d0,stroke:#15803d;
+  class T1,T2,T3 tag;
+  class C1,C2,C3,B build;
+  class U1,U2,U3,CAR upload;
+</pre>
+
+<h4>版本号现状：没有语义化版本，全靠"前缀+日期+流水+用途"约定</h4>
+<p>车端栈不做 x.y.z 语义化版本。tag 名是约定俗成的字符串拼接：前缀表受众（QA_=人工/实车、HIL_=台架、OTA_=正式推车）、日期表发版日、后缀表用途（daily/complex/603_core/617_loop/revertXXXX）、尾巴带 <code>_trt1013</code>=TensorRT 10.13 算子集标记。tag 是 annotated（带 tagger、时间、message），但 message 固定是机器生成的 <code>tag for test:'...' release date:'...' publish ...</code>，<strong>不是人写的 release note</strong>。真正进到 tar 包里的版本号是构建时现取的 git short commit id（<code>ci-scripts_build_upload.sh:35</code> <code>git rev-parse --short HEAD</code>）写进 <code>version.txt</code>。</p>
+<div class="evi"><span class="src">ci-scripts_build_upload.sh:35-36,80</span><span class="note">commit_id=`git rev-parse --short HEAD`；echo $commit_id>version.txt —— 包内版本号=commit id</span></div>
+<div class="evi"><span class="src">binary_upload.py:213 main() erp/commit_id 都是 input() 交互式手敲</span><span class="note">人工构建链路里 commit_id 是手填的，存在与实际 HEAD 不一致风险</span></div>
+
+<h4>构建（Blade）：相对成熟</h4>
+<p>Blade 是 Tencent 开源的声明式构建工具（类似 Bazel），每个目录放 BUILD 文件声明 cc_binary/cc_library/proto_library。BLADE_ROOT 全局配置：<code>-Wall -Werror</code>、C++17、<code>-O2</code>、<code>backend_builder=ninja</code>、<code>generate_dynamic=True</code>（全动态库）、<code>debug_info_level=no</code>（包更小）。镜像有强版本锁：<code>docker_init.sh</code> 钉死 <code>hub.jdcloud.com/rover/nvidia/drive60122:x86_64-cuda12.8.1-ubuntu20.04-2026-06-11_15</code>（X86）和 l4t-jetpack r35.3.1（JP50 arm）。</p>
+<div class="evi"><span class="src">BLADE_ROOT:1-40</span><span class="note">-Werror + C++17 + -O2 + ninja + generate_dynamic + debug_info_level=no</span></div>
+<div class="evi"><span class="src">build.sh:48-50,117-119</span><span class="note">prepare_proto→build 两阶段；clean 用 blade clean --generate-dynamic</span></div>
+<div class="evi"><span class="src">docker_init.sh:5-18</span><span class="note">JP50/JP50_X86/X86 三套镜像，版本号精确到分钟(2026-06-11_15)</span></div>
+
+<h4>产物打包：反向裁剪 + strip + 模型白名单</h4>
+<p>build_release.sh 做三件事：①prepare——rsync 整仓到 <code>release_output/</code>，排除 third_party/simulation/offboard，并 <code>rm -rf conf</code>（车端配置不进包）；②operation——删掉所有源码后缀（cc/cpp/h/proto/onnx/engine 等），按 <code>CAR_KEEP_RELEASE_LIST</code> 从 build64_release 挑可执行和 .so、按 <code>CAR_KEEP_MODEL_LIST</code> 从 component 挑 onnx 模型；若 <code>RELEASE_ENV=release</code> 则 strip 所有 .so；③compress——<code>tar -zcvf</code> 成 .tar.gz。<strong>两份 build_release.sh 并行</strong>：根脚本（60+ 个模型）和 <code>engine_generation/build_release.sh</code>（20+ 个模型，多一步把 <code>/home/jd/perc_engine/*.engine</code> 拷进包），后者用于 OTA 正式发版，模型清单不同。</p>
+<div class="evi"><span class="src">build_release.sh:26-80 CAR_KEEP_RELEASE_LIST / 96-166 CAR_KEEP_MODEL_LIST</span><span class="note">反向白名单：80 个可执行/.so + 70 个 onnx，新增模块必须手工登记</span></div>
+<div class="evi"><span class="src">build_release.sh:286-307 remove_useless_file + 346-362 strip</span><span class="note">release 模式 strip 所有 .so</span></div>
+<aside class="note">对产品负责人：'模型版本'和'代码版本'是两条独立发版线（代码 tag vs perc_engine_config.json 里的模型清单），问题收敛时必须分清'是代码 bug 还是模型 bug'。CAR_KEEP_MODEL_LIST 把 70 个 onnx 文件名（含日期版本）硬编码进 bash，模型迭代=改脚本，模型版本治理完全脱离包管理。</aside>
+
+<h4>上传链路：三套并行 + 凭据明文</h4>
+<p>上传分三条：①sim 测试包→<code>ci-scripts_build_upload.sh</code>: scp 到 jdos 服务器 11.35.230.84 → 注册任务号；②通用 sim 包→<code>binary_upload.py</code>: upload_S3 到 bucket 'sim-data'，注册到 simulservices.jd.com；③车端 OTA→<code>engine_generation/jdcloud.py</code>: 上传到 rover-version bucket，由 <code>generate_upload_all_versions.py</code> 的 <code>OTA_publish()</code> 推车。<strong>三条线的 S3 凭据（AccessKey/SecretKey）都明文写死在 binary_upload.py:18-19 和 jdcloud.py 里</strong>。</p>
+<div class="evi"><span class="src">binary_upload.py:18-19 aws_key/aws_secret_key 明文</span><span class="note">硬编码 S3 凭据进仓库，安全风险</span></div>
+<div class="evi"><span class="src">engine_generation/jdcloud.py:26-28</span><span class="note">endpoint s3.cn-north-1.jdcloud-oss.com，与 binary_upload 是不同 S3 域</span></div>
+
+<h4>到车链路（OTA）：车端自驱 + status.txt 状态机 + 按 sensor_kit 分包</h4>
+<p>车端正式发版是"<strong>拉</strong>"模型不是"推"模型：Xavier 先锋车开机自启 <code>rover5.service</code> → <code>overlap_start_rover.sh</code> → 触发 <code>generate_upload_all_versions.py</code>。该脚本读 <code>/jdx/perc_engine_config.json</code> 的 model_list，对每个 sensor_kit 依次：prepare_engine.sh 生成 TRT engine → compress_upload.sh 打包上传 → OTA_publish() 推到 jdxgateway。状态机用 <code>status.txt</code>（need_update/need_package/build_status/upload_status/failure_times）做断点续传。关键：OTA 接口要求 <code>issueTaskNumber</code>（来自 <code>/home/jd/roverUpdateInfo.json</code>），这是版本与"发版任务"的唯一硬关联点——<strong>但这个文件在车端本地、不在仓库里</strong>。</p>
+<div class="evi"><span class="src">engine_generation/README.md:11-13</span><span class="note">车端自启服务触发 generate_upload_all_versions.py 是发版核心</span></div>
+<div class="evi"><span class="src">generate_upload_all_versions.py:57-81,99-130</span><span class="note">issueTaskNumber 来自 roverUpdateInfo.json；packageList 带 md5 与 sensorIdList</span></div>
+<aside class="note">这是把"无人车交付/需求交付/问题收敛/代码交付"四条线对齐的核心痛点：代码 tag→产物 tar 这一步分叉成了 sim 包（无 sensor_kit）和车端包（按 sensor_kit），需求/问题的归因维度在两条线上不一致。sim/CI 链路（binary_upload）根本没有 sensor_kit 概念——sim 包与车端包是两套产物结构，对不齐。</aside>
+
+<h4>分支模型：只有 devel 单分支，回滚靠 tag + revert commit</h4>
+<p>git branch -a 显示远端只有 origin/devel，没有任何 release/* 或 hotfix/* 分支。回滚两条路：a) 找上个好 tag 重新发版；b) 在 devel 上提 revert commit（如 <code>QA_20260629_daily_revert8906_trt1013</code> 这种"回退 8906 后重发"的命名）。<strong>QA_20260725 与 HIL_20260725061001 两个 tag 指向同一个 commit b91eb4b2</strong>，证明 QA/HIL 不是分支分叉而是同一 commit 的不同受众通道。</p>
+<div class="evi"><span class="src">git rev-list QA_20260725_daily_trt1013 与 HIL_20260725061001_daily_trt1013 都 = b91eb4b2</span><span class="note">QA/HIL tag 共享同一 commit，是平行受众通道不是分支</span></div>
+<div class="evi"><span class="src">git tag 含 revert 命名：QA_20260629_daily_revert8906_trt1013 / 0608daily_revert8623 / 20260701_daily_revert8980</span><span class="note">回滚机制=回退某 commit 后重打 tag，命名里带 revert&lt;PR号&gt;</span></div>
+<aside class="bad">单 devel + squash 合并 + 无 release 分支 = 三重问题收敛障碍：①回滚只能整包退回上个 tag，无法只退某个 MR（squash 抹掉了 MR 边界）；②daily 自动 tag 打在 devel HEAD，回滚后再发又会被下个 daily 自动带上；③发版后 devel 继续跑新代码，老 tag 的 commit 上无法打热修复补丁，线上问题要么等下个 daily 要么人工 cherry-pick。</aside>
+
+<h3>4.2 目标黄金路径：MR → release 分支 → annotated tag → 统一 manifest → A/B OTA</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph MR阶段
+    F[feature/JDXAD-1234<br/>含 Fixes:JDXAD-1234] -->|CI: cpplint+build+test+sim pass| MR[MR!1234<br/>模板必填字段]
+    MR -->|squash body 带 Fixes<br/>或 merge commit --no-ff| DEV[devel]
+  end
+  subgraph 发版阶段
+    DEV -->|每日 18:00 切出| REL[release/2026.07.25]
+    REL -->|QA/HIL 验收 + 评审 sign-off| TAG[annotated tag<br/>v2026.07.25<br/>含 MR 清单 + Fixes 列表]
+  end
+  subgraph 构建上传
+    TAG -->|CI 触发| BUILD[Blade build<br/>+ manifest.json 生成]
+    BUILD -->|必填 commitId 来自 git| S3[OSS<br/>manifest.json 自带追溯链]
+    S3 --> REG[统一账本<br/>tag→commit→S3 key→md5<br/>→平台 id→sensor_kit→VIN]
+  end
+  subgraph 车端
+    REG -->|OTA 推| OTA1[车端 A/B 分区<br/>updater_v2 报告 commitId]
+    OTA1 -->|灰度 5%→30%→100%| CAR[运营车队]
+  end
+  style MR fill:#bfdbfe,stroke:#1d4ed8
+  style TAG fill:#fde68a,stroke:#b45309
+  style S3 fill:#bbf7d0,stroke:#15803d
+  style CAR fill:#ddd6fe,stroke:#6d28d9
+</pre>
+
+<h4>4.2.1 版本号设计：annotated tag + 语义层</h4>
+<p>不强行上 x.y.z（车端栈不适用），但要给 tag 加"语义层"：annotated tag 的 message 必须含 (1) MR 列表 (2) Fixes 的 Jira key 列表 (3) 发版受众 (4) 评审 sign-off 人。这样 <code>git for-each-ref --format='%(contents)'</code> 就能反查"这个 tag 修了哪些问题"。</p>
+<pre>
+# 目标 annotated tag message
+Release v2026.07.25-rc1
+
+Audience: QA daily
+MRs: !1234, !1235, !1237
+Fixes: JDXAD-7387, JDXAD-7390
+Modules touched: Planning, Control
+Sign-off: zhangsan (Planning owner), lisi (release manager)
+Simulation: simulation.jd.com/task/12345 pass rate 98.2%
+Base: v2026.07.24
+</pre>
+
+<h4>4.2.2 回滚机制：tag 偏序 + release 分支 hotfix</h4>
+<pre class="mermaid">
+flowchart LR
+  subgraph 单分支模型[当前]
+    D1[devel 单分支] -->|squash 合并 MR 边界丢失| D1
+    D1 -->|打 tag 无 release 分支| QA1[QA/HIL/OTA tag 直接挂 devel commit]
+  end
+  subgraph 回滚路径[当前回滚]
+    QA1 -->|方式1 退回上个好 tag| R1[重发 QA_20260724_daily]
+    QA1 -->|方式2 devel 提 revert commit| R2[Revert commit + 重打 revert tag]
+    QA1 -.无 hotfix 分支不可用.-> R3[❌ 无法在线上 commit 单独打补丁]
+  end
+  style R3 fill:#fecaca,stroke:#b91c1c
+</pre>
+<p>目标：release/&lt;date&gt; 分支 + hotfix/&lt;issue&gt; 分支。线上问题在 hotfix 分支修后 cherry-pick 回 devel，避免"回滚后再发又被下个 daily 带上"的死循环。</p>
+
+<h4>4.2.3 灰度策略：A/B 分区 + sensor_kit 分包</h4>
+<p>当前是整包替换式（tar.gz 覆盖 /jdx），无 A/B 分区，升级失败回滚靠 status.txt + 备份脚本。建议推动 A/B 分区（两个 rootfs slot，OTA 写非活动 slot，重启切活动 slot，失败自动切回）。同时保留按 sensor_kit 分包（不同车型用不同模型方案）。</p>
+<aside class="note">整包替换+无 A/B 是无人车发版的典型技术债：升级窗口长、失败难回滚。产品 own 发版流程时，"OTA 可回滚 + 版本可追溯"是比"发得快"更优先的目标。</aside>
+
+<h4>4.2.4 统一 manifest：闭合追溯的最小数据基建</h4>
+<p>三套产物结构不对齐是核心痛点：sim 包无 sensor_kit 概念、车端包按 sensor_kit 分包、issueTaskNumber 只在车端本地文件。建议定义一张"发版追溯表"，让三套脚本都往里写：</p>
+<pre class="mermaid">
+flowchart TD
+  subgraph 痛点[当前痛点: 三套产物结构不对齐]
+    P1[sim 包: 无 sensor_kit 概念]
+    P2[车端包: 按 sensor_kit 分包<br/>Origin_4.tar.gz]
+    P3[issueTaskNumber: 只在车端本地文件]
+    P1 -.对不齐.- P2
+    P2 -.不可见.- P3
+  end
+  subgraph 基建[目标: 发版追溯表]
+    T[(tag → commit_id)]
+    T --> T2[(→ build_type car/sim)]
+    T2 --> T3[(→ S3 object_key + md5)]
+    T3 --> T4[(→ 平台注册 id<br/>simulservices/OTA)]
+    T4 --> T5[(→ sensor_kit + 下发车辆 VIN)]
+    T5 --> T6[(→ issue/Jira id 清单)]
+  end
+  痛点 ==>|own 问题收敛第一步| 基建
+</pre>
+<aside class="good">产品视角的抓手：定义一张"发版追溯表"（tag→commit→S3 key→md5→平台 id→车型 sensor_kit→下发车辆 VIN→Jira id），让三套脚本都往里写，这是 own 问题收敛的最小数据基建。这一张表就能回答部门级 dashboard 的核心问题：本周发了多少包、每包含哪些 MR、哪些包上线了哪些车、哪个问题在哪个版本修了。</aside>
+</section>
+
+<!-- ============ S5 ============ -->
+<section id="s5">
+<h2><span class="h2-num">⑤</span>问题收敛机制：发现→定位→修复→验证→关闭 的闭环</h2>
+<p class="lead">ROVER5.0 的发现端和定位端回路是齐的（degradation_monitor + evaluator + data_miner），但修复端和关闭端在 git 这一侧断裂。这一节把五段拆开，标出每个断点的精确位置。</p>
+
+<h3>5.1 发现①车端实时：degradation_monitor 把物理异常编码成故障 ID</h3>
+<p>车在跑的时候，它持续把"车子/模块现在健不健康"打成分数（CPU/内存/磁盘/Hz/吞吐/温度/网络/时钟/电池/连接/控制误差/碰撞/卡死/超速）。这套分数经过两层过滤：先按"阈值（admission L1/L2/L3）"判定触发哪个等级，再按"当前驾驶模式（auto_driver/remote_driver）"把等级翻译成严重度（warning/error/fatal/critical）。严重度经过防抖（debounceMs）和清除超时（clearMs）后，驱动有限状态机决定车要不要降速/靠边/车道内停车（DEG1/DEG2/DEG3），同时把故障合成为 error_report 上报给 Guardian。</p>
+<div class="evi"><span class="src">degradation_monitor/data/fault_ids.hpp:32-57</span><span class="note">故障分类法 F001~F020，每个 ID 对应一类问题（磁盘/内存/模块状态/Hz/CPU/GPU/碰撞/卡死/控制误差等）</span></div>
+<div class="evi"><span class="src">degradation_monitor/handler/fault_manager.cc:41-92</span><span class="note">FaultEvaluator::evaluate 按等级倒序匹配 + modeSeverity 把 (等级,模式) 映射成 Severity；SeverityToFsmEvent 把 Severity 映射成 FSM 降级事件</span></div>
+<div class="evi"><span class="src">degradation_monitor/handler/detection_handler.cc:819-1114</span><span class="note">DetectSystemStatus 把 CPU/内存/磁盘/网络/时钟/GPU/温度逐项按 fatal_rate/error_rate/warning_rate 三档打分</span></div>
+<aside class="note">fault.conf 是车端安全的"底线发现"，它的修改（加新 F0xx、调阈值）属于高风险变更，但目前这些 conf 的改动同样落在普通 commit 里，无 MR 边界、无评审留痕。这是 own 时要特别盯的关键模块清单之一。</aside>
+
+<h3>5.2 发现②仿真/离线：evaluator 把行为质量问题打成 LabelResult</h3>
+<p>evaluator 是另一个发现引擎，专门盯"行为质量"而非"健康度"。它订阅 Planning/Localization/感知/信号灯等 topic，按 11 个"指标 handler"逐项算（碰撞距离/速度加速度越界/顿挫/绕路/路口/障碍物/信号/尾灯/检测置信度），算出来不达标就标一条 LabelResult 发出去。这套标签流向 data_miner 的 save_jira_data 模块，按 priority=HIGH 保留对应时间窗口的数据，最终回传云端形成可被标注/复盘的 badcase。</p>
+<div class="evi"><span class="src">evaluator/metrics/ 目录（11 个 metric handler）</span><span class="note">collision/planning/stutters/detour/intersection/obstacle/signal/taillight/detection_confidence 等行为质量指标各一个 handler</span></div>
+<div class="evi"><span class="src">data_miner/data_dispatcher/save_jira_data/save_jira_data_dispatcher.cc:45-90</span><span class="note">Process 读 save_jira_data_table，按 HIGH priority 组装 retaining_data，DeleteOneJiraData 说明 jira_id 是问题归属键——即每个 badcase 对应一个 jira</span></div>
+<aside class="bad">evaluator 触发的 badcase 有 jira_id（save_jira_data_dispatcher 明确以 jira_id 为键），但修复它的 commit 从不引用这个 jira。"发现"产出了问题 ID，"修复"却不认这个 ID，闭环在这里就断了第一处。</aside>
+
+<h3>5.3 定位：通过数据源→faultId→error_code 的映射链把问题钉到模块</h3>
+<p>问题被发现后要回答"是谁的锅"。每个数据源（system_status/module_status/latency/vehicle_motion/battery/control_cmd/gnss_imu）天然绑死一组 faultId，faultId 又绑死一组 error_code 枚举。所以一旦某个 fault 触发，归属链是"数据源→faultId→error_code 枚举名→Guardian 的 module_result.name"。</p>
+<div class="evi"><span class="src">degradation_monitor/daemon/degradation_control_daemon.cc:86-114</span><span class="note">GetSourceToFaultIds 静态映射表：system_status→F001/F002/F005/F006...，module_status→F004_HZ/F004_EC...，gnss_imu→F018 碰撞——这就是'数据源→故障类别'归属</span></div>
+<div class="evi"><span class="src">degradation_monitor/handler/detection_handler.cc:279-312,1121-1263</span><span class="note">F004_EC 四队列（warning/error/fatal/critical）把每个 error_code 映射到严重度桶</span></div>
+<aside class="bad">定位粒度是"故障类别/数据源/模块进程"，不是"代码行/commit/PR"。从 error_code 反查不到是哪次提交引入的回归——因为 commit 不带 issue/jira 关联。所以"定位"止步于"是 Planning 模块的 F004_HZ fatal"，无法继续收敛到"是 abc123 这个 MR 把 expect_hz 改错导致的"。</aside>
+<aside class="note">无人车行业惯例：定位要做到"问题→模块→负责人→引入版本"四级。这里第一级（模块）有，第四级（引入版本）完全缺失，因为 git 端没留 issue 关联也没留 MR 边界。</aside>
+
+<h3>5.4 修复（断点 A）：commit 直提交无 issue 关联、无 MR 边界</h3>
+<p>定位后开发者直接在 devel 分支上提交修复。commit subject 大致遵循 <code>&lt;模块&gt;:&lt;subject&gt;</code>，但风格极不统一（大小写混用、有的带 fix、有的带 feat、有的纯中文如"实现禾赛ATX雷达的故障上报"）。合并方式是 squash/快进，导致近 30 条 merge commit 全部为空。<strong>最关键：300 条 commit 里 0 条带 issue/jira/refs 关联</strong>，而代码侧明明有 jira_id 概念。</p>
+<div class="evi"><span class="src">_rover-recon.txt:1（近30条merge commit 标题为空）</span><span class="note">git 证据：merge commit 为空 → squash/快进合并，MR 边界丢失</span></div>
+<div class="evi"><span class="src">git log 输出：grep -icE '#[0-9]{2,}|jira|ticket|ROVER-|refs|关联' over last 300 commits = 0</span><span class="note">0 条 commit 关联 issue/jira——问题与代码零关联</span></div>
+<div class="evi"><span class="src">git log --oneline -- degradation_monitor/ = 7; evaluator/ = 1; data_miner/ = 1</span><span class="note">问题收敛核心三模块的总 commit 数极少（共9），但 daily tag 几乎天天发版——说明这些模块的变更被压缩在极少的 commit 里，每个 commit 背后可能是多个未追溯的修复</span></div>
+<aside class="bad">三个根因级断点：(1) squash/快进合并 → MR 边界丢失，无法回溯"这次发版合了哪些修复、各自对应什么问题"；(2) commit 无 issue/jira 关联 → 问题（jira_id）与修复（commit）无法双向追溯；(3) 三模块 commit 被极度压缩 → 单个 commit 聚合多个变更，MR 化拆分缺位。</aside>
+<aside class="note">"近30条 merge commit 为空"不是说没有 MR，而是合并策略把 MR 信息抹掉了。换成"保留 merge commit"或"squash 时把 MR 标题/issue 写进 commit body"就能立刻恢复追溯能力，是性价比最高的改造。</aside>
+
+<h3>5.5 验证（断点 B）：simulation2 的 71 个 validator 与 evaluator 指标双轨</h3>
+<p>修复后要验证"没引入新问题、老问题真修了"。验证手段是 simulation2 的回归体系：71 个 validator（proto 定义），覆盖闯红灯/压实线/碰撞/急刹/规划跳变/感知漏检/预测失误/路由连通性/E2E drivable area/占用栅格关键障碍物等。</p>
+<div class="evi"><span class="src">simulation2/proto/validator/*.proto = 71 个</span><span class="note">覆盖 run_red_light/solid_line_violation/active_collision/unreasonable_brake/planning_decision_jumping/perception_miss_detection/prediction_key_obstacle/routing_connectivity/e2e_collision_metric 等</span></div>
+<div class="evi"><span class="src">simulation2/component/regression/validator/*.cc + regression/metric/*.cc</span><span class="note">两层实现：regression/validator（场景级判过不过）+ regression/metric（连续指标如 TTC）</span></div>
+<aside class="bad">验证层最大的问题是"指标双轨"：仿真用 simulation2 的 validator（71个），实车/在线用 evaluator 的 metric handler（11个），两者定义不统一（同名概念如 collision 在两边实现不同）。结果是一个 badcase 在 evaluator 标出来了，仿真回归却可能验不到，反之亦然。"验证"无法严格闭合"发现"。</aside>
+<aside class="good">判断点：要 own 部门问题收敛，必须推动"发现指标=验证指标"统一——把 evaluator 的 11 个 metric 和 simulation2 的对应 validator 抽成共享定义（同一 proto/同一阈值源），否则回归永远是近似而非证明。</aside>
+
+<h3>5.6 关闭（断点 C）：daily tag 不含修复问题清单</h3>
+<p>修复 commit 进了 devel，daily tag 打出来发版，但 tag 命名（QA_yyyymmdd_daily_trt1013）不含修复的问题清单，发版说明靠人记。问题关闭要么发生在 Jira（与 git 脱钩），要么干脆没有（口头关闭）。当一个 HIL tag 跑出问题，想回答"这个问题是哪次修复引入/哪次修复该解决却没解决"时，git 给不出答案。</p>
+
+<h3>5.7 闭环图：发现→定位→修复→验证→关闭</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph 发现
+    A1[车端实时<br/>degradation_monitor<br/>F001-F020 faultId] -->|error_report| A2[Guardian<br/>AbnormalStatusTable]
+    A3[仿真/路测<br/>evaluator 11 metrics<br/>simulation2 71 validators] -->|LabelResult| A4[save_jira_data<br/>jira_id 保留窗口]
+  end
+  subgraph 定位
+    A2 --> B1[数据源→faultId→error_code<br/>钉到模块]
+    A4 --> B2[jira_id → 待归属模块]
+  end
+  subgraph 修复[修复 ❌断点A]
+    B1 -.->|无issue关联| C1[commit 模块:subject<br/>风格不一]
+    B2 -.->|未引用jira| C1
+    C1 -->|squash/快进| C2[merge commit 为空<br/>MR边界丢失]
+  end
+  subgraph 验证[验证 ❌断点B]
+    C1 -.->|无自动触发| D1[simulation2 回归<br/>71 validators]
+    D1 -.->|指标双轨| A3
+  end
+  C2 -->|daily tag ❌断点C| E[发版 QA_yyyymmdd<br/>tag不含问题清单]
+  style 修复 fill:#ffe0e0
+  style 验证 fill:#fff0e0
+</pre>
+
+<pre class="mermaid">
+sequenceDiagram
+  participant Car as 车端
+  participant Deg as degradation_monitor
+  participant FSm as 降级FSM
+  participant Grd as Guardian
+  participant Eval as evaluator
+  participant DM as data_miner
+  participant Cloud as 云端/Jira
+  participant Git as git(devel)
+  Car->>Deg: system_status/module_status/IMU...
+  Deg->>Deg: 阈值admission L1/L2/L3<br/>+ modeSeverity映射<br/>+ debounce/clearMs
+  Deg->>FSm: Severity→DEG1降速/DEG2靠边/DEG3停车
+  Deg->>Grd: error_report(module=deg_monitor)
+  Car->>Eval: Planning/loc/perc topic
+  Eval->>Eval: 11 metric handler 算分
+  Eval->>DM: LabelResult(kEvaluatorLabel)
+  DM->>Cloud: save_jira_data + 高价值数据回传<br/>jira_id 保留
+  Note over Cloud,Git: ❌ 断点A：修复commit从不引用jira_id<br/>❌ 断点：merge commit为空，MR边界丢失
+  Git-->>Cloud: daily tag 发版<br/>(无问题清单关联)
+</pre>
+</section>
+
+<!-- ============ S6 ============ -->
+<section id="s6">
+<h2><span class="h2-num">⑥</span>四流对齐：用一个 MR + 发版骨架串起来</h2>
+<p class="lead">把四条线放到一个图里看，断链点都集中在"变更 → 版本 → 包"这三个共用节点。修一个节点不够，必须三个同时打钉子。</p>
+
+<h3>6.1 四线当前状态：靠 version.txt 单点黏合</h3>
+<p>ROVER5.0 把车端 C++ 栈从开发到上车，理论上要走四条线：需求→代码、代码→包、包→车、问题→关闭。但现状是这四条线没有一条统一的"轴"。唯一贯穿全程的是一个手写的 <code>version.txt</code>（内容只有 git 短 commit_id），它由 ci-scripts_build_upload.sh 在打包时 echo 进去（:80），又被 engine_generation 读取拼成 OTA 包名、被 scripts/update/update_base.py 在车端读取做版本核对（:229）。换句话说，"版本"这件事没有持久化在 git 里（278 个 tag 全是 lightweight、且多个 tag 指向同一 commit），也没有持久化在 MR 里（squash 合并把 MR 抹平），而是落在一个随包流转的 txt 文件上。</p>
+<aside class="bad">version.txt 是"包级"锚点而非"变更级"锚点：它只回答"这个包是谁打的"，回答不了"这个包修了哪些问题、来自哪些 MR、对应哪些需求"。四条线在"变更"这一层没有公共主键。</aside>
+
+<h3>6.2 目标骨架：MR + annotated tag + 统一 manifest</h3>
+<pre class="mermaid">
+flowchart LR
+  L1[②需求 JDXAD] -->|MR 模板 FixJira 强制| L2[②代码 commit/MR 边界保留]
+  L2 -->|CI 自动取 commit_id 必填| L3[④包 binary+manifest]
+  L3 -->|OTA by vehicle<br/>manifest 带 sensor_kit| L4[①车 HIL/QA tag<br/>annotated 含 MR 清单]
+  L4 -->|record/logsim 上传<br/>evaluator 标 LabelResult| L5[③问题发现]
+  L5 -->|commit body Fixes:JDXAD-xxxx| L2
+  L5 -.->|annotated tag 含 Fixes 清单<br/>可关闭工单| L1
+  style L2 fill:#e0ffe0
+  style L3 fill:#e0ffe0
+  style L5 fill:#e0ffe0
+</pre>
+
+<h3>6.3 四线痛点排序（按可溯源度）</h3>
+<pre class="mermaid">
+graph TB
+  subgraph 排序[现状痛点排序 按可溯源度]
+    P1[最痛 ③问题关闭无锚点<br/>tag 与 fix 无偏序]
+    P2[次痛 ②需求↔代码断链<br/>squash 抹掉 MR+Jira]
+    P3[三痛 ①版本语义低<br/>278 tag 多对一]
+    P4[四痛 ④commitId 可选<br/>包↔变更松耦合]
+  end
+  P1 --> R[共同根因:<br/>变更/版本/包三节点<br/>无机器可读双向链接]
+  P2 --> R
+  P3 --> R
+  P4 --> R
+  style R fill:#fecaca,stroke:#b91c1c
+</pre>
+
+<h3>6.4 own 这件事的三步修复优先级</h3>
+<pre class="mermaid">
+flowchart TD
+  E0[own 发版流程: 三步修复优先级] --> E1[① commit 必带 Jira key<br/>CI 卡口校验<br/>性价比最高]
+  E0 --> E2[② 改 merge commit 保留 MR 边界<br/>评审/责任可追溯]
+  E0 --> E3[③ 模块词表受控<br/>12 个一级模块钉死]
+  E1 --> E4[四线在 git 侧自动闭环]
+  E2 --> E4
+  E3 --> E4
+  style E1 fill:#bbf7d0,stroke:#15803d
+  style E4 fill:#ddd6fe,stroke:#6d28d9
+</pre>
+<table>
+<thead><tr><th>优先级</th><th>动作</th><th>工程成本</th><th>管理收益</th><th>闭环贡献</th></tr></thead>
+<tbody>
+<tr><td>P0</td><td>commit-msg hook 强制 <code>Fixes:JDXAD-\d+</code></td><td>低（1 个 hook + 1 个 commitlint）</td><td>恢复"需求↔代码"双向追溯</td><td>闭合断点 A</td></tr>
+<tr><td>P0</td><td>CI 校验 MR 模板 FixJira 字段非空</td><td>低（.gitlab-ci.yml 加一个 job）</td><td>把模板字段变契约</td><td>闭合断点 A</td></tr>
+<tr><td>P1</td><td>改 squash 为保留 merge commit --no-ff</td><td>低（GitLab 项目设置改一项）</td><td>恢复 MR 边界 + 评审单元</td><td>闭合断点 A 的另一半</td></tr>
+<tr><td>P1</td><td>annotated tag + message 含 MR/Fixes 清单</td><td>低（发版脚本改一处）</td><td>恢复"版本↔变更"偏序</td><td>闭合断点 C</td></tr>
+<tr><td>P2</td><td>模块词表受控（12 个一级模块）</td><td>中（需 freeze + lint）</td><td>dashboard 可按模块统计</td><td>统计层</td></tr>
+<tr><td>P2</td><td>引入 release/* + hotfix/* 分支</td><td>中（流程 + 培训）</td><td>回滚有落点</td><td>结构层</td></tr>
+<tr><td>P3</td><td>统一 evaluator/simulation2 指标定义</td><td>高（跨团队重构）</td><td>"验证=发现"</td><td>闭合断点 B</td></tr>
+<tr><td>P3</td><td>发版追溯表（tag→VIN→Jira）</td><td>高（跨 3 脚本 + 平台）</td><td>部门级 dashboard</td><td>数据基建</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- ============ S7 ============ -->
+<section id="s7">
+<h2><span class="h2-num">⑦</span>30 / 60 / 90 天行动计划 + 指标 + 检查清单</h2>
+<p class="lead">把上面的设计落成产品负责人 cheche 真正能推动的时间表。优先级是"低成本高收益"优先、"重工程改造"延后。</p>
+
+<h3>7.1 30 天：止血——恢复追溯锚点</h3>
+<table>
+<thead><tr><th>周</th><th>动作</th><th>产出</th><th>证据要求</th></tr></thead>
+<tbody>
+<tr><td>W1</td><td>冻结 12 个一级模块词表（Planning/E2E/Control/perc/map/Routing/sim/Degradation/Hardware/chassis/...）</td><td>MODULE_VOCABULARY.md 进仓库</td><td>PR 合入 devel</td></tr>
+<tr><td>W1-2</td><td>加 commit-msg hook + commitlint 规则：模块前缀在词表内 + body 必带 <code>Fixes:JDXAD-\d+</code></td><td>.git-hooks/commit-msg + commitlint.config.js</td><td>本地尝试非法 commit 被拒</td></tr>
+<tr><td>W2-3</td><td>在 GitLab 项目设置开启 MR 模板强制（CI 校验 FixJira 字段非空）</td><td>.gitlab-ci.yml 加 mr-lint job</td><td>非法 MR 被 CI 阻断</td></tr>
+<tr><td>W3-4</td><td>改合并策略：GitLab 项目设置 squash → 保留 merge commit（--no-ff）</td><td>项目设置变更 + 邮件通知</td><td>新 MR 产生 merge commit</td></tr>
+<tr><td>W4</td><td>把 wiki 的发版流程搬进仓库：CONTRIBUTING.md + RELEASE.md</td><td>docs/CONTRIBUTING.md + docs/RELEASE.md</td><td>新人能从仓库自解释流程</td></tr>
+</tbody>
+</table>
+
+<h3>7.2 60 天：建制——release 分支 + annotated tag</h3>
+<table>
+<thead><tr><th>周</th><th>动作</th><th>产出</th></tr></thead>
+<tbody>
+<tr><td>W5-6</td><td>引入 release/&lt;date&gt; 分支：每日 18:00 从 devel 切出，daily tag 打在 release 分支而非 devel HEAD</td><td>git 分支拓扑变更 + 发布脚本改造</td></tr>
+<tr><td>W6-7</td><td>tag 改 annotated，message 含 MR 列表 + Fixes 清单 + 评审 sign-off</td><td>发版脚本改 + tag 模板</td></tr>
+<tr><td>W7-8</td><td>binary_upload.py 把 commit_id 从 input() 改为 <code>git rev-parse --short HEAD</code> 必填</td><td>脚本改造 + 一次试运行</td></tr>
+<tr><td>W8</td><td>引入 hotfix/&lt;issue&gt; 分支：线上问题在 hotfix 修后 cherry-pick 回 devel + release</td><td>分支策略文档更新 + 一次演练</td></tr>
+</tbody>
+</table>
+
+<h3>7.3 90 天：闭环——统一指标 + 发版追溯表</h3>
+<table>
+<thead><tr><th>月</th><th>动作</th><th>产出</th></tr></thead>
+<tbody>
+<tr><td>M3</td><td>推动 evaluator 11 metric 与 simulation2 对应 validator 抽共享定义（同一 proto/同一阈值源）</td><td>共享 proto + 阈值配置源</td></tr>
+<tr><td>M3</td><td>定义发版追溯表 schema（tag→commit→S3 key→md5→平台 id→sensor_kit→VIN→Jira id），三套脚本都往里写</td><td>追溯表 schema + ETL</td></tr>
+<tr><td>M3</td><td>部门级 dashboard 上线：本周发了多少包、每包含哪些 MR、哪些包上线了哪些车、哪个问题在哪个版本修了</td><td>dashboard + 周报模板</td></tr>
+</tbody>
+</table>
+
+<h3>7.4 指标体系（own 这件事怎么衡量成没成）</h3>
+<table>
+<thead><tr><th>指标</th><th>定义</th><th>当前</th><th>30 天目标</th><th>90 天目标</th></tr></thead>
+<tbody>
+<tr><td>commit Fixes 覆盖率</td><td>带 <code>Fixes:JDXAD-\d+</code> 的 commit 占比</td><td>0%</td><td>≥80%</td><td>≥95%</td></tr>
+<tr><td>MR 边界保留率</td><td>merge commit 占比（--no-ff 合并）</td><td>0%</td><td>100%（关键模块）</td><td>100%</td></tr>
+<tr><td>模块前缀规范率</td><td>在 12 个词表内的 commit 占比</td><td>76%（但词表不受控）</td><td>≥90%</td><td>≥98%</td></tr>
+<tr><td>annotated tag 覆盖率</td><td>annotated tag 占比（含 MR/Fixes 清单）</td><td>0%</td><td>—</td><td>≥90%</td></tr>
+<tr><td>问题→代码追溯时长</td><td>从线上问题到锁定引入 commit 的中位时长</td><td>数小时～数天（人肉）</td><td>≤30 分钟（git log --grep）</td><td>≤5 分钟（dashboard）</td></tr>
+<tr><td>问题收敛率</td><td>本周关闭工单 / 本周新增工单</td><td>无法从 git 算</td><td>可算</td><td>≥85%</td></tr>
+<tr><td>平均修复时长 MTTR</td><td>从工单创建到 Fixes commit 合入的中位时长</td><td>无法从 git 算</td><td>可算</td><td>按模块公开</td></tr>
+<tr><td>回归通过率</td><td>修复 commit 触发的 sim 回归通过率</td><td>无法关联</td><td>可关联</td><td>≥98%</td></tr>
+</tbody>
+</table>
+
+<h3>7.5 检查清单（每次发版前过一遍）</h3>
+<ul class="checklist">
+  <li>所有合入 release 分支的 MR 都带 <code>Fixes:JDXAD-\d+</code></li>
+  <li>所有合入的 MR 都在 12 个一级模块词表内</li>
+  <li>关键模块（degradation/fault.conf/control）MR 有 2 个 owner approve</li>
+  <li>annotated tag message 含 MR 列表 + Fixes 清单 + sign-off 人</li>
+  <li>binary_upload 的 commit_id 来自 git rev-parse，非手输</li>
+  <li>manifest.json 写入 tag→commit→S3 key→md5→sensor_kit→VIN 链路</li>
+  <li>simulation.jd.com 回归任务通过率 ≥ 阈值</li>
+  <li>evaluator 标出的 HIGH priority badcase 都有对应 Fixes commit</li>
+  <li>release 分支与 devel 的差异已 cherry-pick 双向同步</li>
+  <li>hotfix 分支（若有）已 merge 回 devel 和 release</li>
+</ul>
+</section>
+
+<!-- ============ S8 ============ -->
+<section id="s8">
+<h2><span class="h2-num">⑧</span>关键设计 rationale + 反事实</h2>
+<p class="lead">把每个关键决策的"为什么这么做"和"不这么做会怎样"摆出来，方便跟团队/上级讨论时有据可依。</p>
+
+<h3>8.1 为什么先做 commit Fixes 关联，而不是先做 CI 单测门禁？</h3>
+<p><strong>Rationale</strong>：commit Fixes 关联的工程成本极低（一个 hook + 一个 commitlint），但能恢复"需求↔代码"双向追溯，这是所有上层 dashboard 的地基。CI 单测门禁工程成本高（要补测试用例、要修 blade test 注释、要稳定 CI 环境），且即便建好也回答不了"这个修复对应哪个工单"的问题。</p>
+<p><strong>反事实</strong>：如果先做 CI 单测门禁而不做 Fixes 关联，3 个月后单测通过率上去了，但部门级 dashboard 仍然算不出"问题收敛率/MTTR"，因为代码和工单还是断的。产品 own 的核心收益（让四条线对齐）落空。</p>
+
+<h3>8.2 为什么推荐保留 merge commit 而不是 squash + body 带 Fixes？</h3>
+<p><strong>Rationale</strong>：merge commit --no-ff 保留 MR 作为 git 图上的独立节点，<code>git log --merges</code> 可直接列出所有评审点，<code>git bisect</code> 可二分定位引入 MR。squash + body 带 Fixes 虽然也能恢复追溯，但 MR 评审单元在 git 图上仍是隐形的，需要靠 body 解析才能恢复，工具链复杂度高。</p>
+<p><strong>反事实</strong>：如果继续 squash 而不带 Fixes，线上问题二分定位时只能逐条 commit 测试，每个 commit 背后可能聚合了多个未追溯的修复（degradation_monitor 仅 7 条 commit 但 daily tag 天天发，证实了这点），二分粒度太粗。如果 squash 但带 Fixes，能恢复"工单→commit"映射，但"工单→MR→评审人→评审时间"这一链路仍不全（评审信息在 GitLab UI，归档后可能丢）。</p>
+<aside class="note">务实折中：对关键模块（degradation/control/fault.conf）保留 merge commit，对其他模块允许 squash + body 强制带 Fixes。这样既保线性又保关键模块的完整追溯。</aside>
+
+<h3>8.3 为什么不强行上语义化版本 x.y.z？</h3>
+<p><strong>Rationale</strong>：车端栈的发布是"日级 daily build + 按 sensor_kit 分包 OTA"，不是 SaaS 的"功能发布"。x.y.z 语义化版本对应"功能集"概念，但车端每次 daily build 都可能含上百个 MR，x.y.z 无法承载这个粒度。 annotated tag + date + audience + MR 清单的组合更贴合实际发版语义。</p>
+<p><strong>反事实</strong>：如果强行上 x.y.z，要么版本号增长极快（每天 +1），要么需要定义"什么时候 minor+1"的规则，对车端栈无意义。团队会很快弃用，回到 date-based 命名。</p>
+
+<h3>8.4 为什么把发版流程从 wiki 搬进仓库？</h3>
+<p><strong>Rationale</strong>：仓库是代码变更的唯一起点，发版流程文档如果在 wiki，新人/产品/测试要看流程必须跨系统，且 wiki 与代码版本无绑定（wiki 改了代码没改，或反之）。把 CONTRIBUTING.md / RELEASE.md / .gitlab-ci.yml 的 MR 模板放仓库，让仓库"自解释"。</p>
+<p><strong>反事实</strong>：如果继续放 wiki，每次流程变更要靠邮件通知，3 个月后无人记得 wiki 在哪、内容是否最新。新成员上手时长 = 问老人时长，部门级 own 落空。</p>
+
+<h3>8.5 为什么推动 A/B 分区而不是继续整包替换？</h3>
+<p><strong>Rationale</strong>：车端 OTA 失败的代价是车趴窝（升级窗口长、失败难回滚）。A/B 分区（两个 rootfs slot，OTA 写非活动 slot，重启切活动 slot，失败自动切回）是无人车/车机行业的事实标准，能把 OTA 失败的影响降到"一次重启"。</p>
+<p><strong>反事实</strong>：如果继续整包替换 + status.txt 状态机，一次 OTA 失败可能需要人工上车站点恢复，部门级 OTA 灰度（5%→30%→100%）几乎不可能，只能全量推、全量赌。</p>
+<aside class="note">这条是中长期目标，不在 30/60 天计划内。但产品负责人要把它放进 own 的 roadmap，因为"OTA 可回滚"是无人车量产的前提。</aside>
+
+<h3>8.6 为什么模块词表是产品可决定的，而不是工程可决定的？</h3>
+<p><strong>Rationale</strong>：模块词表的本质是"部门组织架构在代码侧的投影"——每个一级模块对应一个团队/owner。这是产品负责人（Function Owner）的职责范畴：定义"我们部门有几个一级模块、各自 owner 是谁"。工程团队负责执行（commitlint、CI 卡口）。</p>
+<p><strong>反事实</strong>：如果不冻结词表，团队继续用 Planning/planning/3d_planning/Planning3 四种写法，部门级 dashboard 永远对不齐，"Planning 模块本月改了几次/收敛了多少问题"这种基础问题答不出。产品 own 的数据基建落空。</p>
+</section>
+
+<!-- ============ S9 ============ -->
+<section id="s9">
+<h2><span class="h2-num">⑨</span>延伸阅读</h2>
+<ul>
+  <li><strong>Trunk-Based Development</strong> — <a href="https://trunkbaseddevelopment.com">trunkbaseddevelopment.com</a>。Paul Hammant 的权威站点，讲短命 feature 分支 + 强 CI 的主干开发模式。ROVER5.0 现状是 trunk 但缺 release 分支拓扑，参考这里补全。</li>
+  <li><strong>Release Flow (Microsoft)</strong> — <a href="https://learn.microsoft.com/en-us/azure/devops/learn/devops-at-microsoft/release-flow">learn.microsoft.com · Release Flow</a>。微软的发布分支工作流，origin/release/* + hotfix/*，与车端栈的"日级 daily + 量产 OTA"节奏匹配，是本教材推荐的分支策略原型。</li>
+  <li><strong>Conventional Commits</strong> — <a href="https://www.conventionalcommits.org">conventionalcommits.org</a>。<code>type(scope): subject</code> + <code>Fixes: #N</code> footer 的机器可解析规范。ROVER5.0 不必全盘照搬 type，但 Fixes footer 必须强制。</li>
+  <li><strong>GitHub Flow</strong> — <a href="https://docs.github.com/en/get-started/using-github/github-flow">docs.github.com · GitHub Flow</a>。轻量分支模型（main + feature PR），适合 SaaS 但不适合车端栈（车端不可秒级回滚）。列出供对照。</li>
+  <li><strong>GitLab Merge Request Templates</strong> — <a href="https://docs.gitlab.com/ee/user/project/description_templates.html">docs.gitlab.com · Description Templates</a>。GitLab 官方文档，讲 .gitlab/merge_request_templates/ 怎么写、怎么用 CI 强制字段。</li>
+  <li><strong>Keep a Changelog</strong> — <a href="https://keepachangelog.com">keepachangelog.com</a>。annotated tag message / CHANGELOG.md 的写法规范，对应本教材 4.2.1 节的 tag 语义层。</li>
+  <li><strong>OTA A/B 分区（Android）</strong> — <a href="https://source.android.com/docs/core/ota/ab_updates">source.android.com · A/B Updates</a>。Android 的 A/B 系统更新文档，是无 A/B 整包替换式 OTA 升级到 A/B 的工业参考。</li>
+</ul>
+</section>
+
+<footer>
+  <p>教材 D · ROVER5.0 问题收敛 + 发版黄金路径 · 基于 git 侦察（<code>_rover-recon.txt</code>）与源码逐行核对 · 2026-07-26</p>
+  <p>读者 cheche：本教材的所有论断都标到行（<code>recon:行</code> 或 <code>文件:行</code>），可在 ROVER5.0 仓库本地复现。30/60/90 天计划是"产品负责人可推动的最小动作集"，工程实现需与团队协商。本教材是 own 部门级"问题收敛 + 发版流程"的论证底稿，不是工程改造方案。</p>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#0f1419',
+      primaryColor: '#1c2230',
+      primaryTextColor: '#e6edf3',
+      primaryBorderColor: '#7ee787',
+      lineColor: '#9aa7b4',
+      secondaryColor: '#161c24',
+      tertiaryColor: '#2a3340',
+      fontFamily: '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis' },
+    sequence: { actorMargin: 50, boxMargin: 8 },
+    pie: { textColor: '#e6edf3' }
+  });
+</script>
+</body>
+</html>

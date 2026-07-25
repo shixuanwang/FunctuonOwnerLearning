@@ -21,6 +21,7 @@
 | [数仓物理存储三件套](warehouse-physical-storage.md) | ClickHouse 分区/排序键/TTL —— 从因果模型到代码证据 | practiced |
 | [设计能力校准报告](joyspace-design-calibration.md) | 22 篇 joyspace 文档实测：19 项能力图谱、影响力诊断、3 个月路线 | — |
 | [教材B·JoyDrive-Infra 0→100](textbooks/B-joydrive-infra-0to100.html) | 产品/工程/训练/评测/数据/基建六视角，吃透训练+评测（单 HTML+mermaid） | — |
+| [教材D·ROVER5.0 发版与问题收敛黄金路径](textbooks/D-rover5-release-golden-path.html) | MR 体系/发版/问题收敛诊断+黄金路径+四流对齐+30-60-90 行动（单 HTML+mermaid） | — |
 
 ## ⚠️ 机密提醒
 
