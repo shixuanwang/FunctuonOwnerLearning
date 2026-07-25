@@ -20,6 +20,7 @@
 | [JoyDrive-Infra 架构分析](joydrive-arch-analysis.md) | 三层架构（产品/技术/数据）+ aicoding 工程实践 | introduced |
 | [数仓物理存储三件套](warehouse-physical-storage.md) | ClickHouse 分区/排序键/TTL —— 从因果模型到代码证据 | practiced |
 | [设计能力校准报告](joyspace-design-calibration.md) | 22 篇 joyspace 文档实测：19 项能力图谱、影响力诊断、3 个月路线 | — |
+| [教材A·总纲](textbooks/A-master-textbook.html) | 数据闭环×数据基建全景：三大闭环/AD七段飞轮/仿真场景/基建栈/具身/能力图谱/职业跃迁/学习路线（107KB·11 mermaid） | — |
 | [教材B·JoyDrive-Infra 0→100](textbooks/B-joydrive-infra-0to100.html) | 产品/工程/训练/评测/数据/基建六视角，吃透训练+评测（单 HTML+mermaid） | — |
 | [教材D·ROVER5.0 发版与问题收敛黄金路径](textbooks/D-rover5-release-golden-path.html) | MR 体系/发版/问题收敛诊断+黄金路径+四流对齐+30-60-90 行动（单 HTML+mermaid） | — |
 

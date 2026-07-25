@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>总纲教材 A：数据闭环 + 数据基建 + 具身智能 —— Function Owner 主干认知地图</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.int { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; }
+  .tag.pra { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
+  .tag.dec { background:#fce4ec; color:#880e4f; border:1px solid #f48fb1; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .badge { font-size:12px; padding:2px 6px; border-radius:4px; background:#eef; color:#336; margin-left:6px;}
+  .summary { background:var(--accent-soft); border:1px solid var(--border); border-radius:8px; padding:12px 18px; margin:24px 0; font-size:14.5px; }
+  .summary::before { content:"本章要点｜"; font-weight:600; color:var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · 总纲 8 章</h2>
+<ol>
+  <li><a href="#sec-0">① 三大闭环关系总图与定位</a>
+    <div class="sub"><a href="#s0-1">全景图</a> · <a href="#s0-2">6 个交叉点</a> ·<br><a href="#s0-3">为什么放在一起</a></div>
+  </li>
+  <li><a href="#sec-1">② 自动驾驶数据闭环：七段飞轮</a>
+    <div class="sub"><a href="#s1-1">采集</a> · <a href="#s1-2">标注</a> · <a href="#s1-3">挖掘</a> ·<br><a href="#s1-4">训练</a> · <a href="#s1-5">仿真评测</a> · <a href="#s1-6">部署回流</a> ·<br><a href="#s1-7">物理不变量</a></div>
+  </li>
+  <li><a href="#sec-2">③ 仿真·场景库·世界模型·长尾挖掘</a>
+    <div class="sub"><a href="#s2-1">log replay vs re-sim</a> · <a href="#s2-2">世界模型路线</a> ·<br><a href="#s2-3">场景库+测评指标</a> · <a href="#s2-4">生成式造难例</a></div>
+  </li>
+  <li><a href="#sec-3">④ 数据基建栈（六层底座）</a>
+    <div class="sub"><a href="#s3-1">表格式</a> · <a href="#s3-2">版本化</a> · <a href="#s3-3">血缘</a> ·<br><a href="#s3-4">质量</a> · <a href="#s3-5">元数据</a> · <a href="#s3-6">feature store</a></div>
+  </li>
+  <li><a href="#sec-4">⑤ 流处理·OLAP·编排·MLOps</a>
+    <div class="sub"><a href="#s4-1">Flink</a> · <a href="#s4-2">OLAP</a> · <a href="#s4-3">编排</a> ·<br><a href="#s4-4">Kubeflow vs Ray</a></div>
+  </li>
+  <li><a href="#sec-5">⑥ 具身智能数据闭环：追赶者范式</a>
+    <div class="sub"><a href="#s5-1">冷启动悖论</a> · <a href="#s5-2">遥操作+OXE</a> ·<br><a href="#s5-3">合成优先</a> · <a href="#s5-4">可迁移/不可迁移</a></div>
+  </li>
+  <li><a href="#sec-6">⑦ 能力图谱 + 负责人能力框架</a>
+    <div class="sub"><a href="#s6-1">三阶定级</a> · <a href="#s6-2">读者自评校准</a> ·<br><a href="#s6-3">PM→Owner 跃迁</a> · <a href="#s6-4">JD 对标</a></div>
+  </li>
+  <li><a href="#sec-7">⑧ 学习路线 + 行动清单 + 治理型 PRD 模板</a>
+    <div class="sub"><a href="#s7-1">12 周路线</a> · <a href="#s7-2">北极星指标</a> ·<br><a href="#s7-3">治理型 PRD 模板</a> · <a href="#s7-4">立即可做</a></div>
+  </li>
+  <li><a href="#sec-8">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>总纲教材 A：数据闭环 + 数据基建 + 具身智能</h1>
+<p class="lede">一份写给"4 年数据闭环 PM 要成为综合架构师 + Function Owner"读者的单文件主干认知地图。覆盖<strong>自动驾驶数据闭环（成熟飞轮）</strong>、<strong>数据基建栈（横向底座）</strong>、<strong>具身智能数据闭环（追赶者范式）</strong>三大领域，每条论断带公司案例、数字、来源 URL 和能力定级。</p>
+<p class="meta">输入：调研简报 A（6 facet，置信度 0.87）· 能力校准报告 · 职业路线 · 认知契约 · 标杆仓库 JoyDrive-Infra · 编写日期：2026-07-26</p>
+<p class="meta">读者契约：模型先行、因果优先、术语最后；先看总图再下钻每一段；每章末"本章要点"做收敛；<span class="tag int">introduced</span>=能说概念，<span class="tag pra">practiced</span>=亲自验证，<span class="tag dec">can-decide</span>=能比较方案/代价/故障模式/验收信号。</p>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 三大闭环关系总图与定位</h2>
+
+<h3 id="s0-1">1.1 全景图：三个领域不是平级，是"飞轮 + 底座 + 追赶者"</h3>
+<p>三个领域在公开讨论里经常被并排罗列，但读者最容易踩的坑是把它们当<strong>三个独立技术栈</strong>去学。它们真实的关系是<strong>层级嵌套</strong>：自动驾驶数据闭环是上层"飞轮"，数据基建栈是横跨两个领域的"底座"，具身智能数据闭环是没有车队红利、被迫激进创新的"追赶者"——而它正在反过来倒逼自动驾驶重审假设。</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph AD["自动驾驶数据闭环（成熟度最高）"]
+    direction LR
+    A1["采集<br/>量产车队=差异采样器"] --> A2["标注<br/>offboard 精标"]
+    A2 --> A3["挖掘<br/>误差驱动/触发器"]
+    A3 --> A4["训练"]
+    A4 --> A5["仿真评测"]
+    A5 --> A6["部署回流 OTA"]
+    A6 -.养料.-> A1
+  end
+  subgraph BASE["数据基建栈（横向底座 = 转速上限与方向正确性）"]
+    B1["lakehouse 表格式<br/>Iceberg/Delta/Hudi/Paimon"]
+    B2["版本化+血缘+质量+元数据<br/>lakeFS+OpenLineage+DataHub"]
+    B3["feature store<br/>Feast/Tecton"]
+    B4["流+OLAP+编排+MLOps<br/>Flink+Doris+Argo+Kubeflow/Ray"]
+  end
+  subgraph EMB["具身智能数据闭环（追赶者）"]
+    direction LR
+    E1["遥操作/示教"] --> E2["VLA 训练<br/>π0/OpenVLA"]
+    E2 --> E3["仿真/sim2real"]
+    E3 --> E4["合成数据预训练"]
+    E4 -.回灌.-> E1
+  end
+  AD -->|"共享：仿真引擎/场景库标准 OSC2.0<br/>sim2real 方法论"| EMB
+  EMB -->|"倒逼：合成优先/世界模型/VLA 端到端"| AD
+  BASE -.->|"同一套选型逻辑支撑两个领域"| AD
+  BASE -.->|"同一套选型逻辑支撑两个领域"| EMB
+  classDef ad fill:#eaf1f8,stroke:#0b5394,color:#1a1a1a
+  classDef base fill:#fff8e1,stroke:#d4a017,color:#5b4500
+  classDef emb fill:#fce4ec,stroke:#880e4f,color:#1a1a1a
+  class AD ad
+  class BASE base
+  class EMB emb
+</pre>
+
+<blockquote class="why">这张图解决读者第一个判断错误：把三个领域当三个独立技术栈去学，结果是学了 lakehouse 不知道它支撑哪条飞轮、学了 VLA 不知道它和 AD 端到端共用了什么。正确定位是<strong>飞轮（AD）+ 底座（基建栈）+ 追赶者（具身）</strong>——底座决定飞轮的转速上限和方向是否正确，追赶者反过来倒逼飞轮重审假设。反事实：若把三个领域当平级，会出现"团队各搞一套 lakehouse"，数据资产归一化失败，跨本体/跨车型 schema 永远拼不起来。</blockquote>
+
+<h3 id="s0-2">1.2 三个领域的 6 个交叉点（教材后续逐一展开）</h3>
+<table>
+<tr><th>交叉点</th><th>AD 侧形态</th><th>具身侧形态</th><th>同构本质</th></tr>
+<tr><td><strong>跨本体/跨传感器 schema 归一化</strong></td><td>多车型、多传感器套件归一化</td><td>OXE：22 种机器人本体统一字段</td><td>同一份"异构源 → 统一 schema"问题</td></tr>
+<tr><td><strong>生成式补长尾</strong></td><td>华为扩散模型 1 秒 1000 场景；Waabi World</td><td>GraspVLA 10 亿帧合成预训练</td><td>"把 corner case 从等变成造"</td></tr>
+<tr><td><strong>世界模型</strong></td><td>Wayve GAIA-3、DriveDreamer（渲染层）</td><td>NVIDIA Cosmos、Waabi World（决策层）</td><td>像素扩散 vs 占据自回归的分工</td></tr>
+<tr><td><strong>端到端连续化输出</strong></td><td>端到端轨迹生成</td><td>π0 flow matching + action chunk=50</td><td>离散 vs 连续动作表达的取舍</td></tr>
+<tr><td><strong>real-to-sim-to-real 双向闭环</strong></td><td>真实接管/事故数据回灌仿真</td><td>MIT RialTo：失败样本回灌 sim</td><td>"单向供给"升级为"闭环自优化"</td></tr>
+<tr><td><strong>数据基建层</strong></td><td>lakehouse/版本化/血缘/feature store</td><td>同左</td><td>AD 与具身共用同一套选型逻辑</td></tr>
+</table>
+
+<aside class="note">这 6 个交叉点是本教材的"认知钥匙"。读者看到任一具体技术（如 OXE、World Model、flow matching）先在脑里把它映射到对应的交叉点，就能立刻判断"这是 AD 也有、具身也有，只是换了皮"，避免把同一问题学两遍。<strong>掌握度判断</strong>：能说出每个交叉点在自家业务里的对应物 = <span class="tag dec">can-decide</span>；只能复述名字 = <span class="tag int">introduced</span>。</aside>
+
+<h3 id="s0-3">1.3 为什么"放在一起学"是 ROI 最高的姿势</h3>
+<p>三个领域公开讨论各自孤立——AD 团队读 arXiv 2401.12888，具身团队读 Open X-Embodiment，数据基建团队读 DDIA——<strong>但所有 Function Owner 级判断都发生在三者交界处</strong>。一个典型问题："我们要不要从 ES 迁到 lakehouse？" 这个决策需要同时懂：（1）AD 数据闭环里的"价值单位是 frame 还是 clip"；（2）具身的 OXE schema 归一化教训；（3）lakehouse 表格式 Iceberg vs Hudi 的写入模式差异。三块缺一块，决策都会偏。</p>
+
+<blockquote class="why">"放在一起学"的存在理由是<strong>判断力在交界处产生</strong>。单学一个领域的人能拆解问题，但不能在不确定性里拍板——拍板需要跨界对照（"具身那边怎么做的，他们的代价是什么"）。这是 PM 跨到 Function Owner 的关键认知跃迁。反事实：若分开学，会出现"数据闭环 PM 不懂 lakehouse 物理设计"，被平台方主导决策（这正是读者校准报告里"治理结构定义权让渡给平台方"的根因）。</blockquote>
+
+<div class="summary">
+<strong>三个领域一句话定位</strong>：AD 数据闭环是"被量产车队红利推着走的成熟飞轮"；数据基建栈是"决定飞轮转速上限与方向正确性的横向底座"；具身智能数据闭环是"没有车队红利的追赶者，正在用合成优先 + 遥操作硬件激进创新反过来倒逼 AD 重审假设"。<strong>读者学这本教材的目标</strong>不是记住三个领域的事实清单，而是在脑里把这张关系图变成"判断任何数据相关问题时先在图上定位"的本能。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 自动驾驶数据闭环：七段飞轮 + 物理不变量</h2>
+
+<p>自动驾驶数据闭环已迭代到第 3 代（生成式 + 世界模型 + 主动误差挖掘），是三个领域里成熟度最高的。学术心智模型来自 arXiv 2401.12888《Data-Centric Evolution in AD》（<a href="https://arxiv.org/html/2401.12888v1">来源</a>），给出 7 组件架构。本节按"采集→标注→挖掘→训练→仿真评测→部署回流→物理不变量"七段展开，每段给标杆公司做法、关键数字、能力定级。</p>
+
+<h3 id="s1-1">2.1 采集段：量产车队 = 天然被动飞轮，已解决冷启动</h3>
+<p>AD 采集段的核心范式是<strong>shadow mode + trigger classifier</strong>：车上同时跑生产模型和影子模型，两者分歧或触发器命中时回传 engineering clip。这是 Tesla 开创、小鹏/理想复用的成熟范式，本质是一个"永不疲倦的差异采样器"。</p>
+<ul>
+<li><strong>Tesla</strong>：8 相机 × 36fps，1000 车 1h ≈ 10 亿帧；标注 ROI 提升 100x；去雷达项目 1 周内自动标 1 万 clips（<a href="https://towardsdatascience.com/tesla-ai-day-2021-review-part-2-training-data-how-does-a-car-learn-e8863ba3f5b0/">Tesla AI Day 2021 拆解</a>）。</li>
+<li><strong>小鹏</strong>：300+ 触发器，影子模式 + 定向触发；上传 22x、带宽 15x、集群利用率 &gt;90%、云端 10 EFLOPS、训练规模从 1M → 200M Clips、自研图灵芯片（<a href="https://www.xiaopeng.com/news/company_news/4537.html">1024 科技日</a>）。</li>
+<li><strong>理想</strong>：87 万车影子模式 + 云端世界模型 + 主流水线内嵌脱敏；云端 4.5 EFLOPS；VLA 依赖"数百万辆车构建的数据闭环"（<a href="https://pdf.dfcfw.com/pdf/H3_AP202408201639367464_1.pdf">东方财富研报</a>）。</li>
+<li><strong>Waymo</strong>：单车日产 ~25TB；200 TFLOPS 边缘计算。</li>
+</ul>
+
+<blockquote class="why">shadow mode 是 AD 数据闭环的"飞轮启动器"——它把"何时回传"从无穷多手写规则收敛到"两个模型分歧"一个统一信号。它的本质是<strong>差异采样</strong>：只采对未来训练有信息量的样本。Cruise 用误差、Tesla 用 shadow 分歧、小鹏用 300+ 触发器，看似不同，本质都是差异采样器（<a href="https://codecompass00.substack.com/p/tesla-data-engine-trigger-classifiers">trigger classifier 拆解</a>）。反事实：若没有差异采样，全量回传会让带宽和标注成本爆炸，飞轮转不动。</blockquote>
+
+<aside class="note">读者要从"shadow mode 是个技术名词"升级到"<strong>trigger classifier 是产品功能，值得作为独立子模块立项设计</strong>"。这意味着它有 PRD、有状态机、有评测指标（命中率、误触发率、覆盖长尾分布）、有版本化。读者自家业务里这块如果还散落在各团队代码里，是第一个该收口的产品机会。</aside>
+
+<h3 id="s1-2">2.2 标注段：offboard 精标 + "未来=真值"自监督</h3>
+<p>AD 标注段有两条并行路线，分别对应<strong>检测类任务</strong>和<strong>预测/规划类任务</strong>：</p>
+<ul>
+<li><strong>Offboard 3D 精标（检测类）</strong>：用多车多趟 LiDAR 序列联合优化，在 4D vector-space 重建出比单帧更精确的标注。代表：<strong>Waymo Offboard 3D Auto-Labeling</strong>（CVPR 2021，object-centric 分治，<a href="https://openaccess.thecvf.com/content/CVPR2021/papers/Qi_Offboard_3D_Object_Detection_From_Point_Cloud_Sequences_CVPR_2021_paper.pdf">论文</a>）；<strong>Tesla 4D NeRF 重建</strong>；<strong>Uber Auto4D</strong>（4D 空间 3D + 时间 1D，object size branch + motion path branch）。</li>
+<li><strong>未来=真值自监督（预测/规划类）</strong>：用未来感知结果作为"伪真值"标注过去的预测。<strong>Cruise Continuous Learning Machine（CLM）</strong>是范式开山（<a href="https://medium.com/cruise/cruises-continuous-learning-machine-predicts-the-unpredictable-on-san-francisco-roads-30d60f4c691b">Sean Harris 2020</a>），核心洞察："旧金山市区挑战场景频率是郊区 46 倍；U-turn 出现频率 &lt;0.1%"——量化了长尾问题。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph DET["检测类任务 offboard 精标"]
+    D1["多车多趟 LiDAR 序列"] --> D2["4D vector-space 重建<br/>(NeRF/object-centric)"]
+    D2 --> D3["跨帧聚合精标<br/>Waymo/Tesla/Auto4D"]
+  end
+  subgraph PRED["预测/规划类任务 自监督"]
+    P1["历史帧预测 t"] --> P2["t+N 时刻真实感知"]
+    P2 --> P3["预测 vs 真实分歧显著?<br/>误差驱动入库"]
+    P3 --> P4["未来=真值 回标过去<br/>Cruise CLM"]
+  end
+  DET -.标注喂训练.-> TRAIN[(模型)]
+  PRED -.标注喂训练.-> TRAIN
+  classDef det fill:#eaf1f8,stroke:#0b5394
+  classDef pred fill:#fff8e1,stroke:#d4a017
+  class DET det
+  class PRED pred
+</pre>
+
+<blockquote class="why">两条路线的存在理由是<strong>任务的"可自监督不变量"不同</strong>。检测类任务的不变量是"同一物体在多帧多车视角下是同一物理实体"——所以可以跨帧聚合精标。预测/规划类任务的不变量是"未来必然发生"——所以未来帧可以做过去的真值。先找到你任务的不变量，再选标注路线。反事实：检测类硬套"未来=真值"无效（物体没动）；预测类硬套"多帧聚合"无效（预测的是行为不是物体）。</blockquote>
+
+<aside class="note">这是读者最该吃透的范式：<strong>"可自监督的物理不变量"决定自动化天花板</strong>。Cruise CLM 的"未来=真值"和 Waymo Offboard 的"跨帧聚合"是两种不变量的两个范式解。Function Owner 评审自监督方案时，第一句问的是"你的不变量是什么、为什么它成立"。回答不出 = 方案不可信。读者校准报告显示这块是 <span class="tag dec">can-decide</span>（doc04 数据质量治理按错误码归因，96% 可规避论证），但要把这个能力迁移到"自监督不变量论证"上。</aside>
+
+<h3 id="s1-3">2.3 挖掘段：误差驱动 + 主动学习 + VLM/LLM 自动化</h3>
+<p>标注解决"已有数据怎么变可用"，挖掘解决"<strong>哪些数据值得采</strong>"。三条递进路线：</p>
+<ol>
+<li><strong>规则挖掘</strong>：写触发器（"急刹 + 横向加速度 &gt; X"），是早期路线，覆盖窄、维护成本高。</li>
+<li><strong>误差驱动挖掘</strong>：模型预测和真实分歧显著 → 自动入库。Cruise CLM 是开山，小鹏"算法-人分歧自动上传（无人工）"是量产版。</li>
+<li><strong>VLM/LLM 自动化数据引擎</strong>：用 foundation model 替代手写规则和人工标注。<strong>AIDE</strong>（NEC Lab，CVPR 2024，<a href="https://openreview.net/forum?id=7piDzw05kh">论文</a>）是前沿基线，被引 57+，把 active learning + self/semi-supervised labeling + error mining 拼成 pipeline。这是数据闭环平台下一代架构的 RFP。</li>
+</ol>
+
+<blockquote class="why">三路线递进的存在理由是<strong>维护成本和信息覆盖率的权衡</strong>。规则维护成本高但解释性强，适合安全关键场景；误差驱动覆盖率好但需要"未来真值"基础设施；VLM 自动化最前沿但黑盒、需要兜底。一个成熟数据闭环团队应该<strong>三路线并存</strong>而非替换——规则兜底、误差驱动做主力、VLM 探边界。反事实：若全押 VLM，遇到 VLM 自己也不认识的新长尾会盲飞；若全押规则，永远追不上长尾增速。</blockquote>
+
+<h3 id="s1-4">2.4 训练段：从单模型到端到端 VLA 范式</h3>
+<p>训练段在 AD 里正在经历<strong>感知-预测-规划三段式 → 端到端</strong>的范式切换。这块和具身侧的 VLA（Vision-Language-Action）深度交叉：</p>
+<ul>
+<li><strong>传统三段式</strong>：感知出检测结果 → 预测他车轨迹 → 规划自车动作，三段各有 loss、各有数据集。</li>
+<li><strong>端到端</strong>：直接从原始传感器输入到动作输出。Momenta "飞轮大模型"、华为 WEWA（World Engine + World Action）都在这条线上。</li>
+<li><strong>连续化输出</strong>：端到端轨迹/规划输出在离散化 vs 连续化间取舍。具身侧 <strong>π0 flow matching + action chunk=50</strong>（~1 秒，<a href="https://arxiv.org/html/2410.24164v1">论文</a>）证明连续表达在高频控制上更优，AD 端到端值得评估。</li>
+</ul>
+
+<aside class="note">训练段是 AD 数据闭环里读者最容易"只当用户不当负责人"的环节。读者校准显示这块 <span class="tag pra">practiced</span>（跟过完整闭环但没深入）。Function Owner 必修的是<strong>训练调度</strong>：理解 Determined AI 的实验/checkpoint 模型、Gang scheduling 防分布式死锁、vGPU 分配、checkpoint 续训——这些是 JoyDrive-Infra 的训练子系统核心（见教材 B）。读者当前盲区是"自家集群拓扑/容量水位仍是灰盒"（doc07 自述"数据预热，不太清楚当前几个集群"）。</aside>
+
+<h3 id="s1-5">2.5 仿真评测段：log replay + re-simulation + 世界模型（详见第 3 章）</h3>
+<p>仿真评测段决定"<strong>飞轮转得对不对</strong>"，是闭环里最被低估的高杠杆子系统。本节只给位置，详细的世界模型路线、log replay vs re-simulation、场景库+测评指标见<a href="#sec-2">第 3 章</a>。关键数字先记：<strong>华为 25 万场景库 + 500+ 类功能场景 + 200+ 测评指标</strong>；<strong>百度 PB 级场景库</strong>；<strong>Waymo Waymax + Sim Agents Challenge ~57.5 万场景</strong>。</p>
+
+<h3 id="s1-6">2.6 部署回流段：OTA 是飞轮"闭"点</h3>
+<p>部署回流是飞轮真正"闭"的点——模型上车后，真实运行数据回灌到下一轮采集/挖掘。两个关键设计：</p>
+<ul>
+<li><strong>商业架构 &gt; 技术架构</strong>：Momenta 的"Mpilot 量产喂数据 / MSD L4 吃红利"（<a href="https://www.momenta.cn/article/54.html">来源</a>）、理想的"87 万车影子模式 + OTA 回灌"，都是<strong>用低成本量产场景养高价值算法资产的双产品线互馈</strong>。做数据闭环 PM 不能只看技术，要先看商业架构是否支撑飞轮转动。</li>
+<li><strong>脱敏/合规前置嵌入</strong>：规模化下唯一可行的合规姿势是<strong>前置嵌入</strong>而非事后补丁。理想把脱敏放在"采集→脱敏→训练→OTA"链路里。这是量产车企做数据闭环的硬约束。</li>
+</ul>
+
+<blockquote class="why">"OTA 是飞轮闭点"的存在理由是<strong>没有 OTA 回灌的飞轮是开环</strong>。开环飞轮靠人工补数据，永远追不上长尾增速；闭环飞轮靠真实运行数据自动找问题。Momenta 的"闭环自动化五环（发现/记录/标注/训练/验证）"可以直接落地为数据平台五个产品模块。反事实：若没有 OTA 回灌，部署的模型在真实场景里的失败不会被自动捕获，下一版模型不会变好。</blockquote>
+
+<h3 id="s1-7">2.7 物理不变量决定自动化天花板（本章核心）</h3>
+<p>把七段收敛到一个判断框架：每个 AD 团队的自动化天花板由它<strong>能自监督的物理不变量</strong>决定。</p>
+
+<pre class="mermaid">
+flowchart LR
+  INV["物理不变量<br/>(同一物体多帧一致 / 未来必然发生 / ... )"] -->|"成立"| SS["自监督可行性"]
+  SS --> AL["自动标注覆盖率"]
+  SS --> EM["误差驱动挖掘命中率"]
+  AL --> CAP["自动化天花板"]
+  EM --> CAP
+  INV -.不成立.-> NOSS["必须人工标注<br/>天花板=人工预算"]
+  classDef ok fill:#eaf1f8,stroke:#0b5394
+  classDef bad fill:#fce4ec,stroke:#880e4f
+  class SS,AL,EM,CAP ok
+  class NOSS bad
+</pre>
+
+<blockquote class="why">这个框架的存在理由是<strong>把"做数据闭环"从工程问题升级为范式问题</strong>。低水平团队卡在"标注精度不够"，高水平团队卡在"找不到可自监督的不变量"。读者做数据闭环 PM，每接到一个新任务先问"它的物理不变量是什么、为什么成立、怎么验证"，回答不出来就别立项。反事实：在不成立不变量的任务上砸钱做自监督，会得到看似高自动标注率、实际标注质量塌方的灾难。</blockquote>
+
+<aside class="note">这条洞察最难内化。读者校准报告显示"<strong>失败模式 / 边界 case 是系统性缺口</strong>"——这恰好和"物理不变量不成立的边界"对应。doc14 偶尔做对了"等灯场景对连续轨迹算子是否不连续"的边界疑问，但 20 HDMAP API 完全无降级/限流/重试、18 训练平台无容灾评估。读者下个阶段要练的能力就是<strong>对每个范式问"它在什么边界上不成立"</strong>。</aside>
+
+<div class="summary">
+AD 数据闭环 7 段：<strong>采集</strong>（量产车队=差异采样器，<span class="tag dec">can-decide</span>）→ <strong>标注</strong>（offboard 精标 + 未来=真值，<span class="tag pra">practiced</span>）→ <strong>挖掘</strong>（误差驱动+VLM，<span class="tag pra">practiced</span>）→ <strong>训练</strong>（端到端 VLA 范式切换，<span class="tag pra">practiced</span>）→ <strong>仿真评测</strong>（log replay + 世界模型，<span class="tag int">introduced</span>）→ <strong>部署回流 OTA</strong>（飞轮闭点，<span class="tag pra">practiced</span>）→ 收敛：<strong>物理不变量决定自动化天花板</strong>。商业架构 &gt; 技术架构（Momenta 双产品线互馈）。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 仿真·场景库·世界模型·长尾挖掘</h2>
+
+<p>仿真评测段是 AD 数据闭环里被严重低估的高杠杆子系统。它决定"<strong>飞轮转得对不对</strong>"，而不只是"转得快不快"。本节按"两种仿真范式 → 世界模型两条技术路线 → 场景库+测评指标体系 → 生成式造难例"展开。</p>
+
+<h3 id="s2-1">3.1 log replay vs re-simulation：两种仿真范式不是对立是分工</h3>
+<p>仿真段最容易被新手混淆的概念是<strong>log replay（回放）</strong>和<strong>re-simulation（重仿真）</strong>。两者不是对立而是分工（<a href="https://www.appliedintuition.com/blog/closed-loop-log-replay">Applied Intuition 解析</a>）：</p>
+<table>
+<tr><th>范式</th><th>原理</th><th>适合</th><th>局限</th></tr>
+<tr><td><strong>log replay</strong>（开环/半闭环）</td><td>把真实 log 回放，模型输出不反馈到环境</td><td>感知/预测回归、量化模型在某段真实数据上的表现</td><td>无法测试"模型动作改变后他车如何反应"</td></tr>
+<tr><td><strong>re-simulation</strong>（闭环）</td><td>用世界模型/Sim Agents 响应模型动作，闭环演化</td><td>规划/控制任务、测试对抗场景、长尾边界</td><td>仿真保真度依赖世界模型质量</td></tr>
+<tr><td><strong>双层回归</strong></td><td>log replay + re-simulation 叠加</td><td>量产回归套件（既能测感知又能测规划）</td><td>工程复杂度高，需要统一评测框架</td></tr>
+</table>
+
+<blockquote class="why">两种范式分工的存在理由是<strong>任务类型决定仿真方式</strong>。感知模型输出不影响环境（你识别错了一个车，那车不会因为你识别错就改变轨迹），所以 log replay 够用。规划模型输出会改变环境（你变道了，他车会避让），所以必须 re-simulation。Function Owner 设计评测套件时按任务类型分配两种范式比例。反事实：规划任务只用 log replay，会得到"模型在真实数据上表现好"的虚假结论，因为没测试它动作改变后他车的反应。</blockquote>
+
+<aside class="note">读者校准显示<strong>评测闭环是 introduced 盲区</strong>（doc22 HIL 是性能观测平台，作为数据闭环评测段自己写"Q2-Q3 才纳入"）。这是从 PM 跨到 Function Owner 必须补的硬技能。建议直接对标 JoyDrive-Infra 的 evaluation-data-service（"行云缺陷 → 评测准入 → 自动触发推理流水线 → 状态回填"），它是当前读者能接触到的最近距离的运行中评测闭环实现。精读 <code>doc/evaluation-data-service.md</code>。</aside>
+
+<h3 id="s2-2">3.2 世界模型：渲染层（像素扩散）vs 决策层（占据自回归）的路线分水岭</h3>
+<p>世界模型不是单一技术，是<strong>两条路线</strong>：渲染层生成像素级未来画面，决策层生成占据栅格/语义级未来状态。两者解决不同问题、训练数据不同、用途不同。</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph R["渲染层世界模型（像素扩散）"]
+    R1["输入：当前帧+动作"] --> R2["扩散模型生成未来像素"]
+    R2 --> R3["输出：未来视频帧"]
+    R3 --> R4["用途：仿真可视化、生成式补数据"]
+    R5["代表：Wayve GAIA-3 / DriveDreamer"]
+  end
+  subgraph D["决策层世界模型（占据自回归）"]
+    D1["输入：当前占据栅格+动作"] --> D2["自回归预测未来占据"]
+    D2 --> D3["输出：占据栅格序列"]
+    D3 --> D4["用途：规划训练、安全评测"]
+    D5["代表：OccWorld"]
+  end
+  classDef r fill:#eaf1f8,stroke:#0b5394
+  classDef d fill:#fff8e1,stroke:#d4a017
+  class R r
+  class D d
+</pre>
+
+<ul>
+<li><strong>渲染层</strong>：Wayve GAIA-3（<a href="https://wayve.ai/thinking/gaia-3/">博客</a>）Scaling World Models to Power Safety and Evaluation；DriveDreamer（<a href="https://arxiv.org/abs/2309.09777">论文</a>）。生成像素级未来，主要用于仿真可视化和生成式补数据。</li>
+<li><strong>决策层</strong>：OccWorld（<a href="https://github.com/wzzheng/OccWorld">开源</a>）做占据栅格自回归。更适合规划训练（不需要像素细节，需要的是"前方会不会被堵住"的决策信息）。</li>
+<li><strong>Waabi World</strong>（<a href="https://waabi.ai/insights/how-waabi-world-works">博客</a>）：把生成式 AI 闭环做到旗舰路线，配合 UniSim、Copilot4D、RTR、TraVL。</li>
+</ul>
+
+<blockquote class="why">两条路线分水岭的存在理由是<strong>评测目标和训练目标不同</strong>。视觉评测/感知训练需要像素真实感，所以渲染层合适。规划训练需要决策关键信息（哪里能走哪里不能），所以决策层合适。NVIDIA《Beyond Behavior Cloning》综述（<a href="https://research.nvidia.com/publication/2025-12_beyond-behavior-cloning-autonomous-driving-survey-closed-loop-training">论文</a>）给出三维评估框架：<strong>动作生成 × 环境响应 × 训练目标</strong>——选论文时要按这三轴评估落地成本，而非只看 SOTA 分数。反事实：把渲染层世界模型用于规划训练，会浪费大量算力生成无用的像素细节。</blockquote>
+
+<aside class="note">"渲染层 vs 决策层"是读者判断世界模型相关论文/产品的元地图。看到任一世界模型先问"它在哪一层"，立刻能判断它的训练数据需求、算力成本、用途边界。这是仿真段 <span class="tag dec">can-decide</span> 级判断的入场券。</aside>
+
+<h3 id="s2-3">3.3 场景库 + 测评指标体系：被低估的高杠杆子系统</h3>
+<p>场景库 + 测评指标决定"<strong>飞轮转得对不对</strong>"。它是独立产品线，不是附属工具。标杆：</p>
+<ul>
+<li><strong>华为 ADS 4.0</strong>：25 万场景库 + 500+ 类功能场景 + 200+ 测评指标；云端 7.5 EFLOPS；日行 3500 万公里；模型 5 天迭代；6 亿公里仿真（<a href="https://auto.huawei.com/cn/ads">官方</a>）。</li>
+<li><strong>百度 Apollo</strong>：PB 级场景库（真实 + 虚拟）；文心大模型数据智能搜索引擎 + 数据中台 PaaS 化。</li>
+<li><strong>Waymo</strong>：Waymax + Sim Agents Challenge ~57.5 万场景；Waymo Open Dataset。</li>
+<li><strong>Mobileye Meteor + Genario</strong>（<a href="https://www.mobileye.com/blog/diagnosing-the-long-tail-how-mobileye-turns-edge-cases-into-targeted-training/">博客</a>）：Diagnosing the Long Tail——把边缘 case 系统化变成定向训练数据。</li>
+</ul>
+
+<blockquote class="why">场景库+测评指标独立立项的存在理由是<strong>它防的是"飞轮空转"</strong>。没有它，团队可能狂采数据、狂标数据、狂训练，但模型在关键场景上的表现反而下降（因为评测不准、回归不全面）。华为的 200+ 测评指标本质上是"我们承诺这 200 个场景上模型必须过"的<strong>契约</strong>，不是 KPI。建议把"场景库 + 测评指标体系"作为独立产品线立项，配合 ASAM OpenSCENARIO 2.0 做可互换防工具锁定（<a href="https://www.asam.net/standards/detail/openscenario-dsl/">标准</a>）。反事实：场景库附属在仿真工具下，工具一换场景全丢，多年积累归零。</blockquote>
+
+<aside class="note">读者校准显示<strong>"验收格多处空缺、能力间依赖/冲突仲裁未定义"</strong>——这恰好是场景库+测评指标体系的核心要素。把测评指标设计成"契约"（200 个场景必须过、不过不能交付），就是 JoyDrive-Infra 那种"血缘校验作为交付前置门禁"在评测段的同构。建议读者下一步把"测评指标 = 契约"这件事写成治理型 PRD。</aside>
+
+<h3 id="s2-4">3.4 生成式造难例：长尾靠"造"而非只靠"等"是范式切换</h3>
+<p>这是 AD 数据闭环当前最大的范式切换。当真实采集边际成本高（卡车/长尾）时，"生成式补数据"是比"扩车队"更陡的 scaling 曲线。三个标杆：</p>
+<ul>
+<li><strong>华为</strong>：扩散模型 1 秒生成 1000 极端场景，"AI 教 AI"。</li>
+<li><strong>Waabi</strong>：<strong>非对称自对弈</strong>（<a href="https://waabi.ai/research/selfplay">论文</a>）自动生成让 student 失败的场景；Volvo VNL 卡车零样本迁移；2025/06 Mixed Reality Testing。</li>
+<li><strong>Cruise</strong>：误差驱动全量挖掘，预测-未来现实分歧显著 → 自动入库。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart LR
+  REAL["真实路采<br/>边际成本递增"] -->|"等"| TAIL1["长尾覆盖增长慢"]
+  GEN["生成式造难例<br/>边际成本递减"] -->|"造"| TAIL2["长尾覆盖指数增长"]
+  GEN -.对应具身 GraspVLA.-> GEN2["GraspVLA<br/>10亿帧合成预训练"]
+  GEN -.对应 Waabi 自对弈.-> GEN3["非对称自对弈<br/>找 student 失败场景"]
+  classDef real fill:#fce4ec,stroke:#880e4f
+  classDef gen fill:#e8f5e9,stroke:#1b5e20
+  class REAL,TAIL1 real
+  class GEN,TAIL2,GEN2,GEN3 gen
+</pre>
+
+<blockquote class="why">"造"优于"等"的存在理由是<strong>scaling 曲线斜率不同</strong>。真实路采的 scaling 曲线是凸函数（边际成本递增，因为越长的尾越难遇到），生成式造难例的 scaling 曲线是凹函数（边际成本递减，因为算力是规模化的）。当数据量需求超过某拐点，生成式一定赢。反事实：在拐点之前硬上生成式，会出现"模型在合成数据上 SOTA、真实场景上崩盘"——所以必须配真实数据校准（Waabi World 用真实 log 正则化、GraspVLA 用少样本微调）。</blockquote>
+
+<aside class="note">这条洞察和第 6 章具身智能的"合成优先"路线是同一现象在两个领域的投影。读者要建立的判断力是：<strong>真实数据和合成数据不是二选一，是配比问题</strong>。配比由安全等级（AD 强监管、具身宽松）和长尾密度共同决定。这个判断直接决定数据预算分配，是 Function Owner 级别的决策。</aside>
+
+<div class="summary">
+仿真段四要素：<strong>log replay vs re-simulation 按任务类型分工</strong>（感知用 replay、规划用 re-sim）→ <strong>世界模型两层路线</strong>（渲染层像素扩散 vs 决策层占据自回归）→ <strong>场景库+测评指标独立立项</strong>（防飞轮空转、华为 25 万场景+200 指标）→ <strong>生成式造难例</strong>（scaling 曲线比真实采集陡）。读者盲区：评测闭环 <span class="tag int">introduced</span>，下阶段必修；世界模型路线判断 <span class="tag int">introduced</span>，要补"渲染层 vs 决策层"判断框架。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 数据基建栈：六层横向底座</h2>
+
+<p>数据基建栈是横跨 AD 与具身的底座，决定上层飞轮的转速上限和方向是否正确。它有六个独立关注点，<strong>共识是"OpenLineage 当标准 + DataHub/OpenMetadata 当平台"</strong>——不要让一个工具扛所有职责（参考 <a href="https://thedataguy.pro/writing/2025/08/open-source-data-governance-frameworks/">TheDataGuy 2025 对比</a>）。本节按"表格式 → 版本化 → 血缘 → 质量 → 元数据 → feature store"六层展开。</p>
+
+<h3 id="s3-1">4.1 lakehouse 表格式：Iceberg / Delta / Hudi / Paimon 按写入模式选</h3>
+<p>表格式选型不是看"哪个最好"，是看"<strong>你的写入模式是什么</strong>"。选错会引发格式锁死或写入性能灾难。</p>
+<table>
+<tr><th>表格式</th><th>适合写入模式</th><th>绑定生态</th><th>AD 场景结合点</th></tr>
+<tr><td><strong>Apache Iceberg</strong></td><td>纯追加、多引擎中立</td><td>社区最活、隐藏分区</td><td>感知日志追加写入</td></tr>
+<tr><td><strong>Delta Lake</strong></td><td>通用</td><td>绑定 Databricks</td><td>已在 Databricks 栈内的团队</td></tr>
+<tr><td><strong>Hudi MoR</strong></td><td>高频 upsert/CDC</td><td>Uber/ByteDance/Robinhood 验证（<a href="https://hudi.apache.org/blog/2025/07/21/mor-comparison/">案例</a>）</td><td>车队元数据/标注迭代/GDPR 删除</td></tr>
+<tr><td><strong>Apache Paimon</strong></td><td>流式湖仓、Flink 原生</td><td>国产 EV 生态（理想/蔚来）</td><td>流批一体 + Flink + Doris/Hologres</td></tr>
+</table>
+
+<blockquote class="why">按写入模式选的存在理由是<strong>不同表格式优化的写入路径完全不同</strong>。Iceberg 优化 append-only（每次写一个新 snapshot、合并快）；Hudi MoR 优化 upsert（行级更新走 log、compaction 后合并）；Paimon 优化流批一体（Flink 实时写、批查询读）。错配会出现"Iceberg 上跑高频 upsert，每次写产生大量小文件"或"Hudi 上跑纯 append，compaction 白耗算力"。XTable 技术可对冲格式锁死（跨格式读写）。反事实：纯政治考量选格式（"老板喜欢 Databricks"），技术债会在 2 年后爆发。</blockquote>
+
+<aside class="note">读者校准显示<strong>"数仓物理设计（ER/分片/分区键/SLA）是 introduced 盲区"属实</strong>（doc07"层间 ER 表待补充"至今空、无分区/排序/分桶、性能只给定性、选型无论证）。但<strong>"帧级规模风险论证 can-decide"被低估</strong>（doc07 用 5 分片×5000 万=2.5 亿算 ES 硬上限、3.5 亿瘫痪、Q2 风险拐点）。所以读者缺的不是物理量化能力，是物理设计的<strong>工程化落地</strong>。建议精读 <a href="https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison">Onehouse 2025-10 横向对比</a>，把 doc07 的"层间 ER 表"补成 migrations+分区键设计。</aside>
+
+<h3 id="s3-2">4.2 数据版本化：lakeFS / DVC / Pachyderm 按对象类型选</h3>
+<p>版本化不是单一技术，是<strong>三个对象类型对应三个工具</strong>：</p>
+<ul>
+<li><strong>lakeFS</strong>（<a href="https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered">2025-11 收购 DVC</a>）：服务端、PB 级 Git 语义、零拷贝 branch。<strong>版本化对象存储数据湖表</strong>。</li>
+<li><strong>DVC</strong>：客户端、ML 数据集 + 代码。<strong>版本化 ML 数据集 + 模型 + pipeline</strong>，保持开源。</li>
+<li><strong>Pachyderm</strong>：pipeline-centric。<strong>需要内建血缘 + 容器化</strong>。</li>
+</ul>
+
+<blockquote class="why">三个工具按对象类型分工的存在理由是<strong>"版本"在不同对象上的语义不同</strong>。数据湖表的版本是"快照"（不可变、可 branch、可 zero-copy clone），所以 lakeFS 用 Git 语义。ML 数据集的版本是"训练输入"（要 pin 死、要和模型绑定），所以 DVC 把数据集 hash 进 commit。Pipeline 的版本是"加工逻辑"（要重跑、要追溯），所以 Pachyderm 把血缘内建。反事实：用 DVC 管数据湖表，会发现没有 server 端一致性、跨团队 branch 协作困难。</blockquote>
+
+<aside class="note">读者校准重要修正：<strong>"版本机制不弱、血缘是真的弱"</strong>。doc03 的 snapshot/不可变/clone/准入三件套 + run_id↔dataset_version_id 映射，与 JoyDrive DataArtifact 同构，是 <span class="tag pra">practiced</span>。读者之前笼统说"数据版本与血缘是弱项"是错的，要分开精进——版本机制重点是落地（doc03 功能 7 训练追溯先做掉、给出存储拓扑设计），血缘是 introduced 真盲区。</aside>
+
+<h3 id="s3-3">4.3 数据血缘：OpenLineage 是标准、DataHub 是消费者、血缘 vs 版本要分清</h3>
+<p>血缘段的核心共识是"<strong>先标准化事件，再选消费者</strong>"。OpenLineage 是<strong>协议/标准</strong>不是平台（<a href="https://datahub.com/blog/open-source-data-lineage/">DataHub 博客</a>）。三大引擎（Airflow/Spark/dbt）插 listener 产生 OpenLineage 事件，再由 DataHub/Marquez 消费。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph P["生产端（产生 lineage 事件）"]
+    AF["Airflow listener"]
+    SP["Spark listener"]
+    DBT["dbt listener"]
+  end
+  OL["OpenLineage 事件标准<br/>(协议、非平台)"]
+  subgraph C["消费端（构建血缘图）"]
+    DH["DataHub<br/>(列级+实时+MCP Server)"]
+    MZ["Marquez<br/>(参考后端)"]
+    OM["OpenMetadata<br/>(统一+内置质量)"]
+  end
+  AF --> OL
+  SP --> OL
+  DBT --> OL
+  OL --> DH
+  OL --> MZ
+  OL --> OM
+  classDef p fill:#eaf1f8,stroke:#0b5394
+  classDef s fill:#fff8e1,stroke:#d4a017
+  classDef c fill:#e8f5e9,stroke:#1b5e20
+  class P p
+  class OL s
+  class C c
+</pre>
+
+<blockquote class="why">"标准先于平台"的存在理由是<strong>避免被单一血缘平台锁定</strong>。OpenLineage 是事件协议，任何符合协议的生产端（Airflow/Spark/dbt）和消费端（DataHub/Marquez/OpenMetadata）都能互通。换消费端不丢历史事件、换生产端不重写消费逻辑。反事实：直接用 DataHub 私有 API 产生血缘，未来想换 OpenMetadata 必须全部重写。</blockquote>
+
+<aside class="note">读者最大盲区之一：<strong>血缘 vs 版本不要打包成同一个弱项</strong>。<strong>版本</strong>回答"这是哪个快照"（snapshot_id），<strong>血缘</strong>回答"这个快照怎么来的"（DAG 边）。JoyDrive-Infra 把两者放一起：artifact_id 是版本、血缘边是 metadata-service 维护的"上游 artifact → 下游 artifact"图。读者 doc10 血缘只到 traceid 示意图、存储选型"apache atlas?"打问号、无校验、无故障模式——是 <span class="tag int">introduced</span>。要把 doc10 升级成"实体关系 + 控制面 API 事件驱动 + 血缘校验作为发布前置"（精读 JoyDrive <code>doc/data-artifact-registry-design.md</code>）。<strong>另一个关键修正</strong>：doc10 元数据停在 clip 颗粒度，但 doc07 自己论证"价值单位是 frame"——读者两份文档打架，frame 级元数据/血缘没设计。这不是小细节，是数据架构的根基。</aside>
+
+<h3 id="s3-4">4.4 数据质量：质量门禁前置 + WAP 模式 + 质量分作为血缘一等属性</h3>
+<p>数据质量在 AD 里是<strong>灾难性约束</strong>——"脏一行毁一个 epoch"。共识是<strong>质量门禁前置到 ingest</strong>，配合 WAP（Write-Audit-Publish）模式把质量内建到表格式：</p>
+<table>
+<tr><th>工具</th><th>定位</th><th>适合栈</th></tr>
+<tr><td><strong>Great Expectations</strong></td><td>Python + Data Docs</td><td>Python notebook 探查</td></tr>
+<tr><td><strong>Deequ</strong></td><td>Spark + AWS，约束 ML 推荐器</td><td>Spark 大规模</td></tr>
+<tr><td><strong>Soda Core</strong></td><td>SQL + YAML</td><td>SQL 仓库 + CI</td></tr>
+<tr><td><strong>dbt tests</strong></td><td>dbt 内建</td><td>dbt 转换链</td></tr>
+<tr><td><strong>Databricks DQX</strong></td><td>绑定 Databricks</td><td>Databricks 栈</td></tr>
+<tr><td><strong>Pandera</strong></td><td>Python DataFrame</td><td>Pandas/Polars 探查</td></tr>
+</table>
+
+<blockquote class="why">WAP（Write-Audit-Publish）模式的存在理由是<strong>把"质量验证"从事后补丁变成发布前置门禁</strong>。先 Write 到隐藏分区、Audit 跑质量断言、通过才 Publish 给消费端。质量断言结果回写 DataHub/OpenMetadata，让质量分成为血缘图的一等属性。反事实：事后补丁模式（先发布再发现问题）会出现"消费端已经在用的数据被发现有质量问题"，要么停训练修数据要么带病训练。</blockquote>
+
+<aside class="note">读者<strong>"数据质量治理 can-decide"</strong>是隐藏强项（doc04 三道 Gate 熔断 + 96% 可规避 + 小马 43700 条失败/80% 无错误码、按算子逐条归因）。但治理落成 SOP 而非 migrations+状态机代码——这是 <span class="tag pra">practiced</span> → <span class="tag dec">can-decide</span> 的最后一步。读者自家业务的"数据质量分"目前是 Excel 案例，未沉淀成 SLI/SLO/告警阈值产品。把它升级成 WAP + 质量分血缘一等属性，就是把 doc04 的判断力固化进系统的关键一步。</aside>
+
+<h3 id="s3-5">4.5 元数据治理：DataHub vs OpenMetadata 二选一</h3>
+<p>元数据治理 AI-forward 团队优先 DataHub/OpenMetadata 二选一，避开 Atlas/Amundsen（已边缘化）。</p>
+<table>
+<tr><th></th><th>DataHub</th><th>OpenMetadata</th></tr>
+<tr><td><strong>定位</strong></td><td>实时事件 + MCP Server 面向 AI Agent + Actions Framework</td><td>统一 + 内置质量 + MLflow 集成</td></tr>
+<tr><td><strong>部署</strong></td><td>4-8 周</td><td>2-4 周</td></tr>
+<tr><td><strong>杀手特性</strong></td><td>MCP Server 让 AD Agent 编程化查"这版模型用了哪些数据/质量分/owner"</td><td>开箱即用、上手快</td></tr>
+<tr><td><strong>适合</strong></td><td>有 AI Agent 战略的大团队</td><td>快速起步的中小团队</td></tr>
+</table>
+
+<blockquote class="why">DataHub 的 MCP Server 杀手特性的存在理由是<strong>它把元数据从"给人看"升级为"给 Agent 调用"</strong>。DataHub MCP Server 让 AD Agent 能编程化查"这版模型用了哪些数据、质量分多少、owner 是谁"——这是 LLM 时代元数据平台的核心价值。OpenMetadata 没有等价能力但部署快、内置质量。团队按"是否在 AI Agent 战略"二选一。反事实：用 Atlas/Amundsen，未来想做"Agent 自助查元数据"会卡在生态缺失。</blockquote>
+
+<h3 id="s3-6">4.6 feature store：point-in-time 正确性是底线、归属是谈判地</h3>
+<p>feature store 是负责人绕不开的跨团队接口。两个硬知识点：</p>
+<p><strong>(1) point-in-time 正确性是时序 ML 的底线</strong>。feature store 的核心价值不是缓存，是<strong>"训练时只拿事件时间之前的特征值"</strong>。AD 感知/预测模型的 label 都是未来帧，没有这个保证，训练集会"偷看未来"导致 AUC 虚高且无法复现（<a href="https://resources.tecton.ai/hubfs/Choosing-Feature-Solution-Feast-or-Tecton.pdf?hsLang=en">Tecton 选型指南</a>）。</p>
+<p><strong>(2) feature store 是数据平台与 ML 平台的谈判地</strong>。归属（基础设施 vs 特征定义）、在线/离线一致性 SLA、发现机制三件事必须<strong>提前写死</strong>。Uber Palette 按实体组织、Pinterest 两工程师逐步标准化——都可迁移（<a href="https://www.uber.com/us/en/blog/palette-meta-store-journey/">Uber Palette 博客</a>）。</p>
+
+<table>
+<tr><th>方案</th><th>定位</th><th>适合</th></tr>
+<tr><td><strong>Feast</strong></td><td>开源自管</td><td>算法栈强 + 成本敏感</td></tr>
+<tr><td><strong>Tecton</strong></td><td>托管，声明式 transformation</td><td>要托管 + 流式 + point-in-time 保证</td></tr>
+<tr><td><strong>Hopsworks</strong></td><td>point-in-time 一致性强</td><td>对一致性最敏感的场景</td></tr>
+<tr><td><strong>Databricks / SageMaker</strong></td><td>云绑定</td><td>已在云栈内的团队</td></tr>
+</table>
+
+<blockquote class="why">"feature store 是谈判地"的存在理由是<strong>它同时被数据平台和 ML 平台觊觎</strong>。数据平台认为"特征是数据资产，归我"；ML 平台认为"特征是训练输入，归我"。如果不提前写死归属，会出现两个团队各搞一套、特征口径分裂、训练和生产特征不一致的灾难。point-in-time 正确性是硬底线，没有它训练 AUC 虚高且无法复现。反事实：feature store 归属不写死，离线 batch 标注特征和车端在线推理特征对不齐，模型上车后效果大幅下降。</blockquote>
+
+<aside class="note">"feature store 是谈判地"这条洞察对读者最重要。读者校准显示<strong>"数研冲突已暴露"</strong>、<strong>"治理结构定义权让渡给平台方"</strong>——这正是 feature store 归属谈判失败的典型症状。读者下个阶段要练的就是<strong>"在跨团队谈判（feature store 归属、SLA、发现机制）上代表平台方拍板"</strong>。这不是技术问题，是治理结构问题。把归属、SLA、发现机制写进治理型 PRD（第 8 章给模板），把谈判从"听产品的"变成"听流程的"。</aside>
+
+<div class="summary">
+数据基建六层：<strong>表格式</strong>（按写入模式选，Iceberg/Delta/Hudi/Paimon）→ <strong>版本化</strong>（按对象类型选，lakeFS/DVC/Pachyderm；版本≠血缘）→ <strong>血缘</strong>（OpenLineage 标准先行 + DataHub/OpenMetadata 消费）→ <strong>质量</strong>（WAP 模式前置门禁 + 质量分作为血缘一等属性）→ <strong>元数据</strong>（DataHub/OpenMetadata 二选一，AI Agent 战略选 DataHub MCP Server）→ <strong>feature store</strong>（point-in-time 是底线 + 归属是谈判地）。读者关键修正：版本机制 <span class="tag pra">practiced</span>、血缘 <span class="tag int">introduced</span>，不要打包成同一弱项。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 流处理 · OLAP · 编排 · MLOps</h2>
+
+<p>这是支撑数据闭环飞轮"实时性 + 多维查询 + 任务调度 + ML 全生命周期"的横向能力层。本节给四块的选型逻辑和 AD 场景结合点。</p>
+
+<h3 id="s4-1">5.1 流处理：Flink 几乎是 AD 唯一选择</h3>
+<p>AD 流处理的核心需求是<strong>多传感器对齐、去重、窗口聚合</strong>——这些都刚需 stateful processing + watermark + exactly-once。Apache Flink 是首选：</p>
+<ul>
+<li><strong>Flink</strong>（<a href="https://nightlies.apache.org/flink/flink-doc-stable/docs/concepts/stateful-stream-processing/">官方概念</a>）：stateful + exactly-once + watermark + 流批一体。AD 多传感器对齐/去重/窗口聚合刚需 stateful；watermark 处理车端乱序。</li>
+<li><strong>Spark Structured Streaming</strong>：micro-batch，延迟不如 Flink。</li>
+<li><strong>Kafka Streams</strong>：嵌入式，规模受限。</li>
+<li><strong>Flink Serverless</strong>：托管版。</li>
+</ul>
+<p><strong>工业标杆：理想汽车 Hologres+Flink 万亿级车联网</strong>（<a href="https://developer.aliyun.com/article/1686564">案例</a>）：150 万 RPS、10 秒增量 ETL 框架、端到端延迟 &lt;2s、冷热比从 2:1 → 5:1、计算成本 -40%。还有<strong>蔚来 Flink 实时计算平台</strong>（<a href="https://developer.aliyun.com/article/891962">FFA 2021</a>）。</p>
+
+<blockquote class="why">Flink 是 AD 唯一选择的存在理由是<strong>stateful + watermark + exactly-once 三件套在车端场景不可替代</strong>。车端多传感器（相机/LiDAR/Radar）数据时序错位、网络回传乱序，没有 watermark 就无法定义"何时算迟到"；没有 exactly-once，故障恢复会重复或丢数据；没有 stateful，跨传感器对齐要自己造状态机。反事实：用 Kafka Streams 做多传感器对齐，状态管理会让代码复杂度爆炸。</blockquote>
+
+<h3 id="s4-2">5.2 OLAP：按"评测多 JOIN / 采集监控 / 日志聚合"分场景选</h3>
+<table>
+<tr><th>方案</th><th>定位</th><th>AD 场景</th></tr>
+<tr><td><strong>Doris</strong></td><td>多维 JOIN 强、国产生态</td><td>评测段（模型版本×场景×指标）多维 JOIN</td></tr>
+<tr><td><strong>StarRocks</strong></td><td>联邦查询</td><td>跨数仓联邦查询</td></tr>
+<tr><td><strong>ClickHouse</strong></td><td>单表、压缩、成本</td><td>高基数日志聚合、监控</td></tr>
+<tr><td><strong>Druid</strong></td><td>高并发摄入、时序</td><td>车队覆盖率看板、采集段监控</td></tr>
+</table>
+
+<blockquote class="why">按场景选 OLAP 的存在理由是<strong>不同 OLAP 优化的查询形态完全不同</strong>。Doris/StarRocks 优化多维 JOIN（评测段要 JOIN 模型/场景/指标三张表）；ClickHouse 优化单表压缩聚合（监控日志几十亿行，不需要 JOIN）；Druid 优化高并发摄入 + 时序看板（车端 150 万 RPS 实时摄入）。反事实：用 ClickHouse 跑评测段多维 JOIN，会卡在 JOIN 性能；用 Doris 跑高基数日志聚合，会浪费 JOIN 优化能力。</blockquote>
+
+<aside class="note">读者自家 aicoding 搭过 argo+k8s+flink+clickhouse 数仓 + onboard 监测平台——这是 <span class="tag dec">can-decide</span> 级别的差异化优势（JoyDrive-Infra 没有直接对标这块）。要继续往深做：可观测性、数据质量、实时闭环指标。这是读者从"PM 跨到架构师"的护城河。</aside>
+
+<h3 id="s4-3">5.3 编排：task-centric vs data-centric 是范式分水岭</h3>
+<p>编排工具 2025 格局最重要的判断不是"哪个下载量高"，是<strong>范式分水岭</strong>（<a href="https://www.pracdata.io/p/state-of-workflow-orchestration-ecosystem-2025">State of Workflow Orchestration 2025</a>）：</p>
+<ul>
+<li><strong>task-centric</strong>：Airflow（大厂默认）。任务是一等公民，数据是任务的输入输出。</li>
+<li><strong>data-centric / asset-centric</strong>：Dagster、Flyte。数据资产（数据集/模型版本/评测报告）是一等公民。</li>
+<li><strong>K8s 原生</strong>：Argo Workflows（GPU 任务强）、Kubeflow 底层就是 Argo。</li>
+<li><strong>AI/LLM 集成</strong>：Prefect。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart TB
+  Q["AD 闭环里<br/>'数据集/模型版本/评测报告'<br/>是不是一等公民?"]
+  Q -->|"是 → data-centric"| DC["Dagster / Flyte<br/>(asset-centric)"]
+  Q -->|"否 → task-centric"| TC["Airflow<br/>(大厂默认)"]
+  Q -->|"K8s 平台+大量 GPU 任务"| AR["Argo Workflows<br/>(Kubeflow 底层)"]
+  DC -.推荐.-> REC["AD 推荐 Argo/Dagster<br/>而非 Airflow"]
+  AR -.推荐.-> REC
+  classDef dc fill:#eaf1f8,stroke:#0b5394
+  classDef tc fill:#fff8e1,stroke:#d4a017
+  classDef ar fill:#e8f5e9,stroke:#1b5e20
+  classDef rec fill:#fce4ec,stroke:#880e4f
+  class DC dc
+  class TC tc
+  class AR ar
+  class REC rec
+</pre>
+
+<blockquote class="why">范式分水岭的存在理由是<strong>AD 闭环的核心资产是数据/模型/评测报告，不是任务</strong>。data-centric 编排把数据资产做成一等公民——你声明"我要这个数据集版本"，Dagster 自动反推依赖任务、自动重跑过期数据。task-centric 要你自己维护"任务 A 的输出是任务 B 的输入"的映射。AD 闭环"数据集/模型版本/评测报告"明确是一等公民，所以推荐 Argo/Dagster 而非 Airflow。反事实：用 Airflow 管 AD 闭环，数据集版本变更时要手动改一堆 DAG。</blockquote>
+
+<h3 id="s4-4">5.4 ML 训练编排：Kubeflow 管 DAG + Ray 管算力分层</h3>
+<p>最务实的姿势是<strong>把 K8s 做成"Invisible Infrastructure"</strong>（KubeRay/Kubeflow SDK 抽象），算法团队不碰 YAML：</p>
+<ul>
+<li><strong>Ray</strong>（分布式训练 + Ray Serve + RL）：步间延迟关键、端到端大模型/RL。</li>
+<li><strong>Kubeflow</strong>（端到端 MLOps + KServe）：标准化多模型生命周期 + 多团队，治理强。</li>
+<li><strong>Metaflow</strong>：devex 优先，治理弱。</li>
+<li><strong>KubeRay</strong>：让 Ray 和 Kubeflow 同集群共存。</li>
+</ul>
+<p><strong>推荐组合：Kubeflow 管 DAG + Ray 管算力</strong>（<a href="https://ayedo.de/en/posts/cloud-native-ai-pipelines-mlops-mit-kubeflow-vs-ray/">ayedo.de 对比</a>）。这是大团队最务实的分层。</p>
+
+<blockquote class="why">分层组合的存在理由是<strong>Kubeflow 和 Ray 各自的强项不重叠</strong>。Kubeflow 强在 DAG 编排和治理（多团队、多模型、多环境），Ray 强在算力调度（分布式训练、RL、步间延迟）。让 Kubeflow 管"做什么"（DAG）、Ray 管"怎么跑"（算力），各司其职。反事实：让 Kubeflow 跑 RL，步间延迟会拖慢整个训练；让 Ray 管 DAG，治理能力不够，多团队协作会混乱。</blockquote>
+
+<aside class="note">这是读者训练调度盲区的关键。JoyDrive-Infra 用 Determined AI 做训练调度（精读 <code>doc/det-cli-integration.md</code>）——Determined 是另一个选择，强在实验/checkpoint 模型。读者要建立的判断力是<strong>"Kubeflow vs Ray vs Determined vs Metaflow"选型评审能拍板</strong>。判断维度：是端到端大模型/RL（Ray）还是标准化多模型生命周期（Kubeflow）还是实验/checkpoint 治理强（Determined）。</aside>
+
+<div class="summary">
+横向支撑四块：<strong>流处理</strong>（Flink 几乎是 AD 唯一选择，stateful+watermark+exactly-once 三件套；理想 Hologres+Flink 万亿级 150 万 RPS）→ <strong>OLAP</strong>（按场景分：评测段 Doris/StarRocks、采集监控 Druid、日志聚合 ClickHouse）→ <strong>编排</strong>（task-centric vs data-centric 分水岭，AD 推荐 Argo/Dagster 而非 Airflow）→ <strong>ML 训练编排</strong>（Kubeflow 管 DAG + Ray 管算力分层最务实）。读者差异化优势：argo+k8s+flink+clickhouse 数仓 + onboard 监测 <span class="tag dec">can-decide</span>。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 具身智能数据闭环：追赶者范式</h2>
+
+<p>具身智能数据闭环是"没有车队红利的追赶者"，被迫在合成数据、遥操作硬件、real-to-sim-to-real 上做激进创新，<strong>反过来正在倒逼 AD 重审"真实数据为王"的默认假设</strong>。本节按"冷启动悖论 → 遥操作+OXE → 合成优先 → AD↔具身可迁移/不可迁移"展开。</p>
+
+<h3 id="s5-1">6.1 冷启动悖论：没有车队红利，被迫 bootstrap</h3>
+<p>AD 的冷启动靠量产车队天然飞轮（已解决），具身没有车队红利，被迫用<strong>仿真 + 人工遥操作 bootstrap</strong>。Tesla Optimus 复制 AD 车队飞轮思路，但<strong>没有车队红利</strong>——公开招 Data Collection Operator，投入 &gt;$200 万，这是"被动车队飞轮 → 主动人工采集"的退化。</p>
+
+<blockquote class="why">冷启动悖论的存在理由是<strong>机器人的物理形态决定了没有"廉价差异采样器"</strong>。AD 的车就是天然的数据采集器（每跑一公里都在采），机器人的关节运动需要人遥操作或专门的采集设备（ALOHA 2 $27k 双臂、UMI $400 手持 GoPro 夹爪）。所以具身被迫走"合成优先 + 主动采集"路线。反事实：等机器人量产了再采数据，永远走不出实验室。</blockquote>
+
+<h3 id="s5-2">6.2 遥操作硬件产品化 + 跨本体 schema 归一化（OXE）</h3>
+<p>具身侧两个关键创新：</p>
+<p><strong>(1) 采集硬件产品化、可分发</strong>：</p>
+<ul>
+<li><strong>UMI</strong>（<a href="https://umi-gripper.github.io/">项目</a>）：<strong>$400 手持 GoPro 夹爪</strong>，采集成本降一个数量级。</li>
+<li><strong>ALOHA 2</strong>（<a href="https://aloha-2.github.io/">项目</a>）：$27k 双臂，diffusion policy 部署真机。</li>
+<li><strong>Mobile ALOHA</strong>：移动版双臂。</li>
+<li><strong>DROID</strong>（<a href="https://droid-dataset.github.io/">数据集</a>）：50 采集员跨三洲，76k 轨迹、350h、564 场景、86 任务。</li>
+</ul>
+<p><strong>(2) 跨本体 schema 归一化（OXE 范本）</strong>：<strong>Open X-Embodiment</strong>（<a href="https://robotics-transformer-x.github.io/">项目</a>）把 22 种机器人本体统一成一套 schema，1M+ 轨迹、21 机构、527 技能/约 16 万任务。这是具身侧"跨本体数据归一化"的范本，<strong>对 AD 直接同构可迁移</strong>。</p>
+
+<blockquote class="why">OXE schema 的存在理由是<strong>跨本体训练的前提是 schema 统一</strong>。不同机器人本体关节数、动作空间、传感器配置不同，硬拼训练不出通用策略。OXE 定义了统一字段（observation/action/reward/...），让 22 种本体的数据能共训。这和 AD 的"多车型/多传感器归一化"是同构问题。反事实：不统一 schema，每家机器人公司各搞一套数据格式，跨本体训练永远不可能。</blockquote>
+
+<aside class="note">OXE 是读者最该从具身侧借鉴到 AD 的东西。<strong>AD 多车型/多传感器/多区域车队的"数据格式归一化"是同构问题，OXE schema 设计可直接迁移</strong>。读者自家业务如果还在为"每个车型一套数据格式"头疼，去读 OXE 论文（<a href="https://arxiv.org/abs/2310.08864">arXiv 2310.08864</a>），把"跨本体字段标准化"做成 AD 数据闭环的第一个产品模块。读者校准显示这块对应"产品方案结构化（场景矩阵+共性能力）" <span class="tag pra">practiced</span>，要升级到 <span class="tag dec">can-decide</span>。</aside>
+
+<h3 id="s5-3">6.3 合成优先：合成数据从"补充"变"预训练主力"的范式切换</h3>
+<p>这是 AD↔具身当前<strong>最大的路线分歧点</strong>。AD 长期以真实路采为金标准，对合成数据保守；具身因数据成本极高被迫"合成优先"：</p>
+<ul>
+<li><strong>银河通用 GraspVLA</strong>：<strong>纯合成数据 10 亿帧预训练 + 少样本微调</strong>，零样本 Sim2Real，七大泛化（物体/场景/光照/背景/姿态/高度/语言）（<a href="https://hub.baai.ac.cn/view/42551">报道</a>）。</li>
+<li><strong>Skild AI</strong>（<a href="https://www.skild.ai/blogs/building-the-general-purpose-robotic-brain">博客</a>）：互联网人视频 + 大规模仿真预训练，数小时内 60-80% 任务成功率。</li>
+<li><strong>1X NEO</strong>：看人学，互联网人视频 → 机器人动作。</li>
+<li><strong>Figure Helix 02</strong>（<a href="https://www.figure.ai/news/helix-02">博客</a>）：用 1000 小时关节数据替换 109504 行 C++——模型替代手写控制代码的硬数据。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph AD["AD 路线：真实数据为王"]
+    AD1["量产车队真实路采"] --> AD2["金标准"]
+    AD2 --> AD3["合成数据=补充"]
+  end
+  subgraph EMB["具身路线：合成优先"]
+    EMB1["10亿帧合成预训练<br/>GraspVLA"] --> EMB2["少样本微调"]
+    EMB2 --> EMB3["零样本 Sim2Real"]
+  end
+  AD -.|"重审：合成数据<br/>能替代多少真实里程?"|.-> Q["路线分歧点"]
+  EMB -.|"挑战：'真实为王'<br/>是不是过度保守?"|.-> Q
+  classDef ad fill:#eaf1f8,stroke:#0b5394
+  classDef emb fill:#fff8e1,stroke:#d4a017
+  classDef q fill:#fce4ec,stroke:#880e4f
+  class AD ad
+  class EMB emb
+  class Q q
+</pre>
+
+<blockquote class="why">合成优先的存在理由是<strong>真实数据边际成本 vs 合成数据边际成本的拐点</strong>。具身真实数据成本极高（每个任务都要遥操作采集），合成数据边际成本只取决于算力，所以具身在拐点之前就转向合成优先。AD 真实数据成本相对低（量产车队），所以拐点还没到。但<strong>AD 应该评估自己的世界模型/仿真在"合成数据预训练 + 少量真机微调"范式下能替代多少真实里程</strong>——这是当前两大领域最大的路线分歧点。反事实：AD 死守真实数据，等具身用合成数据跑出更强通用模型，AD 会被反超。</blockquote>
+
+<h3 id="s5-4">6.4 AD ↔ 具身：可迁移 / 不可迁移清单</h3>
+<table>
+<tr><th>方向</th><th>维度</th><th>具身/AD 状态</th><th>可迁移性</th></tr>
+<tr><td rowspan="4">AD → 具身（AD 成熟）</td><td>冷启动</td><td>AD 已解 / 具身困</td><td>AD 领先 3-5 年，输出方法论</td></tr>
+<tr><td>shadow mode</td><td>AD 成熟 / 具身退化为人遥操作</td><td>具身无天然对照，只能借鉴思路</td></tr>
+<tr><td>offboard 精标</td><td>AD 成熟</td><td>具身的"未来=真值"在多关节控制中不直接成立</td></tr>
+<tr><td>scene library + eval harness</td><td>华为 25 万场景 / 百度 PB 级</td><td>具身早期，可借鉴 AD 测评指标体系化思路</td></tr>
+<tr><td rowspan="7">具身 → AD（具身激进）</td><td>跨本体 schema</td><td>OXE 22 本体统一</td><td><strong>AD 多车型归一化同构，直接迁移</strong></td></tr>
+<tr><td>生成式优先</td><td>GraspVLA 10 亿帧合成预训练</td><td>挑战 AD"真实为王"假设</td></tr>
+<tr><td>采集硬件产品化</td><td>UMI $400 / ALOHA2 $27k</td><td>AD 定向 corner case 采集借鉴产品化思维</td></tr>
+<tr><td>real-to-sim-to-real 双向</td><td>MIT RialTo：失败样本回灌 sim</td><td><strong>AD 应把接管/事故数据系统化回灌仿真</strong></td></tr>
+<tr><td>video-to-action 预训练</td><td>Skild/1X NEO 互联网人视频</td><td>对应 AD"人类驾驶视频→自动驾驶策略"</td></tr>
+<tr><td>flow matching 连续输出</td><td>π0 action chunk=50</td><td>AD 端到端轨迹/规划输出取舍可评估</td></tr>
+<tr><td>数据采集即产品功能</td><td>1X NEO/Figure 家用机器人持续采</td><td>提示 AD 重审车内采集隐私/合规边界</td></tr>
+<tr><td rowspan="3">不可迁移（业务本质）</td><td>安全等级</td><td>AD 涉及人身安全 + 强监管 / 具身宽松</td><td>两大领域最大路线分歧点</td></tr>
+<tr><td>车队红利</td><td>AD 有"永不疲倦的差异采样器" / 具身无</td><td>本质差异，不可补</td></tr>
+<tr><td>物理形态</td><td>机器人关节数据 ≠ AD 轨迹数据</td><td>Figure"1000h 替换 10万行 C++"不可直接照搬</td></tr>
+</table>
+
+<blockquote class="why">这份清单的存在理由是<strong>防止读者做"盲目跨领域照搬"或"忽视可迁移洞察"</strong>两个极端。能迁移的（OXE schema、生成式补长尾、real-to-sim-to-real）是同构问题在不同领域的投影；不能迁移的（安全等级、车队红利、物理形态）是业务本质差异。<strong>关键认知：能迁移的是"方法论"，不能迁移的是"具体数字"</strong>。Figure"1000h 替换 10万行 C++"是机器人控制代码的结论，AD 不能直接说"我们也能用数据替换代码"。反事实：盲目照搬具身的合成优先到 AD 安全关键场景，会出现合成数据训练的模型在真实事故中崩盘。</blockquote>
+
+<aside class="note">读者要建立的判断力：<strong>看到任一跨领域技术先问"它和 AD 的对应物是什么、能迁移的是方法论还是数字"</strong>。能迁移方法论的就借鉴（OXE schema 设计方法 → AD 跨车型 schema），不能迁移数字的就停止类比（Figure 1000h → AD 数据量结论）。这是 <span class="tag dec">can-decide</span> 级的跨界判断力，是 PM 跨到 Function Owner 的关键认知跃迁。</aside>
+
+<div class="summary">
+具身侧四要素：<strong>冷启动悖论</strong>（没有车队红利，被迫仿真+遥操作 bootstrap）→ <strong>遥操作硬件产品化+OXE 跨本体 schema</strong>（UMI $400/ALOHA $27k；OXE 22 本体统一，直接同构可迁移到 AD 跨车型）→ <strong>合成优先范式切换</strong>（GraspVLA 10 亿帧合成预训练 + 少样本微调，挑战 AD"真实为王"假设）→ <strong>可迁移/不可迁移清单</strong>（能迁移方法论不能迁移数字；安全等级/车队红利/物理形态不可迁移）。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 能力图谱 + 负责人能力框架</h2>
+
+<p>这一章把前 6 章的技术内容收敛到读者<strong>个人能力地图</strong>：每项能力用三阶定级（introduced/practiced/can-decide），对照读者校准实测，给出 PM → 架构师/Function Owner 的跃迁路径。</p>
+
+<h3 id="s6-1">7.1 三阶定级 rubric：能说 ≠ 会，能拆 ≠ 能拍</h3>
+<p>定级 rubric 是读者私有的，对应 IC1-IC6 / E1-E6 工程阶梯（<a href="https://montecarlo.ai/blog-what-good-data-product-managers-do-and-why-you-probably-need-one">Monte Carlo 参考</a>）：</p>
+<table>
+<tr><th>定级</th><th>判据</th><th>读者必须能做的事</th></tr>
+<tr><td><span class="tag int">introduced</span></td><td>能说概念、能复述</td><td>说出关键名词、读懂文档、不会犯明显错误</td></tr>
+<tr><td><span class="tag pra">practiced</span></td><td>亲自验证、落地过</td><td>指真实文件/运行状态/数据/测试证据，预测失败与恢复行为</td></tr>
+<tr><td><span class="tag dec">can-decide</span></td><td>能在选型评审拍板、能说服</td><td>比较方案/代价/故障模式/验收信号，写出决策记录</td></tr>
+</table>
+
+<blockquote class="why">三阶定级的存在理由是<strong>"能说 ≠ 会，能拆 ≠ 能拍"</strong>。读者校准报告的关键发现："判断力领先的是拆解，不是拍板"——doc18 拆 JoyBuilder 极准、doc13 三家外采零对比。introduced→practiced 需要亲手做，practiced→can-decide 需要"在不确定性里拍板并为之负责"。Function Owner/架构师和 PM 的分水岭就在 practiced→can-decide。反事实：永远停在 practiced，会被"判断力领先"自我感觉良好蒙蔽，遇到选型评审就退缩。</blockquote>
+
+<h3 id="s6-2">7.2 读者校准后的能力图谱（基于实测，非自评）</h3>
+<p>下表是读者能力图谱，对照校准报告（不是读者自评）。<strong>三处关键修正</strong>用 <span class="danger">红字</span>标出——读者自评严重低估或错误打包的地方。</p>
+<table>
+<tr><th>子能力</th><th>自评</th><th>实测</th><th>关键证据</th></tr>
+<tr><td>数据字典/口径声明/衍生指标</td><td>强</td><td><span class="tag dec">can-decide</span></td><td>doc01：原子/衍生分层 + "业务定义+数据来源+约束条件"三元组</td></tr>
+<tr><td>数据质量治理（Gate+错误码归因）</td><td>数采全链强</td><td><span class="tag dec">can-decide</span></td><td>doc04：三道 Gate 熔断 + 96% 可规避 + 按算子逐条归因</td></tr>
+<tr><td>帧级规模风险论证</td><td>—</td><td><span class="tag dec">can-decide</span></td><td>doc07：5 分片×5000 万=2.5 亿硬上限、3.5 亿瘫痪、Q2 风险拐点</td></tr>
+<tr><td>现状盘点/偏差分析/根因量化</td><td>未列</td><td><span class="tag dec">can-decide</span><span class="danger">（隐藏强项）</span></td><td>doc15：97543/102703 单盘案例 + OD 算子 P90=1247min</td></tr>
+<tr><td>问题框定与叙事</td><td>未列</td><td><span class="tag dec">can-decide</span><span class="danger">（隐藏强项）</span></td><td>doc05："要的不是更多数据而是能被消费的有效数据"</td></tr>
+<tr><td>工程化 PRD 爆发点</td><td>—</td><td><span class="tag pra">practiced</span>（不稳定）</td><td>doc17：Hook + 三把锁 + Edge Cases（接近 JoyDrive 水准但只在 17 号爆发）</td></tr>
+<tr><td>数据集版本机制</td><td><span class="danger">弱项（错误打包）</span></td><td><span class="tag pra">practiced</span><span class="danger">（被低估）</span></td><td>doc03：snapshot/不可变/clone/准入 + run_id↔dataset_version_id，与 JoyDrive 同构</td></tr>
+<tr><td>元数据类型体系</td><td>弱项</td><td><span class="tag pra">practiced</span></td><td>doc10：标识/血缘/属性三类 + 全字段枚举（但 clip vs frame 自相矛盾）</td></tr>
+<tr><td>闭环数据流完整性</td><td>—</td><td><span class="tag pra">practiced</span>（前段扎实、后段未通）</td><td>doc12：采集→准入→pipeline→挖掘→tagging→数据集→消费端到端跑通；评测→回流段未打通</td></tr>
+<tr><td>选型 rationale（拆解）</td><td>判断力领先</td><td><span class="tag pra">practiced</span><span class="danger">（领先的是拆解不是拍板）</span></td><td>doc18 拆 JoyBuilder 精准但"建设路径"空；doc13 三家外采零对比</td></tr>
+<tr><td>失败模式 / 边界 case</td><td>未列</td><td><span class="tag int">introduced</span><span class="danger">（隐藏盲区）</span></td><td>20 HDMAP API 无降级/限流/重试；18 训练平台无容灾评估；03 无补偿回滚</td></tr>
+<tr><td>全链路血缘落地</td><td><span class="danger">弱项（含版本，错误打包）</span></td><td><span class="tag int">introduced</span><span class="danger">（但版本不算弱）</span></td><td>doc10：traceid 示意图 + "apache atlas?"打问号 + 无校验/无故障模式</td></tr>
+<tr><td>数仓物理设计（ER/分片/分区键/SLA）</td><td>弱项</td><td><span class="tag int">introduced</span>（属实）</td><td>doc07：分层理论扎实但"层间 ER 表"至今空、无分区/排序/分桶</td></tr>
+<tr><td>评测闭环（数据闭环视角）</td><td>弱项</td><td><span class="tag int">introduced</span>（属实）</td><td>doc22：HIL 是性能观测平台（强），但作为数据闭环评测段"Q2-Q3 才纳入"</td></tr>
+<tr><td>治理结构（变更单/审批/审计/契约）</td><td>—</td><td><span class="tag int">introduced</span><span class="danger">（最关键短板）</span></td><td>doc02/05/10 提了概念但状态机明示"待完善"，无变更单 schema/审计契约/SLA 数值</td></tr>
+<tr><td>向上影响力 / sponsor 背书</td><td>影响力短板</td><td><span class="tag pra">practiced</span>（执行层强、向上弱）</td><td>doc05 14 Read/1 Backlink；People 字段高频是同级马程/王庆全，无总监级 sponsor</td></tr>
+</table>
+
+<blockquote class="why">这份能力图谱的关键修正存在理由是<strong>让读者把精力投到真正短板上而非自评弱项上</strong>。三处错误打包的修正：（1）"数据版本与血缘是弱项"应拆开——版本 <span class="tag pra">practiced</span>、血缘 <span class="tag int">introduced</span>，分开精进；（2）"判断力领先"实际是"拆解领先、拍板未闭环"，要补决策记录；（3）"影响力弱"实际是"治理结构能力缺失"，不是口才问题。反事实：笼统说"我数据版本血缘都弱"，会浪费已有的版本判断力；笼统说"我判断力领先"，会停止练拍板；笼统说"我影响力弱"，会去练演讲而非补治理结构。</blockquote>
+
+<h3 id="s6-3">7.3 PM → Function Owner 跃迁路径与能力补强</h3>
+
+<pre class="mermaid">
+flowchart LR
+  PM["PM<br/>4年数据闭环"] -->|"补强：分布式系统理解<br/>feature store 谈判"| DPM["技术型 Data PM"]
+  DPM -->|"补强：架构级技术 fluency<br/>跨团队组织设计"| FO["Principal Technical PM<br/>Function Owner"]
+  FO -->|"补强：analytics 深度<br/>闭环北极星指标体系"| DA["Data Architect<br/>Platform Tech Lead"]
+  classDef pm fill:#eaf1f8,stroke:#0b5394
+  classDef dpm fill:#fff8e1,stroke:#d4a017
+  classDef fo fill:#fce4ec,stroke:#880e4f
+  classDef da fill:#e8f5e9,stroke:#1b5e20
+  class PM pm
+  class DPM dpm
+  class FO fo
+  class DA da
+</pre>
+
+<p><strong>四项关键补强（按 ROI 排序）</strong>：</p>
+<ol>
+<li><strong>治理结构能力（最高 ROI，2 周）</strong>：把 doc17 的成功经验（Hook + 三把锁 + Edge Cases）抽象成模板：边界句三段 + 状态转移表 + 变更单 schema + 审计字段 + SLA 数值 + 失败模式矩阵。直接补最大短板（治理结构 introduced）+ 最关键高估（影响力 practiced 偏低）。</li>
+<li><strong>失败模式 / 边界 case 系统能力（2 周）</strong>：针对 doc20 HDMAP API、doc03 数据集版本管理各做一份失败模式表（降级/限流/重试/幂等/补偿/回滚）。补隐藏盲区，让工程化水准从"单点爆发"变"稳定输出"。</li>
+<li><strong>血缘与版本分开精进（1 个月）</strong>：版本机制 practiced（重点是落地，doc03 功能 7 训练追溯先做掉，给出存储拓扑设计）；血缘从 introduced 推到 practiced（精读 JoyDrive <code>doc/data-artifact-registry-design.md</code>，把 doc10 的 traceid 示意图升级成"实体关系 + 控制面 API 事件驱动 + 血缘校验作为发布前置"，并解决"clip vs frame"颗粒度矛盾）。</li>
+<li><strong>选型"最后一公里"——决策记录（1 个月）</strong>：针对 doc18 训练平台和 doc13 SDMap，各做一份"维度打分矩阵 + 推荐结论 + 决策记录"。判断力已有，差的是把判断写成可被复议、可被追溯的决策文档。</li>
+<li><strong>升级 sponsor 与向上影响力（贯穿）</strong>：用 doc07 的 Q2 瘫痪风险 + doc15 的偏差分析做弹药，向上一级做正式汇报，争取把数据闭环治理升级成组织目标。</li>
+</ol>
+
+<aside class="note">读者校准的三句狠话要内化：<strong>(1) 你不是"影响力不够"，你是"设计不够治理化"</strong>——下次落不了地先问"我把设计写成 JoyDrive organization-prd 那种结构了吗？"；<strong>(2) 你写得出 17 号，却让 02 号停留在状态清单——你缺的不是判断力，是把判断力产品化的纪律</strong>——把 doc17 抽象成模板是从 practiced 跨到 can-decide 最短的路；<strong>(3) 你最大的高估是"判断力领先"——领先的是拆解，不是拍板</strong>——下次选型逼自己写出"我推荐 X，因为 A/B/C，代价是 D，我承担"。</aside>
+
+<h3 id="s6-4">7.4 JD 对标：Top 公司岗位画像</h3>
+<table>
+<tr><th>公司</th><th>岗位</th><th>硬性门槛</th><th>技术栈倾向</th></tr>
+<tr><td><strong>NVIDIA</strong></td><td>Autonomous Vehicle Dataloop Lead</td><td>CS/EE 学士 + 3 年+ 软件/数据工程</td><td><strong>C/C++/Python/Java + ML/DL + CV + 分布式计算 + Azure/AWS/GCP</strong></td></tr>
+<tr><td><strong>AT&T</strong></td><td>Principal Product Technology Manager (AI & Data Products)</td><td>—</td><td>技术 PM 贴近架构/工程/产品</td></tr>
+<tr><td><strong>LinkedIn</strong></td><td>Technical Product Owner - PIM & Data Architecture</td><td>5+ 年经验</td><td>薪酬 12.6-18.9 万美元</td></tr>
+</table>
+
+<p><strong>NVIDIA 强调 C++ + 底层硬件结合</strong>，与 Waymo/Zoox 偏 Python/算法的画像不同——选型时先定位自己公司的技术栈倾向。<a href="https://www.jobzmall.com/nvidia/job/autonomous-vehicle-dataloop-lead">NVIDIA JD 链接</a>。</p>
+
+<blockquote class="why">JD 对标的存在理由是<strong>校准读者"差多远"而非"差几倍"</strong>。NVIDIA 这类硬门槛（3 年+ 软件工程 + C++）是读者 4 年 PM 经验不完全覆盖的——但读者校准显示"4 年打出了 6 年底座、aicoding 实战扎实"，差距比自评小。读者要做的是把 PM 经验映射到 JD 的"软件/数据工程经验"描述里（自家 argo+k8s+flink+clickhouse 数仓就是直接证据），而不是补一份纯算法经验。反事实：对照 NVIDIA JD 觉得"我不懂 C++ 我不行"，会错过读者真正有竞争力的"数据闭环 + 数据基建"复合画像。</blockquote>
+
+<div class="summary">
+能力图谱与跃迁：<strong>三阶定级</strong>（introduced→practiced→can-decide，能说 ≠ 会、能拆 ≠ 能拍）→ <strong>读者三处关键修正</strong>（版本与血缘分开、判断力领先的是拆解不是拍板、影响力弱实为治理结构缺失）→ <strong>PM→Data PM→Function Owner→Data Architect 跃迁</strong>四项补强（治理结构最高 ROI）→ <strong>JD 对标</strong>：NVIDIA 3 年+ 软件工程 + C++ 画像，读者把 PM 经验映射到"数据工程经验"而非补算法。
+</div>
+
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 学习路线 + 行动清单 + 治理型 PRD 模板</h2>
+
+<p>这是本教材的"落地章"。把前 7 章的认知地图转化成读者未来 12 周的可执行计划、北极星指标体系、立即可做的 5 件事，以及最重要的——<strong>把"业务描述"升级为"治理结构"的 PRD 模板</strong>（这是读者从 PM 跨到 Function Owner 最关键的一跃）。</p>
+
+<h3 id="s7-1">8.1 12 周学习路线甘特图</h3>
+
+<pre class="mermaid">
+gantt
+  title 12 周学习路线（introduced → practiced → can-decide）
+  dateFormat YYYY-MM-DD
+  axisFormat %W
+
+  section Phase 1 地基（2-4 周）
+  DDIA 第二版 精读           :p1a, 2026-01-01, 14d
+  CMU 15-445 数据库内部     :p1b, 2026-01-01, 21d
+  arXiv 2401.12888 AD 闭环综述 :p1c, 2026-01-01, 7d
+
+  section Phase 2 数据基建（4-8 周）
+  CMU 15-721 OLAP/Lakehouse  :p2a, after p1b, 21d
+  Iceberg vs Delta vs Hudi vs Paimon 横向对比 :p2b, after p1a, 14d
+  OpenLineage + DataHub 接入  :p2c, after p2b, 14d
+  feature store point-in-time 落地 :p2d, after p2b, 14d
+
+  section Phase 3 AD 数据闭环范式（4-8 周）
+  Cruise CLM + Tesla Data Engine 精读 :p3a, after p1c, 14d
+  JoyDrive-Infra 评测闭环精读 :p3b, after p1c, 14d
+  World Model 渲染层 vs 决策层 路线判断 :p3c, after p3a, 14d
+
+  section Phase 4 跃迁（贯穿）
+  治理型 PRD 模板 + doc17 复用 :p4a, 2026-01-01, 84d
+  失败模式矩阵（doc20/doc03） :p4b, after p4a, 28d
+  选型决策记录（doc18/doc13） :p4c, after p4b, 28d
+  Sponsor 升级汇报            :p4d, 2026-01-01, 84d
+</pre>
+
+<blockquote class="why">12 周路线的存在理由是<strong>顺序比覆盖面更重要</strong>。地基阶段（DDIA + 15-445）建立所有架构讨论的共同语言；数据基建阶段（15-721 + 横向对比）补读者 introduced 盲区；AD 闭环范式阶段把读者 practiced 能力升级到 can-decide；跃迁阶段贯穿——治理结构、失败模式、决策记录、sponsor 升级同时推进。<strong>不要四个方向同时抓，但跃迁贯穿</strong>。反事实：先学最新论文再补 DDIA，会因为缺地基读不懂；只补技术不练治理结构，PM 永远跨不到 Function Owner。</blockquote>
+
+<h4>分阶段资源（地基 introduced → practiced）</h4>
+<ul>
+<li><strong>DDIA 第二版</strong>（Kleppmann）：数据基建负责人的"宪法"。分布式存储/复制/一致性/流/批/OLAP 心智模型全在此，第二版覆盖 Lakehouse。</li>
+<li><strong>CMU 15-445/645</strong>（Andy Pavlo）："THE BEST 大学数据库课程"，数据库内部。</li>
+<li><strong>arXiv 2401.12888</strong>（<a href="https://arxiv.org/html/2401.12888v1">链接</a>）：AD 数据闭环学术总纲，7 组件架构 + Tesla/NVIDIA/Waymo 数据引擎 + auto-labeling 演进 + dataset 规模对比。</li>
+</ul>
+
+<h4>分阶段资源（进阶 practiced → can-decide）</h4>
+<ul>
+<li><strong>CMU 15-721</strong>（<a href="https://15721.courses.cs.cmu.edu/spring2024/schedule.html">Spring 2024</a>）：进阶 OLAP/Lakehouse/分布式查询处理/查询优化。直接对应 AD 数仓选型底层判断力。</li>
+<li><strong>Full Stack Deep Learning</strong>（Pieter Abbeel，<a href="https://fullstackdeeplearning.com">链接</a>）：ML 基础设施/部署/监控/Kubernetes 全生命周期。</li>
+<li><strong>Designing Machine Learning Systems</strong>（Chip Huyen，Stanford CS329S 教材）：Production ML 的"圣经"。AD 数据闭环本质是超大尺度 Production ML 系统。</li>
+<li><strong>CodeCompass: Tesla Data Engine Trigger Classifiers</strong>（<a href="https://codecompass00.substack.com/p/tesla-data-engine-trigger-classifiers">链接</a>）：Tesla 主动选数机制最技术化拆解。</li>
+<li><strong>State of Workflow Orchestration Ecosystem 2025</strong>（<a href="https://www.pracdata.io/p/state-of-workflow-orchestration-ecosystem-2025">链接</a>）：编排工具 2025 格局最权威横向对比。</li>
+<li><strong>TheDataGuy: Open-Source Data Governance Frameworks</strong>（<a href="https://thedataguy.pro/writing/2025/08/open-source-data-governance-frameworks/">2025-08</a>）：OpenMetadata/DataHub/Atlas/Amundsen 四维度并列对比。</li>
+</ul>
+
+<h3 id="s7-2">8.2 数据闭环北极星复合指标体系</h3>
+<p>读者校准报告显示"<strong>问题框定与叙事 can-decide 是隐藏强项</strong>"（doc05"要的不是更多数据而是能被消费的有效数据"），但缺<strong>体系化的北极星指标</strong>。反直觉发现：<strong>单看数据量会误判飞轮健康度</strong>。真正反映飞轮的复合指标 = 多维组合（来自 <a href="https://www.xiaopeng.com/news/company_news/4537.html">小鹏 1024 科技日</a>反推）：</p>
+
+<table>
+<tr><th>维度</th><th>指标</th><th>标杆数字</th><th>为什么是关键</th></tr>
+<tr><td>差异采样</td><td>触发器数</td><td>小鹏 300+</td><td>覆盖长尾的能力上限</td></tr>
+<tr><td>自动化</td><td>自动标注覆盖率</td><td>Momenta &gt;90% 长尾</td><td>标注成本天花板</td></tr>
+<tr><td>挖掘</td><td>误差驱动采样命中率</td><td>Cruise 旧金山 46x 郊区</td><td>飞轮转得准不准</td></tr>
+<tr><td>采集</td><td>上传倍数</td><td>小鹏 22x</td><td>差异采样效率</td></tr>
+<tr><td>采集</td><td>训练带宽</td><td>小鹏 15x</td><td>数据流通能力</td></tr>
+<tr><td>算力</td><td>集群利用率</td><td>小鹏 &gt;90%</td><td>训练成本</td></tr>
+<tr><td>标注</td><td>标注倍率</td><td>Tesla 100x ROI</td><td>offboard 精标效率</td></tr>
+<tr><td>训练</td><td>训练 clip 规模</td><td>小鹏 1M → 200M</td><td>训练规模扩容能力</td></tr>
+<tr><td>闭环</td><td>OTA 回灌周期</td><td>华为模型 5 天迭代</td><td>飞轮转速</td></tr>
+</table>
+
+<blockquote class="why">复合指标体系的存在理由是<strong>单看任一维度都会误判飞轮健康度</strong>。只看"我们采了 X 亿公里"会被低质量数据骗；只看"标注覆盖率 90%"会被低命中率骗；只看"集群利用率 90%"会被无效训练骗。<strong>这套体系比"我们采了 X 亿公里"更接近本质</strong>。读者要做的是把这套指标沉淀成 SLI/SLO 产品（读者校准显示当前是 Excel 案例未沉淀），让飞轮健康度可监控可告警。反事实：用单维数据量做北极星，会驱动团队狂采低信息量数据。</blockquote>
+
+<aside class="note">"数据北极星是复合指标"是读者最该补的判断力。读者校准显示"偏差分析 can-decide（doc15 用 97543/102703、OD 算子 P90 逼出'资源错配'结论）"——但这是<strong>用数据当权力的单次战役</strong>，不是体系化的北极星。要升级到把这套复合指标做成产品：监控大盘、SLO 告警、决策依据。这是 PM 跨到 Function Owner 在"analytics 深度"维度的具体跃迁。</aside>
+
+<h3 id="s7-3">8.3 治理型 PRD 模板（把 doc17 抽象成可复用结构）</h3>
+<p>这是读者从 PM 跨到 Function Owner <strong>最关键的一跃</strong>。读者校准显示 doc17 是"全文档里最接近 JoyDrive 治理水准的一篇"，但只在单点爆发没复用。下面把它抽象成模板（参照 JoyDrive <code>doc/organization-prd.md</code> 的"边界句+状态机+变更单+契约+审计"五位一体）：</p>
+
+<pre class="mermaid">
+flowchart TB
+  B["1. 边界句三段<br/>In Scope / Out of Scope / Non-Goals"]
+  S["2. 状态转移表<br/>from→to / trigger / guard / side-effect"]
+  C["3. 变更单 schema<br/>申请人/审批人/影响面/回滚预案"]
+  A["4. 审计字段契约<br/>操作者/时间/前后值 JSON/关联 ID"]
+  SLA["5. SLA 数值<br/>不是'快'是'&lt;2s P99'"]
+  F["6. 失败模式矩阵<br/>降级/限流/重试/幂等/补偿/回滚"]
+  B --> S --> C --> A --> SLA --> F
+  classDef t fill:#eaf1f8,stroke:#0b5394
+  class B,S,C,A,SLA,F t
+</pre>
+
+<h4>模板六段详解</h4>
+<ol>
+<li><strong>边界句三段</strong>：In Scope（这个产品管什么）、Out of Scope（这个产品不管什么但相关）、Non-Goals（明确不做的事）。这是治理型 PRD 的第一道防越界。<strong>JoyDrive organization-prd 范例</strong>："组织管人/项目/角色/配额；资源管资源对象/调度；监控管运行状态"——一句话定义清楚谁管什么，技术想越界都难。</li>
+<li><strong>状态转移表</strong>：每个对象的状态用 mermaid stateDiagram-v2 + 跳转矩阵显式定义。每个跳转要写：from→to、trigger（什么触发）、guard（前置条件）、side-effect（副作用/副作用是否同事务）。<strong>doc17 范例</strong>：Hook 触发时机 + 状态锁/车辆锁/时间锁三把锁 + Orphan/Conflict Edge Cases。<strong>读者 doc02 当前是"状态清单"而非"状态机"</strong>——升级到状态机要补"跳转条件 + 副作用"。</li>
+<li><strong>变更单 schema</strong>：高危且不可逆的操作（负责人变更、角色调整、GPU 配额、Namespace 绑定）必须走 Draft→PendingApproval→Approved→Executing→Succeeded/Failed/Cancelled。<strong>审批人≠申请人</strong>、<strong>失败整单回滚不在原单重试（复制为新单带 retry_parent_id）</strong>。</li>
+<li><strong>审计字段契约</strong>：双层审计——AuditRecord（业务动作）+ OpsAuditRecord（平台动作）。字段含变更前值/变更后值 JSON 快照、影响项目、影响责任人、关联变更单 ID。<strong>只追加不修改</strong>，导出动作本身也写一条审计。</li>
+<li><strong>SLA 数值</strong>：不是"快"是"&lt;2s P99"。不是"高可用"是"99.9% monthly availability"。SLA 必须有数值才能监控、告警、对账。</li>
+<li><strong>失败模式矩阵</strong>：每个外部依赖/API/状态跳转都要列：降级（依赖挂了怎么办）、限流（流量尖峰怎么办）、重试（瞬时错误怎么自愈）、幂等（重复请求怎么处理）、补偿（业务事务失败怎么补）、回滚（变更出错怎么回）。</li>
+</ol>
+
+<blockquote class="why">治理型 PRD 模板的存在理由是<strong>把"业务描述"升级为"治理结构"</strong>——这是读者校准显示的最大短板（治理结构 introduced）和最大高估（影响力 practiced）的统一解药。读者校准原话："你的设计是'业务描述'而非'治理结构'。doc02/05/10 你提了状态机、血缘追溯、规则版本化的概念，但都标为'平台待完善项：黄子晋(Rickroll)'——你把治理结构的定义权让渡给了平台方。" 用这套模板重写设计，反对声一来技术执行的是流程不是"听产品的"。<strong>反事实</strong>：不写治理结构，下次数研负责人抵触，你还是回到人治拉锯。</blockquote>
+
+<aside class="note">这是本教材最重要的实操模板。<strong>立刻做（本周）</strong>：挑一个正在推的设计（建议数据资产管理 doc12），强制用六段模板重写。对照 JoyDrive <code>doc/organization-prd.md</code> 逐节抄结构。<strong>本月做</strong>：把这份模板文档化成可复用模板，每次写新 PRD 都套用。<strong>关键认知</strong>：治理结构能力不是"口才"，是"用流程把协同变成系统强制"的工程能力。这是读者从 PM 跨到 Function Owner 唯一不能跳过的一步。</aside>
+
+<h3 id="s7-4">8.4 立即可做的 5 件事（按 ROI 排序）</h3>
+<ol>
+<li><strong>今晚</strong>：重读 JoyDrive <code>doc/organization-prd.md</code> 全文，它是"治理型产品设计"的最佳模板。逐节抄结构。</li>
+<li><strong>本周</strong>：精读 JoyDrive <code>doc/data-artifact-registry-design.md</code>，把读者落不了地的"数据资产管理设计"用它的模型重写（artifact/package/frame 三级 + 三位置同步 + 血缘边）。同时套用上面六段模板。</li>
+<li><strong>本月</strong>：补"评测闭环"盲区——精读 JoyDrive <code>doc/evaluation-data-service.md</code>，画出读者所在业务的全闭环图（采集→标注→挖掘→训练→仿真评测→部署回流），标出读者盲区（评测段、血缘落地段、治理结构段）。</li>
+<li><strong>本月</strong>：补"失败模式"盲区——针对 doc20 HDMAP API、doc03 数据集版本管理各做一份失败模式矩阵（降级/限流/重试/幂等/补偿/回滚）。</li>
+<li><strong>持续 + 下次冲突时</strong>：用 doc07 的 Q2 瘫痪风险 + doc15 的偏差分析做弹药，向上一级做一次正式 sponsor 汇报；下次冲突不要争论，用"边界句 + 状态机 + 变更单 + 契约"把设计写成技术无法拒绝的结构。</li>
+</ol>
+
+<blockquote class="why">5 件事按 ROI 排序的存在理由是<strong>最高 ROI 在"治理结构"而非"补技术"</strong>。读者校准明确："补'治理结构 + 失败模式'这两个高 ROI 盲区优先于补'数仓物理细节'"。原因：技术盲区补了还能被平台方主导决策（"血缘让黄子晋做"），治理结构补了直接把决策权攥回自己手里。<strong>读者下个阶段最关键认知跃迁：把"判断力领先"转化为"落地能力"的唯一路径是把治理工件攥在自己手里</strong>。反事实：先补技术再补治理，会在 6 个月后发现技术能力上去了但决策权还在平台方手里。</blockquote>
+
+<aside class="note">读者校准原话（最该内化）：<strong>"哪怕你不写代码，状态转移表、变更单 schema、审计字段契约这些 PRD 级产物必须是你出的。这是'判断力领先'转化为'落地能力'的唯一路径。"</strong> 这条直接对应读者"目标：综合架构师 + Function Owner"的终极诉求——"把已有的产品与架构判断力稳定映射到 Git、代码、数据、运行时、恢复证据上"。治理型 PRD 就是把这个映射从"在脑子里"变成"在 PRD 里、在状态机里、在变更单里、在审计里"。</aside>
+
+<div class="summary">
+落地章：<strong>12 周路线</strong>（地基→数据基建→AD 闭环范式→跃迁贯穿，顺序比覆盖面重要）→ <strong>北极星复合指标</strong>（9 维：触发器/自动标注覆盖/误差命中/上传倍数/带宽/集群利用率/标注倍率/训练规模/OTA 周期，单看任一维度会误判）→ <strong>治理型 PRD 六段模板</strong>（边界句/状态机/变更单/审计/SLA/失败模式，把 doc17 抽象成可复用）→ <strong>5 件事按 ROI</strong>（治理结构最高 ROI，先攥治理工件再补技术）。
+</div>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">延伸阅读</h2>
+
+<h4>AD 数据闭环范式</h4>
+<ul>
+<li>arXiv 2401.12888《Data-Centric Evolution in AD》学术总纲：<a href="https://arxiv.org/html/2401.12888v1">链接</a></li>
+<li>Cruise Continuous Learning Machine（Sean Harris 2020）：<a href="https://medium.com/cruise/cruises-continuous-learning-machine-predicts-the-unpredictable-on-san-francisco-roads-30d60f4c691b">链接</a></li>
+<li>Tesla AI Day 2021 Part 2 拆解：<a href="https://towardsdatascience.com/tesla-ai-day-2021-review-part-2-training-data-how-does-a-car-learn-e8863ba3f5b0/">链接</a></li>
+<li>Tesla Data Engine Trigger Classifiers：<a href="https://codecompass00.substack.com/p/tesla-data-engine-trigger-classifiers">链接</a></li>
+<li>Waymo Offboard 3D Auto-Labeling（CVPR 2021）：<a href="https://openaccess.thecvf.com/content/CVPR2021/papers/Qi_Offboard_3D_Object_Detection_From_Point_Cloud_Sequences_CVPR_2021_paper.pdf">论文</a></li>
+<li>How Waymo Is Using ML（Scale AI 对 Dmitri Dolgov）：<a href="https://learn.scale.com/public/blogs/how-ml-waymo-building-scalable-autonomous-driver-dmitri-dolgov">链接</a></li>
+<li>Momenta 重新定义无人驾驶关键路径：<a href="https://www.momenta.cn/article/54.html">链接</a></li>
+<li>小鹏 1024 科技日：<a href="https://www.xiaopeng.com/news/company_news/4537.html">链接</a>；东方财富研报：<a href="https://pdf.dfcfw.com/pdf/H3_AP202408201639367464_1.pdf">PDF</a></li>
+<li>华为乾崑智驾 ADS：<a href="https://auto.huawei.com/cn/ads">链接</a></li>
+<li>AIDE（CVPR 2024）：<a href="https://openreview.net/forum?id=7piDzw05kh">论文</a></li>
+</ul>
+
+<h4>仿真 / 世界模型</h4>
+<ul>
+<li>Wayve GAIA-3：<a href="https://wayve.ai/thinking/gaia-3/">链接</a></li>
+<li>How Waabi World works：<a href="https://waabi.ai/insights/how-waabi-world-works">链接</a>；Self-Play：<a href="https://waabi.ai/research/selfplay">链接</a></li>
+<li>Mobileye Meteor + Genario（Diagnosing the Long Tail）：<a href="https://www.mobileye.com/blog/diagnosing-the-long-tail-how-mobileye-turns-edge-cases-into-targeted-training/">链接</a></li>
+<li>NVIDIA《Beyond Behavior Cloning》综述（2025）：<a href="https://research.nvidia.com/publication/2025-12_beyond-behavior-cloning-autonomous-driving-survey-closed-loop-training">链接</a></li>
+<li>ASAM OpenSCENARIO 2.0：<a href="https://www.asam.net/standards/detail/openscenario-dsl/">标准</a>；Applied Intuition 解读：<a href="https://www.appliedintuition.com/blog/asam-openscenario-v2">链接</a></li>
+<li>Closed-Loop Log Replay vs Re-Simulation：<a href="https://www.appliedintuition.com/blog/closed-loop-log-replay">链接</a></li>
+<li>DriveDreamer：<a href="https://arxiv.org/abs/2309.09777">论文</a>；OccWorld：<a href="https://github.com/wzzheng/OccWorld">开源</a></li>
+<li>NVIDIA Accelerating AV Simulation with Neural Reconstruction and World Foundation Models：<a href="https://developer.nvidia.com/blog/accelerating-av-simulation-with-neural-reconstruction-and-world-foundation-models/">链接</a></li>
+<li>Bench2Drive（NeurIPS 2024）：<a href="https://arxiv.org/abs/2406.03877">论文</a></li>
+<li>Awesome-Data-Centric-Autonomous-Driving GitHub：<a href="https://github.com/LincanLi98/Awesome-Data-Centric-Autonomous-Driving">链接</a></li>
+</ul>
+
+<h4>数据基建选型</h4>
+<ul>
+<li>Onehouse: Iceberg vs Delta vs Hudi Feature Comparison（2025-10）：<a href="https://www.onehouse.ai/blog/apache-hudi-vs-delta-lake-vs-apache-iceberg-lakehouse-feature-comparison">链接</a></li>
+<li>InfoQ: Building Reproducible ML Systems with Apache Iceberg：<a href="https://www.infoq.com/articles/reproducible-ml-iceberg/">链接</a></li>
+<li>Apache Hudi MoR Comparison + Uber/Robinhood/ByteDance 案例：<a href="https://hudi.apache.org/blog/2025/07/21/mor-comparison/">链接</a></li>
+<li>DVC Joins lakeFS — Your Questions Answered（2025-11）：<a href="https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered">链接</a></li>
+<li>DataHub: Open Source Data Lineage：<a href="https://datahub.com/blog/open-source-data-lineage/">链接</a></li>
+<li>TheDataGuy: Open-Source Data Governance Frameworks（2025-08）：<a href="https://thedataguy.pro/writing/2025/08/open-source-data-governance-frameworks/">链接</a></li>
+<li>Tecton: Choosing Feature Store：<a href="https://resources.tecton.ai/hubfs/Choosing-Feature-Solution-Feast-or-Tecton.pdf?hsLang=en">PDF</a></li>
+<li>Uber Palette Meta Store Journey：<a href="https://www.uber.com/us/en/blog/palette-meta-store-journey/">链接</a></li>
+</ul>
+
+<h4>流处理 / OLAP / 编排 / MLOps</h4>
+<ul>
+<li>理想汽车 Hologres+Flink 万亿级车联网：<a href="https://developer.aliyun.com/article/1686564">链接</a></li>
+<li>蔚来 Flink 实时计算平台（FFA 2021）：<a href="https://developer.aliyun.com/article/891962">链接</a></li>
+<li>Flink Stateful Stream Processing 官方文档：<a href="https://nightlies.apache.org/flink/flink-doc-stable/docs/concepts/stateful-stream-processing/">链接</a></li>
+<li>Confluent: Kafka vs Pulsar：<a href="https://www.confluent.io/compare/kafka-vs-pulsar/">链接</a></li>
+<li>Onehouse: Spark vs ClickHouse vs Presto vs StarRocks vs Trino：<a href="https://www.onehouse.ai/blog/apache-spark-vs-clickhouse-vs-presto-vs-starrocks-vs-trino-comparing-analytics-engines">链接</a></li>
+<li>State of Workflow Orchestration Ecosystem 2025：<a href="https://www.pracdata.io/p/state-of-workflow-orchestration-ecosystem-2025">链接</a></li>
+<li>ayedo.de: MLOps mit Kubeflow vs Ray：<a href="https://ayedo.de/en/posts/cloud-native-ai-pipelines-mlops-mit-kubeflow-vs-ray/">链接</a></li>
+<li>阿里巴巴 EV Lakehouse（Paimon+Doris+Hologres）：<a href="https://www.alibabacloud.com/blog/electric-vehicle-data-revolution-how-real-time-lakehouse-architectures-solve-automotive-big-data-challenges_602044">链接</a></li>
+<li>Tesla Data Engine（taivo.ai）：<a href="https://taivo.ai/tesla-data-engine">链接</a></li>
+<li>platformengineering.org: What is a Data Platform Engineer：<a href="https://platformengineering.org/blog/what-is-a-data-platform-engineer">链接</a></li>
+<li>Monte Carlo: What good Data PMs do：<a href="https://montecarlo.ai/blog-what-good-data-product-managers-do-and-why-you-probably-need-one">链接</a></li>
+</ul>
+
+<h4>具身智能</h4>
+<ul>
+<li>Open X-Embodiment 项目：<a href="https://robotics-transformer-x.github.io/">链接</a>；论文：<a href="https://arxiv.org/abs/2310.08864">arXiv 2310.08864</a></li>
+<li>π0: VLA Flow Model：<a href="https://arxiv.org/html/2410.24164v1">论文</a></li>
+<li>DROID（RSS 2024）：<a href="https://droid-dataset.github.io/">数据集</a>；论文：<a href="https://arxiv.org/abs/2403.12945">arXiv 2403.12945</a></li>
+<li>ALOHA 2：<a href="https://aloha-2.github.io/">链接</a>；UMI：<a href="https://umi-gripper.github.io/">项目</a>；UMI 论文：<a href="https://arxiv.org/abs/2402.10329">arXiv 2402.10329</a></li>
+<li>RT-2：<a href="https://arxiv.org/abs/2307.15818">论文</a>；OpenVLA：<a href="https://arxiv.org/abs/2406.09246">论文</a>；Octo：<a href="https://arxiv.org/abs/2405.12213">论文</a></li>
+<li>银河通用 GraspVLA：<a href="https://hub.baai.ac.cn/view/42551">报道</a></li>
+<li>Skild AI: Building the General-Purpose Robotic Brain：<a href="https://www.skild.ai/blogs/building-the-general-purpose-robotic-brain">链接</a>；NVIDIA Skild 案例：<a href="https://www.nvidia.com/en-us/case-studies/skild-ai/">链接</a></li>
+<li>Figure Helix 02：<a href="https://www.figure.ai/news/helix-02">链接</a></li>
+<li>MIT CSAIL RialTo：<a href="https://news.mit.edu/2024/precision-home-robotics-real-sim-real-0731">链接</a></li>
+<li>Genesis 项目：<a href="https://github.com/Genesis-Embodied-AI/genesis-world">链接</a>；NVIDIA Isaac Lab 3.0：<a href="https://huggingface.co/blog/nvidia/state-of-simulation-for-physical-ai">链接</a></li>
+<li>Roborax: Embodied AI Data Flywheel：<a href="https://www.roborax.ai/embodied-ai-data-flywheel-physical-ai/">链接</a></li>
+</ul>
+
+<h4>组织 / PM 跃迁</h4>
+<ul>
+<li>InfoQ: Uber Hive Federation（PB 级去中心化）：<a href="https://www.infoq.com/news/2026/04/uber-hive-decentralized-data/">链接</a></li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于调研简报 A（6 facet，整体置信度 0.87）+ 读者能力校准报告 + 职业路线 + 认知契约 + JoyDrive-Infra 标杆仓库整理。所有论断保留公司案例、数字和来源 URL，能力定级对照读者校准报告（非自评）。读者按 §8 学习路线 12 周执行，最高 ROI 是把 doc17 抽象成治理型 PRD 模板并立刻用。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true },
+    gantt: { useMaxWidth: true, fontSize: 11 }
+  });
+</script>
+</body>
+</html>
