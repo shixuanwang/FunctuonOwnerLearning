@@ -22,7 +22,9 @@
 | [设计能力校准报告](joyspace-design-calibration.md) | 22 篇 joyspace 文档实测：19 项能力图谱、影响力诊断、3 个月路线 | — |
 | [教材A·总纲](textbooks/A-master-textbook.html) | 数据闭环×数据基建全景：三大闭环/AD七段飞轮/仿真场景/基建栈/具身/能力图谱/职业跃迁/学习路线（107KB·11 mermaid） | — |
 | [教材B·JoyDrive-Infra 0→100](textbooks/B-joydrive-infra-0to100.html) | 产品/工程/训练/评测/数据/基建六视角，吃透训练+评测（单 HTML+mermaid） | — |
+| [教材C·JoyDriver 0→100](textbooks/C-joydriver-0to100.html) | 端到端模型本质+训练实战（SIMPL/StreamPETR/DDP+RDMA/ONNX 上车）（单 HTML+mermaid） | — |
 | [教材D·ROVER5.0 发版与问题收敛黄金路径](textbooks/D-rover5-release-golden-path.html) | MR 体系/发版/问题收敛诊断+黄金路径+四流对齐+30-60-90 行动（单 HTML+mermaid） | — |
+| [教材F·世界模型 0→100](textbooks/F-world-model-0to100.html) | NVIDIA Cosmos/GAIA/DriveDreamer/OccWorld/Vista 盘点+架构横评+转战补习（单 HTML+mermaid） | — |
 
 ## ⚠️ 机密提醒
 

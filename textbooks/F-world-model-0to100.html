@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从 0 到 100 吃透世界模型（龙头盘点 + 数据基建转战）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --genie:#7c3aed;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:22px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--border); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.gen { background:var(--genie); }
+  .tag.danger { background:var(--danger); }
+  .tag.closed { background:#888; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .badge { font-size:12px; padding:2px 6px; border-radius:4px; background:#eef; color:#336; margin-left:6px;}
+  .repo-card { border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin:18px 0; background:var(--bg); }
+  .repo-card h4 { margin-top:0; }
+  .keynums { font-size:13px; color:var(--evidence); margin:6px 0; }
+  .keynums strong { color:var(--fg); }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · 0→100 路线</h2>
+<ol>
+  <li><a href="#sec-0">① 一句话定位 + 为什么 PM 必须懂世界模型</a></li>
+  <li><a href="#sec-1">② 世界模型全景与三大分类</a>
+    <div class="sub">
+      <a href="#s1-1">生成式 vs 预测式 vs 控制式</a> ·<br>
+      <a href="#s1-2">AD / Robotics / Universe 三赛道</a> ·<br>
+      <a href="#s1-3">与 simulator / 视频生成 / VLA 区别</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">③ 世界模型的本质：物理一致 + 可控 + 反事实</a></li>
+  <li><a href="#sec-3">④ 龙头开源深度盘点：NVIDIA Cosmos</a>
+    <div class="sub">
+      <a href="#s3-1">Cosmos-Predict1 双轨制</a> ·<br>
+      <a href="#s3-2">Cosmos-Reason1 推理层</a> ·<br>
+      <a href="#s3-3">Tokenizer 护城河</a>
+    </div>
+  </li>
+  <li><a href="#sec-4">⑤ 龙头盘点：西方闭源 / 半开源</a>
+    <div class="sub">
+      <a href="#s4-1">Google Genie 1/2/3</a> · <a href="#s4-2">DreamerV3</a> ·<br>
+      <a href="#s4-3">Wayve GAIA-1/2/3</a>
+    </div>
+  </li>
+  <li><a href="#sec-5">⑥ 龙头盘点：AD 世界模型开源矩阵</a>
+    <div class="sub">
+      <a href="#s5-1">DriveDreamer 系</a> · <a href="#s5-2">OccWorld</a> ·<br>
+      <a href="#s5-3">Vista / GenAD</a> · <a href="#s5-4">Drive-WM</a> ·<br>
+      <a href="#s5-5">MagicDrive / Panacea / WoVoGen</a>
+    </div>
+  </li>
+  <li><a href="#sec-6">⑦ 龙头盘点：国内机构 + 视频生成底座</a>
+    <div class="sub">
+      <a href="#s6-1">OpenDriveLab 矩阵</a> · <a href="#s6-2">Emu3.5</a> ·<br>
+      <a href="#s6-3">Wan2.1 / HunyuanVideo / CogVideoX</a> ·<br>
+      <a href="#s6-4">Open-Sora / Open-Sora-Plan</a>
+    </div>
+  </li>
+  <li><a href="#sec-7">⑧ 架构横评表：DiT / AR / Tokenizer / 条件控制</a></li>
+  <li><a href="#sec-8">⑨ 数据架构：视频清洗 + caption + 物理 clip 管线</a></li>
+  <li><a href="#sec-9">⑩ 训练基建：算力 / 5D 并行 / 显存 / checkpoint</a></li>
+  <li><a href="#sec-10">⑪ 世界模型如何重塑数据闭环</a>
+    <div class="sub">
+      <a href="#s10-1">造数据：从补充变主力</a> ·<br>
+      <a href="#s10-2">real-to-sim-to-real</a> ·<br>
+      <a href="#s10-3">仿真器 / reward model 化</a>
+    </div>
+  </li>
+  <li><a href="#sec-11">⑫ 转战补习：扩散底层 / DiT / 视频数据闭环 / 评测</a></li>
+  <li><a href="#sec-12">⑬ 学习路线 + 行动清单（0-12 月）</a></li>
+  <li><a href="#sec-13">⑭ 最深洞察 + 关键决策 rationale</a></li>
+  <li><a href="#sec-14">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>从 0 到 100 吃透世界模型（龙头盘点 + 数据基建转战）</h1>
+<p class="lede">一份写给"4 年自动驾驶数据闭环 PM、想转战世界模型 / 数据基建"读者的单文件教材。覆盖世界模型分类、龙头开源盘点（NVIDIA Cosmos / 西方 / AD / 国内 / 视频生成底座）、架构横评、数据与训练基建、数据闭环重塑、转战补习路线。每个 repo 带 URL + 关键数字。</p>
+<p class="meta">编写日期：2026-07-26 · 面向：判断力领先于实现熟练度、需补扩散模型与训练基建的 PM · 复用 B-joydrive-infra 教材样式</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 一句话定位 + 为什么 PM 必须懂世界模型</h2>
+
+<p>世界模型（World Model）是<strong>"从过去观测预测未来状态、且可被动作控制"</strong>的生成式基础模型。它的关键不在"生成像素"，而在<strong>"理解物理因果 + 可被 action 条件化"</strong>——这是它和纯视频生成（如 Sora/CogVideoX/Wan2.1）的本质区别。</p>
+
+<blockquote class="why">世界模型之所以 2024-2026 爆发，是因为它同时回答了三个工业级问题：(1) <strong>数据稀缺</strong>——长尾/危险场景采集成本极高，世界模型可批量"造数据"；(2) <strong>仿真可信</strong>——传统仿真器（CARLA/VTD）需要手工资产，世界模型从真实视频学；(3) <strong>规划闭环</strong>——把世界模型当 reward model 或 rollout 环境，可直接训规划器。这三件事恰好是 AD 数据闭环 PM 最熟悉的"采集/仿真/评测"三段，所以世界模型是 PM 转战 Physical AI 的最高杠杆切入口。</blockquote>
+
+<p>这本教材的结构：先把"世界模型是什么"从根上讲清（§2-§3），再盘点所有龙头开源 repo（§4-§7，每个带 URL/架构/数据/算力/可复现），然后横评架构（§8），最后落到数据基建（§9）、训练基建（§10）、数据闭环重塑（§11），并给一份从根补的转战补习路线（§12-§13）。</p>
+
+<aside class="note">本书最重要的认知杠杆：<strong>不要把"世界模型"和"视频生成"混为一谈</strong>。Sora/CogVideoX/Wan2.1/HunyuanVideo 是"视频生成基础模型"——它们不学物理、不可交互、不能被 action 条件化；真正的世界模型（Cosmos / Genie / GAIA / Vista / DriveDreamer）具备<strong>可控性 + 物理一致性</strong>。PM 在内部清晰区分这两类叙事，避免资源错配，这是"判断力领先于实现熟练度"的典型用武之地。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 世界模型全景与三大分类</h2>
+
+<h3 id="s1-1">2.1 生成式 / 预测式 / 控制式——按"输出形态 + 用途"切</h3>
+
+<p>世界模型按"输出什么 + 给谁用"可分三类。这比按架构分（Diffusion/AR）更能反映产品定位，因为同一架构可同时落三类用途：</p>
+
+<table>
+<thead><tr><th>类型</th><th>输出</th><th>核心问题</th><th>代表</th><th>PM 用途</th></tr></thead>
+<tbody>
+<tr><td><strong>生成式（Generative）</strong></td><td>未来视频 / 图像 / 多视角帧</td><td>数据合成、长尾补充</td><td>GAIA-2、DriveDreamer、MagicDrive、Panacea、Cosmos Text2World</td><td>仿真数据生产、感知训练数据增强</td></tr>
+<tr><td><strong>预测式（Predictive）</strong></td><td>未来 occupancy / BEV / agent 轨迹</td><td>场景理解、未来推演</td><td>OccWorld、Cam4DOcc、DriveWorld、DrivingWorld</td><td>4D 表征预训练、运动预测、可行驶区域判断</td></tr>
+<tr><td><strong>控制式（Action-controllable）</strong></td><td>action-conditioned 未来 + reward</td><td>规划训练、闭环评测</td><td>Genie 1（Latent Action）、Vista、GAIA-2、DreamerV3、ADriver-I</td><td>仿真器 / reward model / RL 训练环境</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why">三类划分的杠杆在于"PM 价值定位"：生成式最贴近数据合成 PM（你做过的 corner case 采集可平移为 scenario spec）；预测式最贴近感知 PM（4D 表征预训练是"世界模型作为 backbone"）；控制式最贴近规划/仿真 PM（reward model + 闭环评测）。这三类恰好对应你 AD 数据闭环的"数据→训练→评测"三段，迁移成本最低。反事实：若把世界模型只当"视频生成"，就会错过预测式和控制式这两条更接近端到端规划的高 leverage 路线。</blockquote>
+
+<h3 id="s1-2">2.2 AD / Robotics / Universe——按"领域 + 通用性"切</h3>
+
+<p>另一条切分轴是"是否领域专精"：</p>
+<ul>
+  <li><strong>AD 世界模型</strong>（GAIA-2、DriveDreamer、Vista、OccWorld、MagicDrive、Panacea、WoVoGen、Drive-WM、DriveWorld、Cam4DOcc、ADriver-I、DrivingWorld）——条件化用 HDMap/3D bbox/ego trajectory，多视角环视，分辨率 448×960/路。</li>
+  <li><strong>Robotics 世界模型</strong>（Cosmos Reason1、DreamerV3、Genie 1/2/3）——条件化用机器人指令 / latent action，强调跨具身形态泛化。</li>
+  <li><strong>Universe / 通用世界模型</strong>（Cosmos-Predict1、Emu3.5）——大规模通用视频训练，宣称"任意领域可微调"。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart TD
+  WM["世界模型 World Model"] --> BYUSE["按用途"]
+  WM --> BYDOMAIN["按领域"]
+  BYUSE --> GEN["生成式<br/>数据合成"]
+  BYUSE --> PRED["预测式<br/>4D 表征"]
+  BYUSE --> CTRL["控制式<br/>仿真+reward"]
+  BYDOMAIN --> AD["AD<br/>HDMap/3Dbox/ego 条件"]
+  BYDOMAIN --> ROBO["Robotics<br/>指令/latent action"]
+  BYDOMAIN --> UNI["Universe<br/>通用视频预训练"]
+  GEN --> AD
+  PRED --> AD
+  CTRL --> AD
+  GEN --> UNI
+  CTRL --> ROBO
+  PRED --> ROBO
+</pre>
+
+<h3 id="s1-3">2.3 与 simulator / 视频生成 / VLA 的边界</h3>
+<table>
+<thead><tr><th>概念</th><th>关键区别</th><th>典型</th></tr></thead>
+<tbody>
+<tr><td><strong>传统 Simulator</strong></td><td>手工资产 + 物理引擎（CARLA/VTD）；可交互但需大量美术 + 规则编码</td><td>CARLA、VTD、AirSim</td></tr>
+<tr><td><strong>视频生成模型</strong></td><td>只生成画面、不学物理、不可控；Sora/CogVideoX/Wan2.1</td><td>Sora、CogVideoX-5B、Wan2.1-14B</td></tr>
+<tr><td><strong>世界模型</strong></td><td>预测未来状态 + 可被 action 控制 + 学到部分物理因果</td><td>Cosmos、GAIA-2、Genie 1、Vista</td></tr>
+<tr><td><strong>VLA（Vision-Language-Action）</strong></td><td>从图像+指令直接出 action，不显式建模"世界状态演化"</td><td>RT-2、OpenVLA、π0</td></tr>
+</tbody>
+</table>
+
+<aside class="note">"世界模型" vs "VLA"是当下最容易混淆的边界。VLA 是端到端的 perception→action 映射，不显式建模"世界下一秒会怎样"；世界模型显式建模 P(next_state | state, action)。两者可组合：世界模型当模拟器训 VLA。读者记住口诀："<strong>VLA 答'怎么办'，世界模型答'接下来会怎样'</strong>"。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 世界模型的本质：物理一致 + 可控 + 反事实</h2>
+
+<p>判断一个模型是否"够格"叫世界模型，看三条硬指标——这是 PM 做选型/竞品分析时的<strong>判定框架</strong>：</p>
+
+<h4>3.1 物理一致性（Physical Consistency）</h4>
+<p>生成的未来必须服从基本物理：物体不会瞬移、不会穿墙、相机运动符合几何约束、重力/惯性合理。评测难点：<strong>没有公认 benchmark</strong>。Cosmos-Reason1 自建"物理常识本体（Space/Time/Physics）"是西方为数不多的尝试；GAIA/Genie 基本无公开物理一致性评测。</p>
+<aside class="note">物理一致性评测是 PM 最该切入的空白点。AD 数据闭环 PM 习惯的"问题定义 + 金标准 + 闭环指标 + 回归门禁"在这里高度稀缺。把 ROVER5.0 的发版/收敛方法论迁移到世界模型物理评测，是差异化定位。建议补的研究：Cosmos-Reason1 论文（arXiv:2503.15558）的 Physical Common Sense Ontology。</aside>
+
+<h4>3.2 可控性（Controllability）</h4>
+<p>能否通过 action / 条件变量精确控制生成结果？这是世界模型与视频生成的<strong>分水岭</strong>。三种典型可控机制：</p>
+<ul>
+  <li><strong>Latent Action Model</strong>（Genie 1）——无监督从视频学潜在动作，推理时替换为用户 action。</li>
+  <li><strong>Adaptive Layer Norm 条件化</strong>（GAIA-2）——把 ego 速度/曲率作 symlog 编码后通过 AdaLN 注入。</li>
+  <li><strong>Cross-attention 条件化</strong>（MagicDrive、Cosmos、Wan2.1）——文本/3D box/HDMap 通过 cross-attn 注入。</li>
+</ul>
+
+<h4>3.3 反事实推演（Counterfactual Rollout）</h4>
+<p>给定一个"如果换条轨迹会怎样"的查询，能否生成对应未来？这是世界模型当<strong>reward model / 仿真器</strong>的前提。Vista 在不访问 ground-truth action 下对不同动作给 reward；GAIA-2 用 scenario embedding 控制生成；Drive-WM 用"多未来候选 + 图像评估"选最优轨迹。</p>
+
+<blockquote class="why">这三条本质指标的存在理由：世界模型不是"更好的视频生成"，而是"可被规划器/RL agent 当环境用的可交互模拟器"。物理一致性决定它生成的数据是否能上车训练；可控性决定它能否覆盖长尾；反事实决定它能否做规划评估。三者缺一就退化成视频生成。反事实：若一个模型只能生成"统计上像驾驶"的视频但不能被 ego 动作控制，它就是 DriveDreamer v1 的水平——可用作数据增强，但无法做闭环评测。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 龙头开源深度盘点：NVIDIA Cosmos</h2>
+
+<p>NVIDIA 是 2025 年世界模型开源赛道的<strong>事实龙头</strong>——唯一把"World Foundation Model + Tokenizer + Video Curator + Guardrail"整条数据闭环平台都开源的玩家。</p>
+
+<div class="repo-card">
+<h4 id="s3-1">4.1 NVIDIA Cosmos-Predict1 — 双轨制 WFM 平台 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span><span class="tag soft">NVIDIA Open Model License</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/nvidia-cosmos/cosmos-predict1">github.com/nvidia-cosmos/cosmos-predict1</a> · <strong>论文：</strong>arXiv:2501.03575 · <strong>算力：</strong>10000×H100 × 3 个月 · <strong>数据：</strong>2000 万小时原始 → 清洗后 ~10⁸ 训练 clip + 10⁷ 微调 clip</p>
+<p><strong>架构（双轨制，这是 Cosmos 最值得学的设计）：</strong></p>
+<ul>
+  <li><strong>Diffusion 轨</strong>（DiT 扩散）：Text2World + Video2World，各 7B/14B。用 <strong>CV8×8×8 连续 tokenizer</strong>（Continuous Video）。</li>
+  <li><strong>Autoregressive 轨</strong>（自回归 Transformer）：4B/12B/5B/13B。用 <strong>DV8×16×16 离散 tokenizer</strong>（Discrete Video）。</li>
+  <li>视频先压成连续/离散 latent，再预测未来帧——双轨共享 tokenizer 设计哲学。</li>
+</ul>
+<p><strong>数据分布（按类别）：</strong>驾驶 11%、手部操控 16%、人体运动 10%、导航 16%、第一人称 8%、自然动态 20%、动态相机 8%、合成 4%、其他 7%。</p>
+<p><strong>核心创新：</strong></p>
+<ol>
+  <li><strong>Tokenizer 是核心</strong>——CI/DI/CV/DV 四族，空间压缩 8×/16×、时间压缩 4×/8×，总压缩比最高 <strong>2048×</strong>（8×16×16），比 SOTA 高 8× 压缩且更快（2-12×）。</li>
+  <li><strong>时间因果（causal）tokenizer</strong>，支持 1:1/3:4/4:3/9:16/16:9 多宽高比。</li>
+  <li><strong>WFM + Video Curator + Guardrail 三件套全开源</strong>——这是工业级数据闭环平台的范式。</li>
+  <li><strong>Single2MultiView AV</strong>——单视角转多视角，直接服务 AD 多相机生成。</li>
+</ol>
+<p><strong>可复现性：</strong>高度可复现。权重 NVIDIA Open Model License（商用可用、可派生），代码 Apache 2.0；权重/脚本/后训练/微调全开源。<span class="danger">注：Cosmos-Predict1 已转维护模式，新主线为 Cosmos 3（在 HuggingFace 上线）。</span></p>
+</div>
+
+<aside class="note"><strong>双轨制的设计逻辑：</strong>Diffusion 擅长高保真视频生成（连续 latent 利于像素级细节），AR 擅长长时序一致性 + 多模态控制（离散 token 利于 next-token 范式 + 接 LLM）。Cosmos 把两条路线都开源，让用户按"保真度 vs 可控性"权衡选——这是其他单押一路的玩家（GAIA 押扩散、Genie 1 押 AR）所没有的工程成熟度。读者要建立"双轨不是冗余，是覆盖不同 ROI 点"的认知。</aside>
+
+<div class="repo-card">
+<h4 id="s3-2">4.2 NVIDIA Cosmos-Reason1 — 物理常识 + 具身推理层 <span class="tag">开源</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/nvidia-cosmos/cosmos-reason1">github.com/nvidia-cosmos/cosmos-reason1</a> · <strong>论文：</strong>arXiv:2503.15558 · <strong>尺寸：</strong>7B / 56B（多模态 LLM）</p>
+<p><strong>架构：</strong>多模态 LLM（vision-language），通过长链式推理（long chain-of-thought）输出自然语言具身决策。两阶段训练：Physical AI SFT → Physical AI RL，论文报告两阶段均带来显著提升。</p>
+<p><strong>核心创新——把"世界模型"从"生成像素"抬到"生成推理决策"：</strong></p>
+<ul>
+  <li>用<strong>本体（ontology）</strong>显式定义物理常识 + 具身推理的评测维度：Physical Common Sense 覆盖 Space/Time/Physics 三域层级；Embodied Reasoning 是跨具身形态的二维本体。</li>
+  <li>给"世界模型是否真懂物理"提供可量化的 RLAI 范式。</li>
+  <li>配套自建 benchmark。</li>
+</ul>
+<p><strong>用途：</strong>给机器人/AV 提供"看视频→输出下一步具身决策 + 推理链"；可作评测世界模型物理理解能力的上层<strong>裁判/teacher</strong>。</p>
+<p><strong>可复现性：</strong>代码 + 预训练权重均在 NVIDIA Open Model License 下开源。可复现推理与 benchmark。</p>
+</div>
+
+<blockquote class="why">Cosmos-Reason1 的战略意义是<strong>补全世界模型评测缺位</strong>。除它和 DreamerV3（用 150+ 标准 RL 任务）外，GAIA/Genie 几乎无公认 benchmark。这恰好是 AD 数据闭环 PM 习惯的"问题定义 + 评测体系"能补强的地方——把 ROVER5.0 的发版/收敛方法论迁移到世界模型物理评测上，是差异化定位。反事实：若团队只追生成质量（FID/FVD），会做出"画面漂亮但物理穿模"的世界模型，上车就翻车。</blockquote>
+
+<h4 id="s3-3">4.3 NVIDIA Cosmos-Tokenizer — 隐形护城河 <span class="tag">已归档但可用</span></h4>
+<p>独立仓 <a href="https://github.com/NVIDIA/Cosmos-Tokenizer">github.com/NVIDIA/Cosmos-Tokenizer</a>（已归档但可用）。四族 tokenizer：</p>
+<table>
+<thead><tr><th>族</th><th>类型</th><th>空间</th><th>时间</th><th>总压缩</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td>CI</td><td>连续图像</td><td>8/16</td><td>—</td><td>—</td><td>图像生成</td></tr>
+<tr><td>DI</td><td>离散图像</td><td>8/16</td><td>—</td><td>—</td><td>AR 图像</td></tr>
+<tr><td>CV</td><td>连续视频</td><td>8</td><td>4/8</td><td>最高 2048×（8×16×16）</td><td>Diffusion 视频生成</td></tr>
+<tr><td>DV</td><td>离散视频</td><td>8/16</td><td>4/8</td><td>最高 2048×</td><td>AR 视频预测</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>为什么 tokenizer 是世界模型的"隐形护城河"：</strong>视频模型训练算力几乎正比于序列长度。Cosmos 把视频压 2048×，意味着同等算力下能训<strong>多 8 倍数据</strong>或多 8 倍参数。GAIA-2 用 32×8× 连续 latent（~400×）、Genie 1 用 ST-ViViT——谁掌握更好的视频 tokenizer，谁的训练算力效率就高一个数量级。这是 PM 评估"换 tokenizer 是否值得"的硬指标，是必补的模型侧硬知识。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 龙头盘点：西方闭源 / 半开源</h2>
+
+<div class="repo-card">
+<h4 id="s4-1">5.1 Google Genie 1 / 2 / 3 — action-controllable 世界模型奠基 <span class="tag closed">Genie 1 算法+社区复现</span><span class="tag closed">Genie 2/3 完全闭源</span></h4>
+<p class="keynums"><strong>论文：</strong><a href="https://arxiv.org/abs/2402.15391">arXiv:2402.15391</a>（Genie 1）· <strong>博客：</strong><a href="https://deepmind.google/blog/genie-2-a-large-scale-foundation-world-model/">Genie 2 blog</a> · <strong>Genie 1 算力：</strong>256×TPUv5p</p>
+<p><strong>Genie 1 架构（三件套，~11B 参数）：</strong></p>
+<ul>
+  <li><strong>ST-ViViT</strong> 时空视频 tokenizer（200M 参数，VQ-VAE，1024 码本）——时空因子化 transformer，比 C-ViViT 省显存（0.9GB vs 1.6GB）。</li>
+  <li><strong>自回归 Dynamics Model</strong>（10.1B）——预测下一 latent 状态。</li>
+  <li><strong>Latent Action Model（LAM，300M，VQ-VAE，8 个离散潜在动作）</strong>——无监督从视频推断潜在动作。</li>
+</ul>
+<p><strong>数据：</strong>30000 小时互联网 2D 平台游戏视频，从 5500 万 clip（244k 小时）经学习分类器筛选出 680 万 clip，10 FPS、160×90。</p>
+<p><strong>核心创新：</strong></p>
+<ol>
+  <li><strong>完全无监督从无标注视频推断"潜在动作"</strong>——推理时丢弃 LAM、替换为用户动作即可控制。这是 <strong>"action-controllable 世界模型"的奠基范式</strong>。</li>
+  <li>ST-ViViT 时空因子化。</li>
+</ol>
+<p><strong>Genie 2 / Genie 3：</strong>从 AR 转向扩散世界模型；Genie 2 可"任意图像→3D 可玩、动作可控、可持续 1 分钟"；Genie 3 为通用世界模型。架构/训练/数据均<strong>未披露</strong>。</p>
+<p><strong>可复现性：</strong>官方未开源。社区复现——<a href="https://github.com/myscience/open-genie">Open-Genie</a>（PyTorch）、<a href="https://github.com/insait-institute/genieredux">GenieRedux</a>（INSAIT）、Jafar（JAX）。算法可近似复现，权重不可。</p>
+</div>
+
+<aside class="note"><strong>Latent Action Model 是世界模型最重要的概念之一。</strong>传统思路需要给每个视频帧配 action 标签（成本极高），Genie 用 VQ-VAE 把连续 action 离散成 8 类潜在动作——从"看视频"自动学。这意味着<strong>任何无标注视频都可作为世界模型训练数据</strong>，把数据成本从"标注数据"降到"原始视频"。AD PM 可对比：你做 corner case 标注花的人工，在 LAM 范式下可大幅降低——这是降低数据成本的根本性创新。</aside>
+
+<div class="repo-card">
+<h4 id="s4-2">5.2 DeepMind DreamerV3 — 模型基 RL 世界模型原点 <span class="tag">完全开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/danijar/dreamerv3">github.com/danijar/dreamerv3</a> · <strong>论文：</strong>Nature 2025（s41586-025-08744-2） · <strong>算力：</strong>单 GPU 可跑</p>
+<p><strong>架构：</strong>RSSM 循环状态空间模型（latent dynamics）+ decoder/reward/continue heads；actor-critic 在<strong>"想象轨迹"</strong>上训练。与前代关键改动：symlog 预测、free bits、自动熵缩放、去掉 imagination 内 critic 分布——使其<strong>固定超参跨域可训</strong>。</p>
+<p><strong>训练：</strong>单一配置，无超参搜索；可在单 GPU 跑。</p>
+<p><strong>数据：</strong>无外部视频；从 agent 自身与环境交互的 rollout 在线学习。覆盖 150+ 任务（DM Control/Atari/Crafter/ProcGen/Minecraft 等），含连续/离散动作、2D/3D、视觉/低维输入。</p>
+<p><strong>核心创新：</strong>首个固定超参跨 150+ 域达到 SOTA 的算法，<strong>首次无调参解 Minecraft diamond</strong>——证明"世界模型 + 想象训练"可作为通用 RL 范式。</p>
+<p><strong>可复现性：</strong>完全开源（Apache 2.0），代码完整、文档清晰、可单卡复现，是<strong>最易上手的"世界模型"入门项目</strong>。</p>
+</div>
+
+<blockquote class="why">DreamerV3 是教学/研究的"世界模型原点"。它定义了世界模型最朴素的形式：<strong>"在 latent 空间预测未来状态 + 想象训练"</strong>。所有后来的视频世界模型（Cosmos/GAIA/Genie）都是把这个核心思想从 latent 空间抬到像素/视频空间。读者从这里开始建立心智模型最纯粹——单卡可跑、150+ 任务、Nature 论文。反事实：若直接从 Cosmos 14B 入手，会被工程复杂度（5D 并行、Tokenizer、Curator）淹没，学不到世界模型的本质。</blockquote>
+
+<div class="repo-card">
+<h4 id="s4-3">5.3 Wayve GAIA-1 / 2 / 3 — 驾驶生成式世界模型最佳参考 <span class="tag closed">全闭源</span></h4>
+<p class="keynums"><strong>论文：</strong>GAIA-1 arXiv:2309.17080 · <a href="https://arxiv.org/abs/2503.20523">GAIA-2 arXiv:2503.20523</a> · <strong>Org：</strong>Wayve（英国伦敦） · <strong>GAIA-1 参数：</strong>9B</p>
+<p><strong>GAIA-2 架构（最新公开技术细节，是"AD 世界模型产品化"的最佳参考实现）：</strong></p>
+<ul>
+  <li><strong>Video Tokenizer</strong>：85M 编码器 + 200M 解码器（VAE，32× 空间 + 8× 时间下采样，64 通道连续 latent，总压缩 ~400×）。</li>
+  <li><strong>World Model</strong>：8.4B 空间-时间因子化 transformer（4096 维、32 头、22 层），<strong>flow matching 替代 DDPM</strong>，adaptive layer norm 做动作条件、cross-attention 做其他控制。</li>
+  <li>从 GAIA-1 的离散 token 改为连续 latent；支持 5-6 路环视联合生成。</li>
+</ul>
+<p><strong>数据：</strong>约 2500 万段 2 秒视频序列（2019-2024），覆盖英国/美国/德国，3 款轿车+2 款厢式，5-6 路相机，20/25/30Hz，输入分辨率 448×960/路。</p>
+<p><strong>核心创新——丰富的结构化条件（这是 PM 视角的"需求镜像"）：</strong></p>
+<ul>
+  <li>自车速度+曲率（symlog 编码）；动态 agent 3D box；天气/限速/车道/红绿灯/路口等元数据。</li>
+  <li>相机内外参；CLIP 文本/视觉嵌入；scenario embedding（来自 Wayve 私有驾驶模型）。</li>
+  <li>flow matching 训练更稳；rolling window 解码保证多帧一致性。</li>
+</ul>
+<p><strong>可复现性：</strong>三代全部闭源——论文 + 博客 + demo 视频；<strong>无权重、无官方代码、无私有数据</strong>。被 Oxera 报告与多篇综述明确归类为 closed。不可复现。</p>
+</div>
+
+<aside class="note"><strong>GAIA-2 的结构化条件几乎就是 AD 数据 schema 的字段清单。</strong>研究它可反推你自己的数据闭环该采集哪些元数据——这是 PM 视角的"需求镜像"。对比你的 HilPerformancePlatform 数仓 schema，看缺哪些字段（天气标签？红绿灯状态？路口拓扑？scenario embedding？）。GAIA-2 闭源反而是优势：你不会被代码细节带偏，只能从论文反推产品需求，<strong>训练的就是 PM 的需求抽象能力</strong>。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 龙头盘点：AD 世界模型开源矩阵</h2>
+
+<p>AD 是世界模型最贴近工业落地的赛道。开源矩阵分两条主线：<strong>像素/视频生成路线</strong>（DriveDreamer/Vista/GenAD/Panacea/MagicDrive/WoVoGen/Drive-WM/DrivingWorld/ADriver-I）和<strong>3D 占据/几何路线</strong>（OccWorld/Cam4DOcc/DriveWorld）。</p>
+
+<div class="repo-card">
+<h4 id="s5-1">6.1 DriveDreamer 系（v1 / 2 / 4D）— 真实驾驶世界模型开创者 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>v1：</strong><a href="https://github.com/JeffWang987/DriveDreamer">github.com/JeffWang987/DriveDreamer</a>（ECCV 2024）· <strong>v2：</strong><a href="https://github.com/f1yfisher/DriveDreamer2">github.com/f1yfisher/DriveDreamer2</a>（AAAI 2025）· <strong>4D：</strong><a href="https://github.com/GigaAI-research/DriveDreamer4D">github.com/GigaAI-research/DriveDreamer4D</a>（CVPR 2025） · <strong>Org：</strong>GigaAI + CASIA + 清华</p>
+<p><strong>DriveDreamer v1：</strong>首个完全从<strong>真实驾驶场景</strong>建立的世界模型（区别于游戏/仿真器环境的 GAIA-1）。两阶段训练：先学结构化交通约束（HDMap/3D bbox/轨迹），再预测未来状态。数据：nuScenes。</p>
+<p><strong>DriveDreamer-2：</strong>引入 LLM 接口——LLM 把用户文本查询转成 agent 轨迹 → 生成符合交规的 HDMap → Unified Multi-View Model 出时序一致多视角视频。<strong>首个能用自然语言定制驾驶视频的世界模型</strong>。FID 11.2、FVD 55.7，比 SOTA 相对提升 ~30%/50%。生成数据可使下游 3D 检测 +4%、跟踪 +8%。</p>
+<p><strong>DriveDreamer4D：</strong>用世界模型先验合成额外多视角数据（变道、前进-后退轨迹）来增强 4D 场景重建——首次把"世界模型当数据机器"喂给 4D 重建。</p>
+<p><strong>可复现性：</strong>代码均开源（Apache-2.0）。v1 repo 有训练/数据准备文档但未明确放预训练权重；v2/4D 有代码与权重。整体可复现性中等偏上，但需自备 nuScenes。</p>
+</div>
+
+<div class="repo-card">
+<h4 id="s5-2">6.2 OccWorld — 3D occupancy 自回归世界模型 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/wzzheng/OccWorld">github.com/wzzheng/OccWorld</a>（ECCV 2024，清华） · <strong>算力门槛：</strong>单张 RTX 4090（24GB）可训</p>
+<p><strong>架构：</strong>GPT 式自回归生成——先用 VQ-VAE 把 3D occupancy 离散化为 token，再用 transformer 自回归预测"下一帧场景 + ego 运动"的联合演化。</p>
+<p><strong>数据：</strong>nuScenes + Occ3D 的 3D occupancy 标注；兼容 SelfOcc/TPVFormer/SurroundOcc 的 occupancy 数据。</p>
+<p><strong>核心创新：</strong>把世界模型从"像素空间"搬到"<strong>3D occupancy 离散 token 空间</strong>"，自监督预测未来场景与 ego 联合演化；可预测周围 agent 运动与可行驶区域，显示"理解场景而非记忆数据"。<strong>局限：难以预测新进入视野的车辆</strong>。</p>
+<p><strong>可复现性：</strong>Apache-2.0；权重 + train.py/eval/visualize 全释出；硬件门槛低。<strong>是 PM 入门 AD 世界模型的最佳实验体</strong>。</p>
+</div>
+
+<aside class="note">OccWorld 把"世界模型"从像素抬到 occupancy——这是认知杠杆。像素世界模型（DriveDreamer/GAIA）关心"画面像不像"，occupancy 世界模型关心"几何对不对"。对 AD 而言，occupancy 是更接近规划/可行驶区域判断的表示。读者要建立："表示空间决定下游用途"的直觉——这是补强点 2 的核心。</aside>
+
+<div class="repo-card">
+<h4 id="s5-3">6.3 Vista + GenAD — OpenDriveLab 世界模型矩阵 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>Vista：</strong><a href="https://github.com/OpenDriveLab/Vista">github.com/OpenDriveLab/Vista</a>（NeurIPS 2024） · <strong>GenAD：</strong><a href="https://github.com/OpenDriveLab/DriveAGI">github.com/OpenDriveLab/DriveAGI</a>（CVPR 2024 Highlight） · <strong>Org：</strong>OpenDriveLab / 上海 AI Lab</p>
+<p><strong>Vista 架构：</strong>Latent diffusion（基于 Stability AI generative-models）；支持多模态动作条件——<strong>转向角、速度、指令、轨迹、目标点</strong>。</p>
+<p><strong>Vista 核心创新：</strong>强泛化的驾驶世界模型——高保真未来预测 + 连续长时程外推 + 多模态动作可控 + <strong>可在不访问真值动作下对不同动作给 reward</strong>（即可作 reward model 评估驾驶行为）。是 GenAD 的后续升级。</p>
+<p><strong>GenAD（CVPR 2024）：</strong>大规模 video prediction 预测模型，用 <strong>OpenDV-YouTube（1700+ 小时真实驾驶视频，nuScenes 的 ~300 倍）</strong>做 web-scale 预训练。提供 OpenDV-mini（25 小时 / 44GB raw / 390GB img）供快速上手。</p>
+<p><strong>可复现性：</strong>Vista 代码 Apache-2.0，权重 vista.safetensors 在 HuggingFace + Google Drive（v1.0，2024/06）；门槛相对低、社区活跃。GenAD 数据/下载脚本全释出，模型本体权重在仓库内未完整释出（后续以 Vista 形式释出）。</p>
+</div>
+
+<blockquote class="why">Vista + GenAD + WorldEngine + ReSim + SimScale 构成 OpenDriveLab 世界模型矩阵，是<strong>国产里最"产品化、工程化、贴近 AD 数据闭环"的世界模型组合</strong>。它们分别覆盖生成（Vista）、表征预训练（GenAD）、后训练数据引擎（WorldEngine）、可靠仿真（ReSim）、规模化评测（SimScale）——这五件套与你的 AD 数据闭环工作流天然对齐。强烈建议作为主练习场。反事实：若只学单一 repo（如 Vista），会错过 WorldEngine 把"世界模型当后训练数据引擎"的产品定位——这才是 PM 最该关注的"数据闭环 2.0"。</blockquote>
+
+<div class="repo-card">
+<h4 id="s5-4">6.4 Drive-WM — 多视角 + 端到端规划兼容 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/BraveGroup/Drive-WM">github.com/BraveGroup/Drive-WM</a>（CVPR 2024，CASIA） · <strong>数据：</strong>nuScenes（多视角）</p>
+<p><strong>架构：</strong>多视角视觉预测世界模型，基于 diffusers 库；生成多视角一致、可控的未来视频，并与端到端规划模型兼容，可基于图像评估从多个预测未来中选最优轨迹。</p>
+<p><strong>核心创新：</strong>首个与端到端规划兼容的驾驶世界模型；首个生成高保真多视角视频的驾驶 WM；用"多未来候选 + 图像评估"做轨迹决策。</p>
+<p><strong>可复现性：</strong>Apache-2.0；<strong>但权重与训练代码截至检索时仍标注"coming soon"</strong>（README TODO），工程复现度偏低。是 GAIA 系列闭源时研究 AD 世界模型最实际的可跑起点（架构+论文可读）。</p>
+</div>
+
+<div class="repo-card">
+<h4 id="s5-5">6.5 MagicDrive / Panacea / WoVoGen — 可控生成三件套 <span class="tag">开源</span></h4>
+<p class="keynums"><strong>MagicDrive：</strong><a href="https://github.com/cure-lab/MagicDrive">github.com/cure-lab/MagicDrive</a>（ICLR 2024，CUHK，1167 stars） · <strong>Panacea：</strong><a href="https://github.com/wenyuqing/panacea">github.com/wenyuqing/panacea</a>（CVPR 2024/2025） · <strong>WoVoGen：</strong><a href="https://github.com/fudan-zvg/WoVoGen">github.com/fudan-zvg/WoVoGen</a>（ECCV 2024）</p>
+<p><strong>MagicDrive：</strong>扩散模型；用 cross-attention + additive encoder branch 注入<strong>文本/相机姿态/3D bbox/road map</strong>条件；cross-view attention 保证多视角一致性。强调"多样化 3D 几何控制"，解决纯 BEV 条件对高度/遮挡/路面高程控制不足。可生 60 帧长视频。复现度高（多档 checkpoint 在 HF：flymin/MagicDrive-*）。</p>
+<p><strong>Panacea/Panacea+：</strong>扩散 + 4D attention + 两阶段生成 pipeline；ControlNet 框架用 BEV layout 精细控制。强调 Consistency（时序+跨视角）+ Controllability（与标注对齐）；可调天气/时间/场景；生成带自动标注的无限合成数据。</p>
+<p><strong>WoVoGen：</strong>World Volume-aware Diffusion；两阶段——(i) 据车辆控制序列"envision"未来 4D temporal world volume（HD map + occupancy），(ii) 据该 4D world volume + 传感器关联生成多相机视频。<strong>引入显式 4D world volume 作为生成基础元素</strong>。</p>
+</div>
+
+<h4>6.6 补充：Cam4DOcc / DriveWorld / ADriver-I / DrivingWorld</h4>
+<table>
+<thead><tr><th>项目</th><th>定位</th><th>URL/出处</th><th>可复现</th></tr></thead>
+<tbody>
+<tr><td><strong>Cam4DOcc</strong></td><td>首个 camera-only 4D occupancy 预测 benchmark + OCFNet 基线</td><td><a href="https://github.com/haomo-ai/Cam4DOcc">github.com/haomo-ai/Cam4DOcc</a>（CVPR 2024）</td><td>高（benchmark 级，77+ 引用）</td></tr>
+<tr><td><strong>DriveWorld</strong></td><td>4D 预训练场景理解（Memory State-Space Model）；下游全栈涨点（3D 检测 +7.5% mAP、规划 -0.34m L2）</td><td>arXiv:2405.04390（CVPR 2024，PKU+NUDT）</td><td>低（官方 repo 未命中）</td></tr>
+<tr><td><strong>ADriver-I</strong></td><td>MLLM + Diffusion 联合架构；vision-action pairs 联合 rollout</td><td>arXiv:2311.13549（132+ 引用）</td><td>低（无官方代码）</td></tr>
+<tr><td><strong>DrivingWorld</strong></td><td>GPT-style 自回归驾驶世界模型；可预测 40s+ 长视频</td><td>arXiv:2412.19505（HKUST+Horizon）</td><td>中（推理+评测代码已释，训练 TODO）</td></tr>
+<tr><td><strong>MagicDrive3D</strong></td><td>MagicDrive 升级为 3D 可控（任意视角渲染）+ Gaussian Splatting</td><td><a href="https://github.com/flymin/MagicDrive3D">github.com/flymin/MagicDrive3D</a>（WACV 2026）</td><td>低（需邮件申请 draft）</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>风险提示——"paper-only"项目陷阱：</strong>CogDriving 经多方检索未发现公开项目；ADriver-I/DriveWorld 无官方代码。做竞品/选型分析时务必以"<strong>代码是否释出 + license + 最近 commit</strong>"三件套核实，避免被 paper-only 项目误导。AD PM 的"判断力领先"优势在这里直接变现——能识别 hype vs 落地。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 龙头盘点：国内机构 + 视频生成底座</h2>
+
+<h3 id="s6-1">7.1 OpenDriveLab 世界模型矩阵（上海 AI Lab）— PM 主练习场</h3>
+<table>
+<thead><tr><th>项目</th><th>定位</th><th>URL</th></tr></thead>
+<tbody>
+<tr><td><strong>Vista</strong></td><td>可泛化驾驶世界模型（多模态动作 + reward）</td><td>github.com/OpenDriveLab/Vista</td></tr>
+<tr><td><strong>GenAD</strong></td><td>web-scale 视频预测预训练基座</td><td>github.com/OpenDriveLab/DriveAGI</td></tr>
+<tr><td><strong>WorldEngine</strong></td><td>Physical AI 后训练框架（解决长尾安全关键数据稀缺）</td><td><a href="https://github.com/OpenDriveLab/WorldEngine">github.com/OpenDriveLab/WorldEngine</a></td></tr>
+<tr><td><strong>ReSim</strong></td><td>可可靠仿真多样开放驾驶场景</td><td><a href="https://opendrivelab.com/ReSim">opendrivelab.com/ReSim</a></td></tr>
+<tr><td><strong>SimScale</strong></td><td>nuPlan+NAVSIM 仿真规模化评测</td><td><a href="https://github.com/OpenDriveLab/SimScale">github.com/OpenDriveLab/SimScale</a></td></tr>
+</tbody>
+</table>
+<blockquote class="why">OpenDriveLab 矩阵的战略价值：它把世界模型定位为<strong>"后训练数据引擎"</strong>而非单纯生成器——直击 AD 长尾数据稀缺。WorldEngine 把世界模型当数据扩增与对齐工具；SimScale 把仿真规模化评测标准化。这套组合是当下最"产品化/工程化"贴近 AD 数据闭环的国产世界模型工作，与你的 JoyDrive/HilPerformancePlatform 工作流天然对齐。</blockquote>
+
+<h3 id="s6-2">7.2 Emu3 / Emu3.5（智源）— 国产"统一世界模型"代表 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h3>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/baaivision/emu3">github.com/baaivision/emu3</a> · <a href="https://github.com/baaivision/Emu3.5">github.com/baaivision/Emu3.5</a> · <strong>训练：</strong>&gt;10 万亿 token 交错视频帧+文本</p>
+<p><strong>架构：</strong>原生多模态 next-token prediction（VQ 视觉分词器 + 统一 token 空间，<strong>无模态 adapter / 无任务 head</strong>）。Emu3.5 引入 <strong>DiDA（Discrete Diffusion Adaptation）</strong>把串行解码转双向并行，推理快约 20×。</p>
+<p><strong>核心创新：</strong>纯 next-token 统一理解和生成（区别于 Sora 类扩散）；Emu3.5 明确定位为<strong>"多模态世界模型"</strong>——跨视觉-语言联合预测下一状态，具备时空一致的长程生成；明确朝"世界学习者（world learner）"叙事。是国产里最贴近"统一世界模型"范式的开源代表。</p>
+
+<h3 id="s6-3">7.3 视频生成底座（非世界模型，但是世界模型的训练底座）</h3>
+
+<div class="repo-card">
+<h4>Wan2.1 / Wan2.2（阿里通义万相）— 国产开源视频生成事实标杆 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/Wan-Video/Wan2.1">github.com/Wan-Video/Wan2.1</a> · <a href="https://github.com/Wan-Video/Wan2.2">github.com/Wan-Video/Wan2.2</a> · <strong>尺寸：</strong>1.3B（dim1536/30层/12头）+ 14B（dim5120/40层/40头）；Wan2.2 升级为 MoE（A14B）</p>
+<p><strong>架构：</strong>Flow Matching + DiT。T5 多语言文本编码器 + 每层 cross-attention；时间嵌入经共享 MLP 预测 6 个调制参数。自研 <strong>Wan-VAE（3D causal VAE）</strong>做时空压缩 + 时间因果性，可编解码任意长 1080P 视频不丢历史时序信息。</p>
+<p><strong>训练：</strong>数据"数十亿级图像+视频"，H800 级集群训练。</p>
+<p><strong>核心创新：</strong>首个支持中英文双语文字渲染效果的开源视频生成模型；展示了视频生成的 scaling law（1.3B→14B 性能跨越）；VBench 登顶，被多家评测认为超越闭源 Sora。生态最完整（VACE 编辑、FLF2V 首尾帧、ComfyUI/diffusers 深度集成、FSDP+xDiT USP 多卡推理）。</p>
+<p><strong>可复现性：</strong>中-高。推理/微调脚本全开源（Apache-2.0），社区有 VideoX-Fun 全参数训练教程；但 14B 从零训练需 H800 级算力，企业级微调可行。</p>
+<p><strong>社区推理显存：</strong>1.3B 仅需 8.19GB 跑 480P；14B 720P 需 65-80GB（H100 级）。</p>
+</div>
+
+<div class="repo-card">
+<h4>HunyuanVideo（腾讯混元）— 开源最大视频模型之一 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/Tencent/HunyuanVideo">github.com/Tencent/HunyuanVideo</a> · <strong>尺寸：</strong>13B · <strong>推理显存：</strong>720p×129f 需 60GB，544p×129f 需 45GB（提供 FP8 量化）</p>
+<p><strong>架构：</strong>Dual-Stream → Single-Stream Transformer + Full Attention（文本 token 与视频 token 先独立处理后融合）+ Causal 3D VAE（4/8/16 压缩）+ <strong>MLLM 文本编码器</strong>（decoder-only 多模态大模型，而非 CLIP/T5）。用 3D RoPE。</p>
+<p><strong>VAE 对比（MCL-JCV PSNR）：</strong>HunyuanVideo <strong>35.39</strong> vs Cosmos-VAE 32.76 vs CogVideoX-1.5 33.22 vs OpenSora-1.2 30.15——<strong>开源最强 3D VAE</strong>。</p>
+<p><strong>核心创新：</strong>双流→单流 DiT 设计；MLLM 当文本编码器（语义强于 T5/CLIP）；AngelPTM 5D 并行 + 99.5% 训练稳定率，<strong>是当前开源里工程基建披露最完整的之一</strong>。</p>
+<p><strong>训练数据清洗管线（PM 必学）：</strong>Dover 美学 + 清晰度模型 + 光流运动速度预测 + 场景切分（PySceneDetect + Transnet v2）+ OCR 去文字 + YOLOX 风格水印/logo 检测 + 14 类相机运动分类器。Caption 用自研 VLM 生成结构化 JSON（短/密描述、背景、风格、镜头、光照、氛围）。</p>
+</div>
+
+<div class="repo-card">
+<h4>CogVideoX（清华 THUDM）— 早期开源 T2V 标杆 <span class="tag">2B Apache-2.0 / 5B 自定义</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/THUDM/CogVideo">github.com/THUDM/CogVideo</a> · <strong>尺寸：</strong>2B / 5B（CogVideoX1.5-5B 支持 10s）</p>
+<p><strong>架构：</strong>Expert Transformer（专家 Transformer）+ 3D Causal VAE（4×8×16 压缩 = 时间4 / 空间8 / 通道16）。Transformer 内部用"专家注意力"，文本专家分支与视频专家分支解耦，再融合。3D RoPE + 可学习位置嵌入。</p>
+<p><strong>训练：</strong>5B BF16；传闻 ~224×H800 级别（仓库/论文未直接确认）。约 3500 万高质量视频片段（平均 6 秒/段）。</p>
+<p><strong>核心创新：</strong>"专家 Transformer"把文本与视频注意力解耦显著降低噪声；3D Causal VAE 几乎无损重建；推理优化好（2B 在 GTX 1080Ti 可跑，5B 在 RTX 3060 可跑）。</p>
+</div>
+
+<aside class="note"><strong>Expert Transformer 的设计哲学：</strong>把"理解专家"和"生成专家"解耦——文本 token 和视频 token 在 Transformer 内部走独立注意力分支，再融合。这避免了跨模态噪声污染，长视频生成漂移更小。CogVideo（2022）是当时首个开源大规模 T2V 模型，CogVideoX（2024）大幅刷新开源 SOTA。读者要建立："专家分离 vs 统一注意力"是 Transformer 设计的核心权衡——HunyuanVideo 走"双流→单流"，CogVideoX 走"专家分支"，Wan2.1 走"全注意力"。</aside>
+
+<h3 id="s6-4">7.4 Open-Sora / Open-Sora-Plan — 低成本训练教材级</h3>
+
+<div class="repo-card">
+<h4>Open-Sora v2（HPC-Ai Tech）— $200K 训出商用级 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/hpcaitech/Open-Sora">github.com/hpcaitech/Open-Sora</a> · <strong>尺寸：</strong>v2 为 11B · <strong>训练成本：</strong>约 $200,000（H100/H800），约同类 1/5-1/10</p>
+<p><strong>架构演进：</strong>v1.0/v1.1 STDiT（时空分离）→ v1.2 3D-VAE + Rectified Flow + 统一空时 VAE → v1.3+ Shifted Window Attention → v2.0（11B）主分支。</p>
+<p><strong>核心创新：</strong>"<strong>$200K 训出商用级</strong>"是国产开源里唯一把训练成本彻底透明化的项目；ColossalAI 分布式（序列并行 768px + 张量并行 256px）降本 50-60%；Motion Score 控制运动强度（1-7 档）。</p>
+<p><strong>可复现性：</strong>中-高。代码+权重+训练脚本全开源；但完整复现 11B 仍需百万美元级算力。<strong>是研究"低成本训练视频基础模型"的最佳教材级 repo</strong>。</p>
+</div>
+
+<div class="repo-card">
+<h4>Open-Sora-Plan v1.5（PKU-YuanGroup）— 国产昇腾全栈训练 <span class="tag">开源</span><span class="tag soft">Apache-2.0</span></h4>
+<p class="keynums"><strong>URL：</strong><a href="https://github.com/PKU-YuanGroup/Open-Sora-Plan">github.com/PKU-YuanGroup/Open-Sora-Plan</a> · <strong>Org：</strong>北大 + 华为 + 鹏城实验室</p>
+<p><strong>架构演进：</strong>v1.0/1.1 2+1D → v1.2 Dense 3D → v1.3 <strong>Skiparse 3D</strong>（稀疏注意力，性能接近 Dense DiT 但提速 35%+）→ v1.5 SUV（Sparse Skiparse 3D DiT）。WFVAE（Wavelet-Flow VAE）8×8×8 下采样，PSNR 高于 Wan2.1 的 VAE。</p>
+<p><strong>训练：</strong>v1.5（8B）<strong>完全在华为昇腾 Ascend 910 上训练</strong>（学界少见的国产卡训练大模型案例），用 4000 万视频样本，框架 MindSpeed-MM。</p>
+<p><strong>可复现性：</strong>中。代码/数据/权重全开源，但 <strong>v1.5 主要在 NPU/MindSpeed-MM 框架，GPU 版本"coming soon"</strong>——这是首次在顶级开源视频模型上看到"国产算力锁定"，对复现/二次开发是新的工程约束。</p>
+</div>
+
+<h4>7.5 补充：Latte / LTX-Video / U-ViT — 教学级 DiT</h4>
+<table>
+<thead><tr><th>项目</th><th>定位</th><th>URL</th><th>门槛</th></tr></thead>
+<tbody>
+<tr><td><strong>U-ViT</strong></td><td>把 U-Net 换成 ViT 的开创性工作；保留 U-Net 长跳连</td><td><a href="https://github.com/baofff/U-ViT">github.com/baofff/U-ViT</a></td><td>学术级单卡</td></tr>
+<tr><td><strong>Latte（Vchitect）</strong></td><td>潜空间内纯 Transformer block 的视频 DiT 原型</td><td><a href="https://github.com/Vchitect/Latte">github.com/Vchitect/Latte</a></td><td>学术级单卡</td></tr>
+<tr><td><strong>LTX-Video</strong></td><td>首个实时 DiT 视频模型（30 FPS @ 1216×704）；LTX-2 起含音频</td><td><a href="https://github.com/Lightricks/LTX-Video">github.com/Lightricks/LTX-Video</a></td><td>消费级推理</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>教材级开源项目梯度（按"原理最简→生产最强"排序）：</strong>Latte（原理最简、单机可跑、最适合学视频 DiT）→ CogVideoX-2B（工程完整、消费卡可推理）→ Open-Sora（低成本复现、分布式教学）→ HunyuanVideo 技术报告（基建披露最全、5D 并行教科书）→ Wan2.1 技术报告（scaling law + 生态）。按此顺序读 paper + 跑 inference，能从"会判断"快速过渡到"能讨论训练基建细节"。U-ViT 是 DiT 路线的直接前置工作（被引 833+，2022），必读。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 架构横评表：DiT / AR / Tokenizer / 条件控制</h2>
+
+<h3>8.1 主干架构横评</h3>
+<table>
+<thead><tr><th>项目</th><th>主干</th><th>Tokenizer / VAE</th><th>条件控制</th><th>训练范式</th></tr></thead>
+<tbody>
+<tr><td>Cosmos-Predict1（Diffusion 轨）</td><td>DiT</td><td>CV8×8×8 连续（2048×）</td><td>cross-attn</td><td>Diffusion</td></tr>
+<tr><td>Cosmos-Predict1（AR 轨）</td><td>Transformer</td><td>DV8×16×16 离散（2048×）</td><td>token-level</td><td>AR next-token</td></tr>
+<tr><td>Genie 1</td><td>ST-ViViT + AR Dynamics</td><td>VQ-VAE（1024 码本）</td><td><strong>Latent Action Model</strong></td><td>AR</td></tr>
+<tr><td>Genie 2/3</td><td>扩散</td><td>未披露</td><td>未披露</td><td>Diffusion</td></tr>
+<tr><td>DreamerV3</td><td>RSSM</td><td>latent（不重建像素）</td><td>action</td><td>RL 想象训练</td></tr>
+<tr><td>GAIA-2</td><td>ST 因子化 transformer（8.4B）</td><td>VAE（32×空间 + 8×时间，~400×）</td><td><strong>AdaLN（速度/曲率）+ cross-attn</strong></td><td>Flow matching</td></tr>
+<tr><td>DriveDreamer-2</td><td>Diffusion + LLM</td><td>VAE</td><td>HDMap + LLM 文本</td><td>Diffusion</td></tr>
+<tr><td>OccWorld</td><td>GPT-style AR</td><td>VQ-VAE（occupancy token）</td><td>ego action</td><td>AR next-token</td></tr>
+<tr><td>Vista</td><td>Latent diffusion</td><td>VAE</td><td>steering/speed/cmd/trajectory/goal</td><td>Diffusion</td></tr>
+<tr><td>MagicDrive</td><td>Diffusion</td><td>VAE</td><td>cross-attn + additive（text/cam/3Dbox/map）</td><td>Diffusion</td></tr>
+<tr><td>WoVoGen</td><td>Diffusion</td><td>VAE</td><td>4D world volume（HDmap+occ）</td><td>Diffusion</td></tr>
+<tr><td>Emu3.5</td><td>next-token</td><td>VQ 视觉分词器</td><td>统一 token 空间</td><td>AR + DiDA</td></tr>
+<tr><td>Wan2.1</td><td>DiT + Flow Matching</td><td>Wan-VAE（3D causal）</td><td>cross-attn（T5）</td><td>Flow Matching</td></tr>
+<tr><td>HunyuanVideo</td><td>Dual→Single-stream DiT</td><td>Causal 3D VAE（4/8/16，PSNR 35.39）</td><td>cross-attn（MLLM）</td><td>Diffusion</td></tr>
+<tr><td>CogVideoX</td><td>Expert Transformer</td><td>3D Causal VAE（4×8×16）</td><td>专家注意力</td><td>Diffusion</td></tr>
+<tr><td>Open-Sora v2</td><td>DiT + Rectified Flow</td><td>3D-VAE</td><td>cross-attn</td><td>Rectified Flow</td></tr>
+<tr><td>Open-Sora-Plan v1.5</td><td>SUV Skiparse 3D DiT</td><td>WFVAE 8×8×8（小波流）</td><td>cross-attn</td><td>Diffusion</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>架构收敛到"tokenizer + (扩散/DiT) 或 自回归 transformer"双轨。</strong>Cosmos 把双轨同时开源；Genie 1→2 从 AR 转扩散；GAIA-2 用 flow matching 而非 DDPM；DreamerV3 走 RSSM latent（不重建像素级生成）。AD 领域 GAIA-2/Cosmos 都用"空间-时间因子化 transformer + 多视角联合 latent"。这条认知让你做选型时不会被各种缩写淹没——本质就两条路线，权衡点是"保真度 vs 可控性 vs 长时序一致性"。</aside>
+
+<h3>8.4 AD 世界模型 vs 通用视频生成底座（关键判断框架）</h3>
+<p>这是 PM 在内部清晰区分两类叙事、避免资源错配的<strong>判断框架</strong>。两者底层架构同源（都是 DiT + 3D VAE + Flow Matching），但定位、可控性、评测标准完全不同：</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph VM["AD 世界模型（可控 + 物理）"]
+    direction TB
+    AV1["条件化：HDMap/3Dbox/ego trajectory/速度/曲率"]
+    AV2["输出：多视角环视未来 + occupancy + reward"]
+    AV3["评测：FID/FVD + 物理一致性 + 下游任务增益"]
+    AV4["用途：闭环仿真 + 数据合成 + 规划训练"]
+    AV1 --> AV2 --> AV3 --> AV4
+  end
+  subgraph VG["通用视频生成底座（高保真 + 不可控）"]
+    direction TB
+    GV1["条件化：文本 prompt（CLIP/T5/MLLM）"]
+    GV2["输出：单/多视角视频（无 action）"]
+    GV3["评测：VBench/FVD/人类偏好"]
+    GV4["用途：内容创作 + 作世界模型预训练底座"]
+    GV1 --> GV2 --> GV3 --> GV4
+  end
+  VG -.->|"加 action 条件 + 物理训练<br/>= 转化为 AD 世界模型"| VM
+  VM -.->|"去掉 action 条件<br/>= 退化成视频生成"| VG
+</pre>
+
+<table>
+<thead><tr><th>维度</th><th>通用视频生成底座</th><th>AD 世界模型</th></tr></thead>
+<tbody>
+<tr><td>代表</td><td>Wan2.1 / HunyuanVideo / CogVideoX / Open-Sora / Sora</td><td>Cosmos / GAIA-2 / Vista / DriveDreamer / OccWorld</td></tr>
+<tr><td>条件化</td><td>文本 prompt</td><td>HDMap / 3D bbox / ego trajectory / 速度 / 曲率</td></tr>
+<tr><td>是否学物理</td><td>否（统计相关性）</td><td>部分（几何 + 运动约束）</td></tr>
+<tr><td>是否可交互</td><td>否</td><td>是（action-conditioned rollout）</td></tr>
+<tr><td>多视角一致性</td><td>弱</td><td>强（5-6 路环视联合）</td></tr>
+<tr><td>评测标准</td><td>VBench / FVD / 人类偏好</td><td>FID/FVD + 物理一致性 + 下游任务增益</td></tr>
+<tr><td>PM 价值定位</td><td>预训练底座 / 通用工具</td><td>数据闭环核心 + 仿真器 + reward model</td></tr>
+</tbody>
+</table>
+
+<h3>8.2 训练范式：DDPM → Rectified Flow / Flow Matching</h3>
+<p>所有头部项目都从 DDPM 转向 Flow Matching：Open-Sora v1.2+、Wan2.1、LTX-Video、GAIA-2 均用 Flow Matching。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 扩散家族
+    DDPM["DDPM<br/>(2020)"]
+    DDIM["DDIM<br/>采样加速"]
+    RF["Rectified Flow<br/>直路径"]
+    FM["Flow Matching<br/>通用框架"]
+    DDPM --> DDIM
+    DDPM --> RF
+    RF --> FM
+  end
+  subgraph 主干家族
+    UNET["U-Net<br/>(2020)"]
+    VIT["ViT/U-ViT<br/>(2022)"]
+    DIT["DiT<br/>(2023)"]
+    EXPERT["Expert TF<br/>(CogVideoX)"]
+    DS["Dual→Single<br/>(HunyuanVideo)"]
+    UNET --> VIT
+    VIT --> DIT
+    DIT --> EXPERT
+    DIT --> DS
+  end
+  FM -.->|当前事实标准| DIT
+</pre>
+
+<aside class="note"><strong>Diffusion vs Flow Matching（必补）：DDPM 把噪声添加建模为离散马尔可夫链（每步加一点噪声），采样需多步反向去噪（50-1000 步），路径弯曲。<strong>Flow Matching</strong> 把生成过程建模为从噪声分布到数据分布的连续流（ODE），用神经网络学速度场 v(x,t)，路径可"拉直"（Rectified Flow）让采样步数大幅减少（1-10 步可达 DDPM 50 步质量）。Sora 之后 Flow Matching 成事实标准，因为它训练更稳（GAIA-2 明确说"flow matching 训练更稳"）、推理更快。读者要建立："<strong>Flow Matching 是 Diffusion 的连续化 + 直路径优化</strong>"，不是全新范式。</aside>
+
+<h3>8.3 Tokenizer / VAE 对比</h3>
+<table>
+<thead><tr><th>项目</th><th>压缩比</th><th>PSNR</th><th>特性</th></tr></thead>
+<tbody>
+<tr><td>NVIDIA Cosmos-Tokenizer (CV/DV)</td><td><strong>最高 2048×</strong></td><td>—</td><td>连续/离散 + 空间/时间四族；causal</td></tr>
+<tr><td>HunyuanVideo Causal 3D VAE</td><td>4(时间)×8(空间)×16(通道) = 512×</td><td><strong>35.39</strong></td><td>开源最强 3D VAE</td></tr>
+<tr><td>CogVideoX 3D Causal VAE</td><td>4×8×16 = 512×</td><td>33.22</td><td>几乎无损重建</td></tr>
+<tr><td>Wan2.1 Wan-VAE</td><td>3D causal</td><td>—</td><td>任意长 1080P 不丢历史时序</td></tr>
+<tr><td>Open-Sora-Plan WFVAE</td><td>8×8×8</td><td>高于 Wan2.1</td><td>小波流式 VAE</td></tr>
+<tr><td>OpenSora-1.2</td><td>—</td><td>30.15</td><td>早期基准</td></tr>
+<tr><td>GAIA-2 VAE</td><td>32×空间 + 8×时间 = ~400×</td><td>—</td><td>64 通道连续 latent</td></tr>
+<tr><td>Genie 1 ST-ViViT</td><td>VQ-VAE（1024 码本）</td><td>—</td><td>时空因子化 transformer tokenizer</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑨ 数据架构：视频清洗 + caption + 物理 clip 管线</h2>
+
+<p>数据是真正的护城河——比模型架构更难追赶。所有头部项目都自研 caption 模型并构建分层清洗管线，"好 caption = 好生成"是行业共识。</p>
+
+<h3>9.1 视频数据清洗管线（PM 必学）</h3>
+<p>以 HunyuanVideo 披露最完整的清洗管线为模板：</p>
+<pre class="mermaid">
+flowchart LR
+  RAW["原始视频池<br/>(数十亿级)"] --> DIM["基础维度过滤<br/>分辨率/时长/宽高比"]
+  DIM --> AQ["美学过滤<br/>Dover 模型"]
+  AQ --> SQ["清晰度过滤<br/>模糊检测"]
+  SQ --> MQ["运动质量<br/>光流速度预测"]
+  MQ --> SC["场景切分<br/>PySceneDetect<br/>+ Transnet v2"]
+  SC --> OCR["OCR 去文字<br/>(避免生成错误文字)"]
+  OCR --> LOGO["水印/logo 检测<br/>YOLOX 风格"]
+  LOGO --> CAM["14 类相机运动<br/>分类器标注"]
+  CAM --> CLEAN["高质量 clip"]
+  CLEAN --> CAP["Caption 生成<br/>自研 VLM"]
+  CAP --> DATA["训练数据"]
+</pre>
+
+<h3>9.2 Caption Schema（结构化标注，AD PM 可直接迁移）</h3>
+<p>HunyuanVideo 的 VLM JSON caption 含：<strong>短描述 / 密描述 / 背景 / 风格 / 镜头 / 光照 / 氛围</strong> + 14 类相机运动分类。这是多维 schema + 标注规范 + 质量抽检——本质和 AD 标注团队的 schema 设计同构。</p>
+
+<blockquote class="why">AD PM 的<strong>结构化标注经验是稀缺资产</strong>。HunyuanVideo 的 caption schema、MagicDrive 的 3D 几何条件、GAIA-2 的元数据 schema——都是"多维 schema + 标注规范 + 质检规则"的实例。你可以直接承担"caption schema 设计师 / 视频标注产品经理"角色，这是从 AD 数据 PM 跨入世界模型阻力最小的入口。反事实：若 caption schema 设计粗糙（只有"短描述"），生成模型学不到风格/光照/相机的可控性，世界模型退化成纯随机生成。</blockquote>
+
+<h3>9.3 AD 物理标注 clip 管线（你的 HilPerformancePlatform 可立即扩展）</h3>
+<p>GAIA-2 的训练数据 schema 几乎是 AD 数据闭环的字段清单：</p>
+<table>
+<thead><tr><th>字段类别</th><th>具体字段</th><th>对应 AD 数据基建</th></tr></thead>
+<tbody>
+<tr><td>ego 状态</td><td>速度、曲率（symlog 编码）</td><td>canbus 已采集</td></tr>
+<tr><td>动态 agent</td><td>3D box（位置+朝向+类别）</td><td>3D 检测标注</td></tr>
+<tr><td>环境元数据</td><td>天气/限速/车道/红绿灯/路口</td><td>场景标签 + HDMap</td></tr>
+<tr><td>相机参数</td><td>内外参</td><td>标定数据</td></tr>
+<tr><td>语义嵌入</td><td>CLIP 文本/视觉嵌入、scenario embedding</td><td>需要新建（场景理解模型）</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>把世界模型当"需求镜像"：</strong>GAIA-2 的 schema 反推出你的数据闭环该采集哪些元数据。对比你的 HilPerformancePlatform 数仓 schema，看缺哪些字段——尤其是 scenario embedding（来自驾驶模型的场景向量），这是当下 AD 数据基建普遍缺的字段。补这块字段就是 PM 的产品决策面。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">⑩ 训练基建：算力 / 5D 并行 / 显存 / checkpoint</h2>
+
+<h3>10.1 算力门槛分级</h3>
+<table>
+<thead><tr><th>级别</th><th>代表</th><th>算力</th><th>可复现</th></tr></thead>
+<tbody>
+<tr><td>教学级</td><td>U-ViT / Latte / DreamerV3 / OccWorld</td><td>单 GPU / 单 RTX 4090</td><td>个人可复现</td></tr>
+<tr><td>生产入门</td><td>CogVideoX-2B / LTX-Video</td><td>消费卡推理（1080Ti/3060）</td><td>推理易、微调中、全训难</td></tr>
+<tr><td>开源 SOTA</td><td>HunyuanVideo-13B / Wan2.1-14B / Open-Sora v2-11B / Open-Sora-Plan v1.5-8B</td><td>H100/H800/Ascend910 集群 + 5D 并行</td><td>推理易、微调中、<strong>全训需百万美元级</strong></td></tr>
+<tr><td>工业闭源</td><td>Cosmos / Genie 1 / GAIA-2</td><td>10000 H100（Cosmos）/ 256 TPUv5p（Genie 1）/ 未披露（GAIA）</td><td>不可复现（除 Cosmos）</td></tr>
+</tbody>
+</table>
+
+<h3>10.2 5D 并行（TP/SP/CP/DP/ZeRO）— 长视频训练命脉</h3>
+<p>所有头部开源项目都收敛到 5D 并行：</p>
+<ul>
+  <li><strong>TP（Tensor Parallel）</strong>——矩阵乘法按 dim 切分到多卡。</li>
+  <li><strong>SP（Sequence Parallel）</strong>——序列维度切分；<strong>这是长视频（1080P/长时长）训练的命脉</strong>。代表：ColossalAI、xDiT USP。</li>
+  <li><strong>CP（Context Parallel, Ring Attention）</strong>——上下文窗口环形切分。</li>
+  <li><strong>DP（Data Parallel）</strong>——数据并行。</li>
+  <li><strong>ZeRO / ZeroCache</strong>——优化器状态/梯度/参数分片，显存换算力。</li>
+</ul>
+<p>框架矩阵：HunyuanVideo 用 <strong>AngelPTM</strong>、Open-Sora 用 <strong>ColossalAI</strong>、Open-Sora-Plan 用 <strong>MindSpeed-MM</strong>。HunyuanVideo 报告 <strong>99.5% 训练稳定率</strong>靠自动容错+checkpoint。</p>
+
+<aside class="note"><strong>为什么 SP 是长视频命脉（类比 AD 长序列感知）：</strong>视频 token 化后序列长度爆炸（10s 1080P 视频经 4×8×16 压缩后仍有数十万 token），单卡装不下。SP 把序列切成多段分到多卡，每卡只算自己那段注意力，再 all-gather 合并——和 AD 长序列感知里的"序列并行"完全同构。读者类比：AD 训练里你处理过 BEV 时序融合的序列长度问题，世界模型的 SP 是把同一思想抬到视频 token 级。这是"训练基建让你从数据 PM 升级为算力/并行 PM"的桥梁。</aside>
+
+<h3>10.3 训练稳定率与 checkpoint（与 AD 训练中断恢复同源）</h3>
+<p>HunyuanVideo 99.5% 稳定率 = 自动容错 + checkpoint。这与 AD 训练里"训练中断恢复"完全可复用——Determined 的 Preempted 自动续训机制，在世界模型训练里同样适用。</p>
+
+<pre class="mermaid">
+flowchart TD
+  JOB["训练 Job 提交"] --> SCHED["5D 并行调度<br/>TP/SP/CP/DP/ZeRO"]
+  SCHED --> TRAIN["前向+反向<br/>每 N step"]
+  TRAIN --> CKPT["周期 checkpoint<br/>(显存→持久存储)"]
+  CKPT --> HEALTH{"健康检查"}
+  HEALTH -->|OK| TRAIN
+  HEALTH -->|节点故障| FAILOVER["自动容错<br/>从最近 checkpoint 续训"]
+  FAILOVER --> SCHED
+  HEALTH -->|重大错误| ALERT["告警+人工介入"]
+  NOTE["99.5% 稳定率<br/>= 自动容错覆盖<br/>99.5% 故障"]
+</pre>
+
+<h3>10.4 训练经济学（Open-Sora v2 透明化）</h3>
+<p>Open-Sora v2（11B）训练总成本约 <strong>$200,000</strong>，是同类（11B HunyuanVideo / 30B Step-Video）的 1/5-1/10。透明化拆解：</p>
+<ul>
+  <li>序列并行（768px）+ 张量并行（256px）降本 50-60%。</li>
+  <li>ColossalAI 分布式优化。</li>
+  <li>Rectified Flow 减少采样步数。</li>
+</ul>
+<p>对比：Cosmos 10000 H100 × 3 个月（成本估算 $50M-$100M 级）。<strong>训练成本差 200-500 倍</strong>——这是 PM 必须纳入产品规划的新变量。</p>
+
+<aside class="note"><strong>算力经济学是 Function Owner 必须的新约束：</strong>训练预算、算力供应链（NPU vs GPU）、推理部署成本（Wan2.1 14B 需 65-80GB 显存）将直接影响世界模型产品的可行性与定价。Open-Sora v2 的 $200K 训练成本透明化、Open-Sora-Plan v1.5 的昇腾锁定，是 PM 必须能讲清楚的"训练经济学"——这恰是 AD PM 的训练集群经验（GPU 利用率、显存峰值、all-reduce）可直接迁移的能力。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">⑪ 世界模型如何重塑数据闭环</h2>
+
+<p>这是本教材对 PM 最重要的一章。世界模型不是"另一种模型"，而是<strong>"数据闭环 2.0"</strong>——它把"造数据"从补充变主力，把"仿真器"从手工资产变学习式，把"评测"从开环变闭环。</p>
+
+<h3 id="s10-1">11.1 造数据：从补充变主力</h3>
+<p>传统 AD 数据闭环：真车采集 → 标注 → 训练 → 评测 → 回流（难例挖掘）。长尾/危险场景采集成本极高、覆盖率低。</p>
+<p>世界模型驱动的数据闭环：真车采集（少量）→ <strong>世界模型批量合成</strong>（变道/夜间/雨天/cut-in/紧急制动等可控场景）→ 自动标注 → 训练 → 评测 → 回流。</p>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 传统数据闭环
+    T1["真车采集<br/>(高成本)"] --> T2["人工标注"]
+    T2 --> T3["训练"]
+    T3 --> T4["评测"]
+    T4 --> T5["难例回流"]
+    T5 --> T1
+  end
+  subgraph 世界模型数据闭环
+    W1["真车采集<br/>(少量种子)"] --> W2["世界模型批量合成<br/>(可控场景)"]
+    W2 --> W3["自动标注<br/>(CLIP/scenario embed)"]
+    W3 --> W4["训练"]
+    W4 --> W5["闭环评测<br/>(世界模型当仿真器)"]
+    W5 --> W6["长尾回流"]
+    W6 --> W1
+  end
+</pre>
+
+<blockquote class="why">世界模型把"造数据"从补充变主力的存在理由：传统采集的边际成本几乎不降（每多一个场景都要再跑一趟车），世界模型合成的边际成本几乎为零（一次训练，无限生成）。DriveDreamer-2 实测：生成数据可使下游 3D 检测 +4%、跟踪 +8%——这是可量化的 ROI。反事实：若团队只信真车数据，长尾场景覆盖率永远卡在"已采集的几千公里"水平，无法突破到"任意可控场景"。</blockquote>
+
+<h3 id="s10-2">11.2 Real-to-Sim-to-Real 闭环</h3>
+<p>世界模型把"real → sim → real"打通：</p>
+<ol>
+  <li><strong>Real → Sim</strong>：从真实视频训练世界模型（GAIA-2 用 25M 段私有驾驶序列）。</li>
+  <li><strong>Sim → Real</strong>：世界模型生成合成数据，反哺真实模型训练。</li>
+  <li><strong>Real → Sim（再）</strong>：真实模型在仿真里跑出新 failure case，再回真实数据补。</li>
+</ol>
+<p>DriveDreamer4D 是这个闭环的典型实例：用世界模型先验合成额外多视角数据来增强 4D 场景重建，重建结果又可作为新训练数据。</p>
+
+<h3 id="s10-3">11.3 仿真器 / Reward Model 化</h3>
+<p>这是世界模型最接近端到端规划的用法：</p>
+<ul>
+  <li><strong>当仿真器</strong>：Vista 用世界模型生成可控未来，规划器在不同动作下 rollout，看哪个未来最优。</li>
+  <li><strong>当 reward model</strong>：Vista 在不访问真值 action 下对不同动作给 reward——这绕开了 RL 的 reward 设计难题。</li>
+  <li><strong>当闭环评测环境</strong>：GAIA-2/Cosmos 都把"合成危险场景做闭环评测"作为核心卖点。OpenDriveLab 的 ReSim + SimScale 是这条路线的产品化。</li>
+</ul>
+
+<aside class="note"><strong>世界模型当 reward model 的杠杆：</strong>RL 的核心难题是 reward 设计（自动驾驶里"安全/舒适/合规"如何量化？）。世界模型给出了新答案：让世界模型预测"如果走这条轨迹，下一秒会不会撞"——把 reward 设计转化为"未来预测"。Vista 和 GAIA-2 都走这条路。读者要建立："世界模型让 RL reward 从手工规则变数据驱动"的认知——这是端到端规划的新范式。</aside>
+
+<h3>11.4 数据闭环同构映射（PM 即战力迁移点）</h3>
+<table>
+<thead><tr><th>AD 数据闭环</th><th>世界模型数据闭环</th><th>迁移难度</th></tr></thead>
+<tbody>
+<tr><td>corner case 采集</td><td>低质/水印/运动模糊过滤</td><td>低（框架平移）</td></tr>
+<tr><td>数据飞轮</td><td>caption 质量飞轮</td><td>低</td></tr>
+<tr><td>闭环 SLA</td><td>训练稳定率 99.5% + 数据通过率</td><td>低</td></tr>
+<tr><td>难例挖掘</td><td>scenario spec & eval 设计</td><td>中（需懂生成式 AI）</td></tr>
+<tr><td>仿真回归测试</td><td>世界模型当仿真器</td><td>中（需懂可控生成）</td></tr>
+<tr><td>标注管线</td><td>caption schema + 质检规则</td><td>低（直接迁移）</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-11">⑫ 转战补习：扩散底层 / DiT / 视频数据闭环 / 评测</h2>
+
+<p>作为 4 年 AD 数据闭环 PM，你的判断力领先但实现熟练度需补。这一章给出从根补的清单。</p>
+
+<h3>12.1 必补 1：扩散模型底层（从根补，不只是术语）</h3>
+<p>AD 背景 PM 多熟悉 BEV/Occupancy/端到端判别式范式，但对扩散过程不熟。补习路径：</p>
+<ol>
+  <li><strong>DDPM（2020）原始论文</strong>——理解前向加噪 + 反向去噪。</li>
+  <li><strong>DDIM（2021）</strong>——理解非马尔可夫采样加速。</li>
+  <li><strong>Score-based / SDE</strong>——理解连续化视角。</li>
+  <li><strong>Rectified Flow / Flow Matching（2022-2023）</strong>——理解直路径优化，Sora 之后事实标准。</li>
+  <li><strong>Latent Diffusion（LDM, 2022）</strong>——理解为什么在 latent 空间扩散（VAE 压缩 + 扩散）。</li>
+</ol>
+
+<aside class="note"><strong>扩散模型的因果链（先因果后术语）：</strong>(1) 想生成复杂数据分布但直接建模 P(x) 难；(2) 那就反向走——从简单分布（高斯噪声）出发，学一个"逐步去噪"的过程，最终把噪声变成数据；(3) 训练时给真实数据加噪声、让神经网络学"预测加了多少噪声"；(4) 推理时从纯噪声开始、反复去噪得到生成样本。<strong>核心是"反向去噪过程"，不是"加噪过程"</strong>——加噪是固定的（用预定义的 noise schedule），学的是去噪网络。读者记住："<strong>扩散 = 学一个能从噪声还原数据的神经网络</strong>"，这就是因果本质。</aside>
+
+<h3>12.2 必补 2：DiT 为何取代 U-Net</h3>
+<p><strong>因果链：</strong></p>
+<ol>
+  <li>扩散模型的核心是去噪网络 <strong>ε_θ(x,t)</strong>，传统用 U-Net（CNN + 跳连）。</li>
+  <li>U-Net 的归纳偏置（局部性、平移不变性）对图像有用，但限制了 scaling。</li>
+  <li>DiT（Peebles & Xie, 2023）证明 Transformer 也能做去噪网络，且<strong>遵循 scaling law</strong>——参数越多，FID 越低。</li>
+  <li>Transformer 的优势：统一架构（图/文/视/音同构）、易扩展、易并行。</li>
+  <li>视频进一步要求时空建模，U-ViT/ Latte 把 DiT 搬到视频潜空间。</li>
+</ol>
+
+<blockquote class="why">DiT 取代 U-Net的存在理由：scaling law。U-Net 不遵循 scaling law（参数到一定规模收益递减），DiT 遵循——这是 LLM 路线在视觉的复刻。Sora 用 DiT、所有 2024+ 视频模型（CogVideoX/HunyuanVideo/Wan2.1/Open-Sora）都用 DiT。反事实：若坚持 U-Net，视频模型会卡在 1B 参数量级，无法 scale 到 13B/14B。</blockquote>
+
+<h3>12.3 必补 3：空间 + 时间注意力的设计权衡</h3>
+<p>视频 Transformer 的核心设计选择：</p>
+<ul>
+  <li><strong>2+1D 分离</strong>（CogVideoX 早期、Open-Sora v1.0）——空间注意力和时间注意力分开做，省算力但可能丢时空耦合。</li>
+  <li><strong>Dense 3D 统一</strong>（CogVideoX 后期、HunyuanVideo、Wan2.1）——空间+时间联合注意力，质量好但算力爆炸。</li>
+  <li><strong>Skiparse / Shifted Window</strong>（Open-Sora-Plan、Open-Sora v1.3+）——稀疏注意力，性能接近 Dense 3D 但提速 35%+。</li>
+</ul>
+
+<h3>12.4 必补 4：视频数据闭环（你的强项迁移）</h3>
+<p>已在 §9 详述。核心迁移点：</p>
+<ul>
+  <li>视频清洗 = 你做过的数据质检（把"corner case 挖掘"换"低质/水印/运动模糊过滤"）。</li>
+  <li>caption schema = 你做过的标注 schema 设计。</li>
+  <li>caption 质量飞轮 = 数据飞轮。</li>
+  <li>训练稳定率 SLA = 闭环 SLA。</li>
+</ul>
+
+<h3>12.5 必补 5：评测体系（PM 高 leverage 切入点）</h3>
+<p>世界模型缺统一 benchmark——这恰是 PM 强项。建议主导设计<strong>"生成质量 + 物理一致性 + 下游任务增益"三维评测框架</strong>：</p>
+<table>
+<thead><tr><th>维度</th><th>指标</th><th>方法</th><th>模板</th></tr></thead>
+<tbody>
+<tr><td>生成质量</td><td>FID / FVD</td><td>自动化</td><td>DriveDreamer-2（FID 11.2 / FVD 55.7）</td></tr>
+<tr><td>物理一致性</td><td>碰撞率 / 穿模率 / 几何合理性</td><td>规则 + 人工抽检</td><td>Cosmos-Reason1 Physical Common Sense Ontology</td></tr>
+<tr><td>下游任务增益</td><td>3D 检测 mAP / 跟踪 AMOTA / 规划 L2</td><td>真实数据集评测</td><td>DriveDreamer-2（检测+4%/跟踪+8%）、DriveWorld（全栈涨点）</td></tr>
+<tr><td>可控性</td><td>条件遵循率 / 动作响应准确度</td><td>自动化 + 人工</td><td>Vista 多模态动作条件评测</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>评测体系是 PM 最稀缺的切入点。</strong>除 Cosmos-Reason1 自建物理常识本体 + benchmark、DreamerV3 用 150+ 标准 RL 任务、Cam4DOcc 是 benchmark 级工作外，GAIA/Genie 缺乏公认 benchmark。AD PM 的"问题定义 + 金标准 + 闭环指标 + 回归门禁"在这里高度稀缺——把 ROVER5.0 的发版/收敛方法论迁移到世界模型评测，是差异化定位。这是"判断力领先于实现熟练度"的最直接变现点。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-12">⑬ 学习路线 + 行动清单（0-12 月）</h2>
+
+<h3>13.1 学习路线图</h3>
+<pre class="mermaid">
+flowchart TD
+  M0["0-3 月<br/>建立心智模型"]
+  M3["3-6 月<br/>PoC 实验"]
+  M6["6-12 月<br/>产品蓝图"]
+  M0 --> M3 --> M6
+  M0 --> R1["精读 DreamerV3<br/>(世界模型原点)"]
+  M0 --> R2["精读 Cosmos-Predict1 论文<br/>(双轨+Tokenizer)"]
+  M0 --> R3["精读 Vista + Wan2.1 + Emu3.5<br/>(三大范式)"]
+  M0 --> R4["补扩散底层<br/>(DDPM→Flow Matching)"]
+  M3 --> P1["OccWorld 单卡跑通<br/>(AD 入门)"]
+  M3 --> P2["CogVideoX-2B 推理<br/>(视频生成原理)"]
+  M3 --> P3["Wan2.1/CogVideoX 在 HilPlatform<br/>做驾驶场景增广 PoC"]
+  M3 --> P4["复现 DriveDreamer-2 增益<br/>(检测+4%/跟踪+8%)"]
+  M6 --> L1["OpenDriveLab WorldEngine 对标<br/>(后训练数据引擎)"]
+  M6 --> L2["主导三维评测框架<br/>(生成+物理+下游)"]
+  M6 --> L3["写 Function Owner 产品蓝图<br/>(世界模型驱动数据闭环)"]
+</pre>
+
+<h3>13.2 第一阶段（0-3 月）：建立心智模型</h3>
+<ol>
+  <li><strong>DreamerV3</strong>（<a href="https://github.com/danijar/dreamerv3">github.com/danijar/dreamerv3</a>）——单卡跑通，建立"世界模型 = latent 空间预测未来 + 想象训练"心智。</li>
+  <li><strong>Cosmos-Predict1 论文</strong>（arXiv:2501.03575）——理解双轨制 + Tokenizer 护城河。</li>
+  <li><strong>Vista 论文 + repo</strong>——理解 action-controllable 驾驶世界模型。</li>
+  <li><strong>Wan2.1 技术报告</strong>（arXiv:2503.20314）——理解 scaling law + 生态最完整视频生成底座。</li>
+  <li><strong>Emu3.5 论文</strong>——理解 next-token 统一多模态世界模型。</li>
+  <li><strong>扩散底层补习</strong>——DDPM → DDIM → LDM → Rectified Flow / Flow Matching。</li>
+</ol>
+
+<h3>13.3 第二阶段（3-6 月）：PoC 实验</h3>
+<ol>
+  <li><strong>OccWorld 单卡跑通</strong>（RTX 4090，Apache-2.0）——理解 VQ-VAE + AR 在 occupancy 空间的应用。</li>
+  <li><strong>CogVideoX-2B 推理</strong>——理解 3D Causal VAE + Expert Transformer。</li>
+  <li><strong>Wan2.1 / CogVideoX 在 HilPerformancePlatform 数仓做驾驶场景视频增广 PoC</strong>——把 PM 的"场景覆盖率/长尾定义"能力迁移为世界模型 scenario spec & eval 设计。</li>
+  <li><strong>复现 DriveDreamer-2 的"检测+4%/跟踪+8%"增益</strong>——量化世界模型作为数据增强的 ROI。</li>
+</ol>
+
+<h3>13.4 第三阶段（6-12 月）：产品蓝图</h3>
+<ol>
+  <li><strong>以 OpenDriveLab WorldEngine 为对标</strong>——把"世界模型驱动的数据闭环"写进 Function Owner 产品蓝图。</li>
+  <li><strong>主导三维评测框架</strong>（生成质量 + 物理一致性 + 下游任务增益）——把 ROVER5.0 方法论迁移。</li>
+  <li><strong>设计 caption schema + 数据清洗规则</strong>——承担"caption schema 设计师 / 视频标注产品经理"角色。</li>
+  <li><strong>训练基建 PM 化</strong>——主导 GPU 利用率、并行策略选型、checkpoint SLA（你的 AD 训练集群经验直接迁移）。</li>
+</ol>
+
+<h3>13.5 战略定位建议</h3>
+<blockquote class="why"><strong>不要去做世界模型算法本身</strong>（与 Vista/DriveDreamer/Cosmos 团队正面竞争）；<strong>定位为"世界模型的数据/评测/落地 PM"</strong>——负责 scenario 定义、合成数据质检、仿真回归测试、与真车数据闭环的接口设计。这是 AD 数据闭环 PM 的天然延伸且市场上几乎无人占据。你的差异化优势：(1) 数据闭环方法论成熟；(2) 标注管线工程化经验；(3) 评测体系设计能力；(4) 判断力领先于实现熟练度——能识别 hype vs 落地。这四点组合在世界模型赛道极度稀缺。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-13">⑭ 最深洞察 + 关键决策 rationale</h2>
+
+<h3>14.1 三大最深洞察</h3>
+
+<h4>洞察 1：Tokenizer 是世界模型的"隐形护城河"，比模型架构更难追赶</h4>
+<p>NVIDIA Cosmos Tokenizer 把视频压缩到 2048×，比 SOTA 高 8× 压缩且更快。这意味着同等算力下能训<strong>多 8 倍数据</strong>或多 8 倍参数。GAIA-2 用 ~400×、Genie 1 用 VQ-VAE——压缩比直接决定训练算力效率。<strong>谁掌握更好的视频 tokenizer，谁的世界模型 ROI 就高一个数量级</strong>。这恰是 PM 评估"换 tokenizer 是否值得"的硬指标，是必补的模型侧硬知识，也是 NVIDIA 在开源赛道的核心壁垒。</p>
+
+<h4>洞察 2：数据闭环同构性——世界模型就是"数据闭环 2.0"</h4>
+<p>AD 数据闭环 PM 的核心能力（长尾挖掘、场景挖掘、数据合成、Corner Case 治理）与世界模型"当数据机器"的定位（DriveDreamer-2/4D、WorldEngine）<strong>完全同构</strong>。传统闭环"采集→标注→训练→评测→回流"的边际成本几乎不降；世界模型驱动的闭环"少量采集 → 批量合成 → 自动标注 → 训练 → 闭环评测 → 长尾回流"的边际成本接近零。<strong>PM 可直接把世界模型定位为"生成式数据闭环"产品，把"仿真场景生产 + 长尾补充 + 评测资产"作为 Function Owner 的产品边界</strong>——这是 2025-2026 最热的 Physical AI 叙事。</p>
+
+<h4>洞察 3：评测缺位 = PM 高 leverage 切入点</h4>
+<p>除 Cosmos-Reason1 自建物理常识本体 + benchmark、DreamerV3 用 150+ 标准 RL 任务、Cam4DOcc 是 benchmark 级工作外，<strong>GAIA/Genie 缺乏公认 benchmark</strong>。FID/FVD 评生成质量、occupancy IoU 评预测，但缺跨模型可比的统一 leaderboard。这恰是 PM 强项——AD PM 习惯的"问题定义 + 金标准 + 闭环指标 + 回归门禁"在世界模型赛道高度稀缺。把 ROVER5.0 的发版/收敛方法论迁移到世界模型物理评测，是差异化定位，也是"判断力领先于实现熟练度"的最直接变现。</p>
+
+<h3>14.2 关键决策 rationale + 反事实</h3>
+<table>
+<thead><tr><th>决策面</th><th>Rationale（为何如此）</th><th>反事实（不这么做的崩塌路径）</th></tr></thead>
+<tbody>
+<tr><td><strong>用 Cosmos 基座 vs 自研</strong></td><td>NVIDIA Open Model License 允许商用与派生；Tokenizer 2048× 是开源最强；驾驶 11% 训练占比 + AV 微调示例</td><td>自研需 10000 H100 × 3 月（$50M+ 级），ROI 不成立；用闭源 GAIA 则无权重、不可派生</td></tr>
+<tr><td><strong>双轨制（Diffusion + AR）</strong></td><td>覆盖不同 ROI 点：Diffusion 保真、AR 可控；让用户按场景选</td><td>单押 Diffusion 失去长时序一致性 + LLM 接入能力；单押 AR 失去像素级保真</td></tr>
+<tr><td><strong>Genie 用 Latent Action Model</strong></td><td>无监督从无标注视频推断潜在动作，把数据成本从"标注"降到"原始视频"</td><td>显式 action 标注成本极高，长尾场景几乎无法覆盖</td></tr>
+<tr><td><strong>视频生成转 Flow Matching</strong></td><td>训练更稳（GAIA-2 实证）、采样步数少（1-10 步）、是 Sora 之后事实标准</td><td>坚持 DDPM：训练不稳、推理慢（50-1000 步）、scaling 受限</td></tr>
+<tr><td><strong>DiT 取代 U-Net</strong></td><td>Transformer 遵循 scaling law（参数↑→FID↓），U-Net 不遵循</td><td>坚持 U-Net：视频模型卡在 1B 参数量级，无法 scale 到 13B/14B</td></tr>
+<tr><td><strong>世界模型当 reward model（Vista）</strong></td><td>把 RL reward 设计转化为"未来预测"，绕开手工 reward</td><td>手工设计"安全/舒适/合规"reward：永远不完备、难量化、易被 reward hacking</td></tr>
+<tr><td><strong>3D VAE 决定生成质量天花板</strong></td><td>VAE PSNR 直接决定下游扩散起点（HunyuanVideo 35.39 vs OpenSora-1.2 30.15 差距显著）</td><td>忽视 VAE 只调扩散主干：天花板被 VAE 锁死，参数再多也突破不了</td></tr>
+<tr><td><strong>caption schema 设计</strong></td><td>多维 schema（短/密描述+背景+风格+镜头+光照+氛围+14类相机运动）让模型学到可控性</td><td>只用"短描述"：生成模型学不到风格/光照/相机可控性，退化成随机生成</td></tr>
+<tr><td><strong>SP（序列并行）是长视频命脉</strong></td><td>视频 token 化后序列爆炸（数十万 token），单卡装不下；SP 切序列到多卡</td><td>不用 SP：1080P 长视频训练 OOM，世界模型卡在短视频</td></tr>
+<tr><td><strong>定位"数据/评测/落地 PM"而非算法</strong></td><td>AD PM 的数据闭环方法论 + 标注管线 + 评测体系在世界模型赛道极度稀缺，差异化明显</td><td>正面竞争算法：与 Vista/DriveDreamer/Cosmos 团队比，无明显优势</td></tr>
+</tbody>
+</table>
+
+<aside class="note">全书最重要的认知杠杆：<strong>世界模型不是"另一种模型"，而是"数据闭环 2.0"</strong>。它把"造数据"从补充变主力，把"仿真器"从手工资产变学习式，把"评测"从开环变闭环。这三件事恰好是 AD 数据闭环 PM 最熟悉的"采集/仿真/评测"三段——所以世界模型是 PM 转战 Physical AI 的最高杠杆切入口。判断力领先的 PM 能看到这一点，实现熟练度只是补强的工具。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-14">延伸阅读</h2>
+<ul>
+  <li><strong>Cosmos-Predict1 论文</strong>（arXiv:2501.03575）——双轨制 + Tokenizer + 数据闭环平台范式。</li>
+  <li><strong>Cosmos-Reason1 论文</strong>（arXiv:2503.15558）——物理常识本体 + 具身推理评测方法论。</li>
+  <li><strong>Genie 1 论文</strong>（arXiv:2402.15391）——Latent Action Model 奠基。</li>
+  <li><strong>GAIA-2 论文</strong>（arXiv:2503.20523）——AD 世界模型产品化最佳参考实现。</li>
+  <li><strong>DreamerV3 Nature 论文</strong>（s41586-025-08744-2）——世界模型原点。</li>
+  <li><strong>DDPM 原始论文</strong>（Ho et al. 2020）——扩散模型起点。</li>
+  <li><strong>DiT 论文</strong>（Peebles & Xie, ICCV 2023）——Transformer 取代 U-Net 的 scaling law 证据。</li>
+  <li><strong>Flow Matching for Generative Modeling</strong>（Lipman et al. 2023）——Flow Matching 数学基础。</li>
+  <li><strong>Latent Diffusion（LDM）论文</strong>（Rombach et al. 2022）——为什么在 latent 空间扩散。</li>
+  <li><strong>HunyuanVideo 技术报告</strong>——开源里工程基建披露最完整的视频生成训练文档。</li>
+  <li><strong>Open-Sora v2 论文</strong>（arXiv:2503.09642）——$200K 训练成本透明化。</li>
+  <li><strong>Open-Sora-Plan v1.5 技术报告</strong>——Skiparse 稀疏注意力 + 昇腾全栈训练。</li>
+  <li><strong>Awesome-World-Model 综述索引</strong>（<a href="https://github.com/LMD0311/Awesome-World-Model">github.com/LMD0311/Awesome-World-Model</a>）——世界模型论文索引。</li>
+  <li><strong>Awesome-Papers-World-Models-Autonomous-Driving</strong>（<a href="https://github.com/chaytonmin/Awesome-Papers-World-Models-Autonomous-Driving">github.com/chaytonmin/Awesome-Papers-World-Models-Autonomous-Driving</a>）——AD 世界模型综述。</li>
+  <li><strong>Vista / GenAD / WorldEngine / ReSim / SimScale</strong>（OpenDriveLab 矩阵）——主练习场。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 5 facet 世界模型开源调研素材整理。所有 repo URL 可点击验证，关键数字（算力/数据/参数/PSNR/FID/FVD）均来自论文或 README。读者按 §13 学习路线依次精读 + 跑实验，可在 12 月内完成从"会判断"到"能讨论训练基建 + 写产品蓝图"的转战。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
