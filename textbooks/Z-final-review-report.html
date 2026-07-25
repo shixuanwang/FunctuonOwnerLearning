@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教材终审报告 · 教育家 × 架构师 双视角</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --good:#188038;
+    --grade-aplus:#0b5394; --grade-a:#1a73a8; --grade-aminus:#3a7d44;
+    --grade-bplus:#8a6a00; --grade-b:#b45309;
+    --p0:#b3261e; --p1:#d4a017; --p2:#5f6368;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px 0; max-width:100%;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"审稿人按语｜"; font-weight:600; color:#8a6a00; }
+  aside.danger {
+    display:block; background:#fdecea; border-left:3px solid var(--danger);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#6e1a14;
+  }
+  aside.danger::before { content:"P0 硬伤｜"; font-weight:600; color:var(--danger); }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"核心洞察｜"; font-weight:600; color:var(--accent); }
+  blockquote.why.editor::before { content:"教育家视角｜"; }
+  blockquote.why.arch::before { content:"架构师视角｜"; }
+  blockquote.why.consensus::before { content:"双视角共识｜"; }
+  blockquote.why.consensus { border-left-color:var(--grade-aminus); background:#eef7f0; }
+  .danger { color:var(--danger); font-weight:600; }
+  .good { color:var(--good); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:11.5px;
+    padding:2px 8px; border-radius:10px; margin-right:4px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.p0 { background:var(--p0); color:#fff; }
+  .tag.p1 { background:var(--p1); color:#3a2c00; }
+  .tag.p2 { background:var(--p2); color:#fff; }
+  .tag.edu { background:#7c3aed; color:#fff; }
+  .tag.arch { background:#0b5394; color:#fff; }
+  .tag.both { background:linear-gradient(90deg,#7c3aed 50%, #0b5394 50%); color:#fff; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+
+  /* 评级徽章 */
+  .grade {
+    display:inline-block; padding:3px 12px; border-radius:6px; font-weight:700;
+    color:#fff; font-size:14px; vertical-align:middle;
+  }
+  .grade.aplus { background:var(--grade-aplus); }
+  .grade.a { background:var(--grade-a); }
+  .grade.aminus { background:var(--grade-aminus); }
+  .grade.bplus { background:var(--grade-bplus); }
+  .grade.b { background:var(--grade-b); }
+  .grade-note { font-size:12.5px; color:var(--evidence); margin-left:6px; }
+
+  /* 书卡片 */
+  .book-card {
+    border:1px solid var(--border); border-radius:10px; padding:24px 28px;
+    margin:28px 0; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.03);
+  }
+  .book-card h3 { margin-top:0; }
+  .book-card .grades {
+    margin:8px 0 14px; padding:10px 14px; background:var(--bg-soft);
+    border-radius:6px; font-size:14px;
+  }
+  .role-line {
+    display:inline-block; margin-right:18px;
+  }
+
+  /* KPI 横排卡片 */
+  .kpi-row { display:flex; gap:12px; margin:18px 0; flex-wrap:wrap; }
+  .kpi {
+    flex:1; min-width:130px; border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; background:#fff;
+  }
+  .kpi .num { font-size:22px; font-weight:700; color:var(--accent); }
+  .kpi .lbl { font-size:12.5px; color:var(--evidence); margin-top:2px; }
+
+  /* 主题卡 */
+  .theme-card {
+    border-left:4px solid var(--accent); padding:14px 18px; margin:16px 0;
+    background:var(--bg-soft); border-radius:0 8px 8px 0;
+  }
+  .theme-card h4 { margin:0 0 6px; color:var(--accent); }
+
+  /* 行动矩阵 */
+  .action-matrix th, .action-matrix td { font-size:13px; }
+
+  /* 收口块 */
+  .rework-call {
+    border:2px solid var(--accent); border-radius:10px; padding:20px 24px;
+    margin:24px 0; background:var(--accent-soft);
+  }
+  .rework-call h4 { margin-top:0; color:var(--accent); }
+
+  /* 引文式一句话 */
+  .one-line {
+    border-left:3px solid var(--accent); padding:8px 16px; margin:10px 0;
+    background:#fafafa; font-style:normal; font-size:15px;
+  }
+  .one-line::before { content:"一句话总评｜"; font-weight:600; color:var(--accent); }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · 终审报告</h2>
+<ol>
+  <li><a href="#sec-0">① 一句话总评（整体水位）</a></li>
+  <li><a href="#sec-1">② 审核计划与标准</a>
+    <div class="sub">
+      <a href="#s1-1">用户特点锚点</a> ·<br>
+      <a href="#s1-2">双视角判据</a> ·<br>
+      <a href="#s1-3">评级分布</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">③ 12 本教材逐本卡片</a>
+    <div class="sub">
+      <a href="#bk-A">A 总纲</a> · <a href="#bk-B">B JoyDrive</a><br>
+      <a href="#bk-C">C JoyDriver</a> · <a href="#bk-D">D ROVER5</a><br>
+      <a href="#bk-E">E 具身</a> · <a href="#bk-F">F 世界模型</a><br>
+      <a href="#bk-G">G nn-zero-hero</a> · <a href="#bk-H">H nanochat</a><br>
+      <a href="#bk-I">I 系统性能</a> · <a href="#bk-J">J aicoding</a><br>
+      <a href="#bk-KP">K-prd</a> · <a href="#bk-KQ">K-report</a>
+    </div>
+  </li>
+  <li><a href="#sec-3">④ 跨教材主题（共识发现）</a></li>
+  <li><a href="#sec-4">⑤ Top 优先行动（合并 top5）</a></li>
+  <li><a href="#sec-5">⑥ 如果你想继续打磨</a></li>
+  <li><a href="#sec-6">⑦ 附录：双视角 KPI</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>教材终审报告 · 教育家 × 架构师 双视角综合</h1>
+<p class="lede">两位资深审稿人——<strong>教育家</strong>（基于认知契约与职业路线做教学法终审）与<strong>架构师</strong>（基于技术准确性、证据质量、深度、可落地性做严苛终审）——对 12 本教材做逐本抽样精读 + 跨教材一致性核查。本报告是两份终审的综合，给读者一张"全套教材质量水位 + 优化路线 + 优先行动"的导航图。</p>
+<p class="meta">审稿对象：A/B/C/D/E/F/G/H/I/J/K-prd/K-report 共 12 本 · 编写日期：2026-07-26 · 基准：认知契约（模型先行/两遍法/三阶掌握度/四真相/影响力短板）+ 职业路线（综合架构师 + Function Owner）</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 一句话总评：整体质量水位</h2>
+
+<blockquote class="why consensus">12 本教材整体处于<strong>"A 级教材群"</strong>水位——证据密度、反事实块、难点注解、跨域判断框架四项均达标，<strong>反事实块 158 处</strong>几乎每节都有"不这么做会塌在哪"，是契约"先因果后术语"的最佳兑现；最大系统性短板是<strong>三阶定级（introduced/practiced/can-decide）缺失 9/12 本</strong>，与契约第5条"能说≠会"形成最大冲突；架构师视角发现 <strong>3 处技术硬伤（EEVDF 缩写错误 / ACT "ReActing" 术语误用 / DDP 梯度平均缺 loss scaling 语境）</strong>需立即修复。教材群已具备"标杆精读 + 训练流水线 + 治理型 PRD + 跨域判断框架"四条主线，距离 Function Owner 跃迁<strong>只差最后一公里：迁移练习 + 三阶定级 + 机制化落地</strong>。</blockquote>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="num">12</div><div class="lbl">本教材已终审</div></div>
+  <div class="kpi"><div class="num">158</div><div class="lbl">反事实块（共识计数）</div></div>
+  <div class="kpi"><div class="num">3/12</div><div class="lbl">仅 3 本有系统性三阶定级</div></div>
+  <div class="kpi"><div class="num">3</div><div class="lbl">架构师视角技术硬伤</div></div>
+  <div class="kpi"><div class="num">9/12</div><div class="lbl">缺三阶定级的教材数</div></div>
+</div>
+
+<p>两份终审在<strong>系统性短板</strong>（三阶定级缺失）、<strong>核心价值</strong>（A 治理型 PRD 六段模板、B file:line 证据密度、K 三方口径矛盾诊断）、<strong>需立即修复的硬伤</strong>（E 的 ReActing、I 的 EEVDF）上高度一致；差异在于教育家更看重"读者读完能否升级一阶"，架构师更看重"数字/术语/缩写是否站得住"——两者互补，必须同时落地。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 审核计划与标准</h2>
+
+<h3 id="s1-1">2.1 用户特点锚点（双视角共用）</h3>
+<p>两份终审共用同一组用户画像作为校准基准。这些硬约束决定了"教材好不好"的判据不是泛泛的"易读/有深度"，而是<strong>"是否服务 PM 跨 Function Owner 的这一条具体路径"</strong>。</p>
+<table>
+<thead><tr><th>维度</th><th>画像</th><th>对教材的硬约束</th></tr></thead>
+<tbody>
+<tr><td>能力定位</td><td>4 年数据闭环 PM，判断力领先于亲手实现熟练度</td><td>必须把抽象判断框架焊死而非堆术语；读者校准原话"领先的是拆解不是拍板"</td></tr>
+<tr><td>认知模式</td><td>模型先行 / 先因果后术语 / 两遍法</td><td>第一遍只建因果骨架，第二遍补身份/合同/权限/异常/回滚/证据；教材必须显式分两遍而非平铺</td></tr>
+<tr><td>掌握度模型</td><td>introduced → practiced → can-decide 三阶</td><td>每章必须显式标注当前在哪一阶、读完能否升一阶、证据是什么；"能说≠会"必须钉到真实文件/运行状态/测试证据</td></tr>
+<tr><td>差异化强项</td><td>argo+k8s+flink+clickhouse 数仓 + onboard 监测</td><td>抽象杠杆必须以图先行；CK/PG/调度/血缘论断要与读者自家平台对齐</td></tr>
+<tr><td>致命盲区</td><td>① 数据版本与血缘 ② 评测闭环 ③ 治理结构（影响力命门）</td><td>这三块教材不只是输入知识，更要输出治理型 PRD/决策记录/失败模式矩阵这类工程工件</td></tr>
+<tr><td>aicoding</td><td>实战扎实但"被 agent 推着走"（301 open spawn edge / 6/6 token_budget=None）</td><td>每个概念后给出"你自己 grep/跑/验证什么"的最小动作，逼读者离开 agent 亲手验证</td></tr>
+</tbody>
+</table>
+
+<h3 id="s1-2">2.2 双视角判据</h3>
+<p>两位审稿人用了不同的判据清单——教育家更看重<strong>认知契合度</strong>（模型先行/先因果后术语/三阶定级/动手设计），架构师更看重<strong>技术质量</strong>（准确性/证据/file:line 可验证/跨教材口径一致）。两份判据合并后形成 16 维判据网，每本教材在两份判据下都被独立打分。</p>
+<table>
+<thead><tr><th style="width:50%">教育家 10 维判据</th><th style="width:50%">架构师 8 维判据</th></tr></thead>
+<tbody>
+<tr><td>认知契合度1·模型先行</td><td>C1 技术准确性（ML/系统/数据术语硬伤）</td></tr>
+<tr><td>认知契合度2·先因果后术语</td><td>C2 证据质量（file:line 可验证、数字来源 URL）</td></tr>
+<tr><td>认知契合度3·两遍法</td><td>C3 深度与不过度简化（反事实、关键 trade-off）</td></tr>
+<tr><td>认知契合度4·三阶定级</td><td>C4 可落地性（introduced→practiced→can-decide 路径）</td></tr>
+<tr><td>认知契合度5·难点注解到位</td><td>C5 选型 rationale（按维度选而非"哪个最好"）</td></tr>
+<tr><td>学习路径连贯性</td><td>C6 跨教材口径一致（术语/同构关系自洽）</td></tr>
+<tr><td>可读性·图文节奏</td><td>C7 契约贴合度（模型先行/两遍法/四真相/三阶）</td></tr>
+<tr><td>动机与节奏·为何学</td><td>C8 诚实度（设计态 vs 运行态、声明 vs 执行落差）</td></tr>
+<tr><td>练习与验证设计·能说≠会</td><td>—</td></tr>
+<tr><td>贴合"判断力领先实现熟练度待补"</td><td>—</td></tr>
+</tbody>
+</table>
+
+<aside class="note">两份判据的重叠区是 <strong>C7 契约贴合度 ↔ 认知契合度 1/2/4</strong>、<strong>C8 诚实度 ↔ 反事实块</strong>、<strong>C4 可落地性 ↔ 三阶定级</strong>——这三块是两位审稿人共同打高分（A/D/G/H/K-report）和共同扣分（盘点类 E/F、缺三阶的多数教材）的杠杆点。</aside>
+
+<h3 id="s1-3">2.3 评级分布</h3>
+
+<pre class="mermaid">
+graph LR
+  A["A+ 共 1 本<br/>G nn-zero-to-hero"]:::aplus
+  B["A 共 6 本<br/>A·C·J·B·K-report·K-prd"]:::a
+  C["A- 共 3 本<br/>H·I·E·F"]:::aminus
+  D["B+ 共 2 本<br/>D·I教育家版"]:::bplus
+  E["B 共 0 本"]:::b
+  A -.最高水准.-> X["标杆"]
+  B -.系列主力.-> Y["可own"]
+  C -.打磨后达A.-> Y
+  D -.立即返工.-> Z["返工"]
+  classDef aplus fill:#0b5394,color:#fff
+  classDef a fill:#1a73a8,color:#fff
+  classDef aminus fill:#3a7d44,color:#fff
+  classDef bplus fill:#8a6a00,color:#fff
+  classDef b fill:#b45309,color:#fff
+</pre>
+
+<table>
+<thead><tr><th>教材</th><th>教育家评级</th><th>架构师评级</th><th>综合定位</th></tr></thead>
+<tbody>
+<tr><td><strong>A-master-textbook</strong> 总纲</td><td><span class="grade a">A</span></td><td><span class="grade aminus">A-</span></td><td>认知中枢，治理型 PRD 六段模板是全栈最有价值产物</td></tr>
+<tr><td><strong>B-joydrive-infra</strong> 标杆精读</td><td><span class="grade aminus">A-</span></td><td><span class="grade a">A</span></td><td>证据密度全场最高，PM 跨 Owner 最佳参照系</td></tr>
+<tr><td><strong>C-joydriver</strong> 端到端模型</td><td><span class="grade a">A</span></td><td><span class="grade a">A</span></td><td>技术深度最高，端到端工程决策可审计</td></tr>
+<tr><td><strong>D-rover5</strong> 发版治理</td><td><span class="grade bplus">B+</span></td><td><span class="grade a">A</span></td><td>证据最硬、ROI 最清晰；视觉一致性硬伤</td></tr>
+<tr><td><strong>E-embodied-ai</strong> 具身盘点</td><td><span class="grade bplus">B+</span></td><td><span class="grade aminus">A-</span></td><td>机构生态地图最全；ReActing 术语硬伤</td></tr>
+<tr><td><strong>F-world-model</strong> 世界模型</td><td><span class="grade bplus">B+</span></td><td><span class="grade aminus">A-</span></td><td>三大分类判断框架精确；盘点路径感弱</td></tr>
+<tr><td><strong>G-nn-zero-to-hero</strong> 教学法</td><td><span class="grade aplus">A+</span></td><td><span class="grade a">A</span></td><td>整套教材群的教学法巅峰</td></tr>
+<tr><td><strong>H-nanochat-workflow</strong> 训练工程</td><td><span class="grade aminus">A-</span></td><td><span class="grade aminus">A-</span></td><td>G 之后的最佳承接，单一旋钮因果链</td></tr>
+<tr><td><strong>I-systems-performance</strong> 性能方法论</td><td><span class="grade aminus">A-</span></td><td><span class="grade bplus">B+</span></td><td>USE/RED 方法论骨架精确；EEVDF 硬伤</td></tr>
+<tr><td><strong>J-aicoding-audit</strong> aicoding 审计</td><td><span class="grade a">A</span></td><td><span class="grade a">A</span></td><td>证据最痛，"声明-执行落差"教科书级诊断</td></tr>
+<tr><td><strong>K-onboard-prd-final</strong> 治理型 PRD</td><td><span class="grade aminus">A-</span></td><td><span class="grade a">A</span></td><td>北极星 + Gate Override 设计达评审席水准</td></tr>
+<tr><td><strong>K-onboard-quality-report</strong> 代码审计</td><td><span class="grade a">A</span></td><td><span class="grade a">A</span></td><td>三角校验方法论最锋利的审稿范本</td></tr>
+</tbody>
+</table>
+
+<aside class="note">两位审稿人分歧最大的三本：① <strong>D</strong>（教育家 B+→架构师 A，分歧在视觉一致性是否扣分）；② <strong>I</strong>（教育家 A-→架构师 B+，分歧在 EEVDF 缩写错误是否致命）；③ <strong>K-prd</strong>（教育家 A-→架构师 A，分歧在"管理层签字政治风险"是否需降级方案）。三处分歧都已落到具体优化项。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 12 本教材逐本卡片</h2>
+
+<p>每张卡片格式：①双视角一句话总评 ②核心亮点（共识 + 各自独有） ③Top 优化点（按 P0/P1/P2 排，每条标 <span class="tag edu">教</span>/<span class="tag arch">架</span>/<span class="tag both">双</span> 视角来源）。</p>
+
+<!-- ====== A ====== -->
+<div class="book-card" id="bk-A">
+<h3>A-master-textbook（总纲·数据闭环×数据基建×具身）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade a">A</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade aminus">A-</span></span>
+  <span class="grade-note">综合：认知中枢，治理型 PRD 六段模板是全栈最有价值产物</span>
+</div>
+<p class="one-line">教育家：全系列认知地图与治理型 PRD 模板的最高水准教材，三阶定级、读者校准修正、跨域同构判断框架三项独有；缺陷是覆盖面过广导致盘点"可验证证据"偏弱、无动手验证。架构师：把三个领域收敛成"飞轮+底座+追赶者"判断框架，治理型 PRD 六段模板对标 JoyDrive organization-prd；扣分项是 7.1 三阶判据略主观，且对 NVIDIA 12 周路线落地难度低估。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> 唯一系统性贯穿 introduced/practiced/can-decide 三阶标注（50 处），对齐读者校准报告（非自评），第7章三处"错误打包"红字修正直接命中认知盲区</li>
+  <li><span class="tag both">双</span> §8 治理型 PRD 六段模板（边界句/状态机/变更单/审计/SLA/失败模式）+ doc17 复用，是 PM 跨 Owner 唯一不能跳过的一跃</li>
+  <li><span class="tag arch">架</span> §1.1 全景图"飞轮+底座+追赶者"三层嵌套 + 反事实"若把三领域当平级会各搞一套 lakehouse"——全教材群最高杠杆的一张图</li>
+  <li><span class="tag arch">架</span> §4.3 把"版本 vs 血缘"拆开，点破 doc10 是 introduced 真盲区，修正方向精确到 file</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处动手验证/命令级</strong>（grep 实测）违反"能说≠会"契约——每章末追加"本章 introduced→practiced 的最小动作"：第2章"画自家7段飞轮标物理不变量"、第4章"Onehouse 2025 横向对比表跑 Iceberg vs Hudi upsert 小文件对比"、第6章"读 OXE 论文映射 5 字段"</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>盘点章节升级"决策矩阵+代价+故障模式"三件套</strong>：每个工具（Iceberg/Hudi/Paimon、lakeFS/DVC、Doris/CH/Druid）给一张"我家业务选 X 的判断维度打分+推荐结论+我承担的代价"决策记录模板</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>AIDE 引用数"被引 57+"写死正文</strong>（A:252），2026 年必然过时——改为"截至 2024 发表，建议读者用 Semantic Scholar 复核当前引用数"</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>第6章具身"可迁移/不可迁移清单"升级为"三问判断流程图"</strong>：(1)对应物是什么 (2)能迁移的是方法论还是数字 (3)我家安全等级/车队红利/物理形态是否允许；配 worked example（Figure 1000h 替换 10万行 C++）+ 读者自练（π0 flow matching → AD 轨迹）</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§8.2 北极星 Momenta ">90% 长尾"未给来源 URL</strong>——补 momenta.cn 或研报来源，或注明"90% 为行业推算"</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§5.2 OLAP 选型表 CK 定位需更新</strong>：CK ≥23.3 引入 hash join + distributed JOIN 改善，补"2-3 大表 JOIN 甜区，>5 表 JOIN 仍推 StarRocks"</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§8.1 12 周甘特图</strong>：用真实起始日期 + 每阶段末标注"practiced 证据是什么文件/命令/产出文档"</li>
+</ol>
+</div>
+
+<!-- ====== B ====== -->
+<div class="book-card" id="bk-B">
+<h3>B-joydrive-infra-0to100（JoyDrive-Infra 训练+评测）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade aminus">A-</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：证据质量全场最高，PM 跨 Function Owner 最佳标杆参照系</span>
+</div>
+<p class="one-line">教育家：标杆仓库精读最佳范本，file:line 证据密度极高、Outbox/对账/血缘校验等难点反直觉；缺陷是完全缺失三阶定级和读者自有业务的映射。架构师：全教材群证据质量最高，每条论断钉到 migrations/L:N 或 doc.md 行号，"事实归属切工作区""血缘只读投影""Preempted 仅查看"讲透了设计哲学。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> 每条论断钉到 file:line（migrations、services、doc 全标行号），整套教材证据密度最高</li>
+  <li><span class="tag both">双</span> §4.4 "Agent Gateway Zero Trust 设计 vs 落地度 0%"、§6.6 "Reconciler 设计 vs 实现缺口"反复教"设计文档≠实际状态、要从运行时反推"——FO 最稀缺判断力</li>
+  <li><span class="tag arch">架</span> §4.2 逐行拆 ExperimentCreated → AFTER INSERT 触发器 → pg_notify → workflow LISTEN 事务边界，明确"TRIGGER 在 commit 后才 NOTIFY 是 transactional outbox 精髓"（90% 教程讲错的点）</li>
+  <li><span class="tag arch">架</span> §5.2-5.5 评测准入事务边界（advisory lock + 首写优先 + 评论回写非阻断）、worker 节流、状态回填容错——比生产系统文档都细</li>
+  <li><span class="tag edu">教</span> §8 四遍读路径 + §9 10 个决策 rationale + 反事实表是 can-decide 训练靶</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——每章末追加"本章知识点三阶表"：如 §5 评测闭环 advisory lock/抢占式 claim/两级状态标 practiced（有 file:line 对照自家平台），血缘校验门禁标 introduced（要读者去自家仓库找对应物）</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>缺"读者把设计迁移到自家 onboard/数仓"对照任务</strong>——新增 §11"迁移练习"：把自家 HilPerformancePlatform 与 JoyDrive 对照（血缘账本/Outbox 三件套/ChangeRequest/血缘校验门禁），产出"差距清单+优先级"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§4.1 "Determined 不跨集群调度"论断需更强证据</strong>——补精确边界"Determined 在每个 Rancher 集群内部用节点标签做资源池映射，非 Karmada 跨集群 Pod 调度；跨集群连通靠 remotedial tunnel"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§7.4 AI coding 纵深防御需对照教材 J 交叉引用</strong>——补"这套 tag/wrapper 属 advisory 层，真正能挡住的是 PreToolUse hook + permission rule（deterministic 层），否则会同 J 诊断的 301 open spawn edge 同病"</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§9.3 "只追加不修改"认知钥匙</strong>——在开篇 §0 后新增"本平台的认知钥匙"，每个出现该模式的章节末用一句话回扣</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§5 评测章节 Prefect 独立 PG 故障域意义需串联</strong>——§6.7 DB 物理隔离的同构设计</li>
+</ol>
+</div>
+
+<!-- ====== C ====== -->
+<div class="book-card" id="bk-C">
+<h3>C-joydriver-0to100（JoyDriver 端到端模型+训练）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade a">A</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：技术深度全场最高，端到端工程决策可审计</span>
+</div>
+<p class="one-line">教育家：教科书级"模型先行"范本，从 pyproject 血缘痕迹推导 fork 演化、forward() 五阶段、ego 放 index0 脆弱约定等难点到位。架构师：把 StreamPETR 时序融合/ego token index 0 约定/bicycle model 积分/ONNX 训练-部署双形态拆到行号级；唯一硬伤是 DDP 图梯度平均表述需补 loss scaling 语境。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1.1 从 pyproject name='simpl' 但 entrypoint='joydriver' 血缘痕迹推断 SIMPL fork 演化——"读代码第一站永远是 pyproject"教成肌肉记忆</li>
+  <li><span class="tag both">双</span> §2.1 forward() 五阶段 + §3 逐层拆解（RegNet→CPFPN→PositionEmbedding3D→StreamPETR→TrajectoryHead→RefineHead），每层给 file:line + 为何如此 + 反事实</li>
+  <li><span class="tag arch">架</span> §2.3 StreamPETR 时序融合三步纯函数 + "detach 不让反向沿时间无限回溯（truncated BPTT）" + "memory_len 必须是 num_query 整数倍" assert</li>
+  <li><span class="tag arch">架</span> §2.4 "ego 放 index 0 是最脆弱的隐式约定，破坏后 trajectory_head 取错 token 整个规划错位"——代码里最易被重构改坏的不变量</li>
+  <li><span class="tag arch">架</span> §6.5-6.8 ONNX 工程化（dummy inputs/opset/layout 转换/常量折叠/onnxsim/force_reset clip_length 训练-部署一致性）比 ONNX 官方文档更贴近 AD 部署现实</li>
+  <li><span class="tag edu">教</span> §2.2 IL vs RL 表 + covariate shift 两个工程手段；§1.5 cfg manifest 当"数据闭环活化石"是 PM 金句</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§4.2 DDP 梯度同步图补 loss scaling 语境</strong>（C:655-667）：严格说 DDP 默认 ReduceOp=SUM，PyTorch 在 backward hook 自动 /world_size 等价 AVG；若读者用 loss/world_size 手动归一化会双重除法（8 卡训练最常见 loss scale bug）。JoyDriver run.py:681 未显式 /world_size 依赖 DDP 默认行为</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>§1.3 端到端 vs 模块化对比表升级"三问决策框架"</strong>：(1)梯度能否从规划 loss 回传感知骨干（中间有不可导 NMS 则不能）(2)训练数据是检测框还是轨迹真值 (3)可解释性要求多高——这是 can-decide 训练</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处三阶定级 + 未标注读者当前水位</strong>——开篇标注"读者校准：训练调度 practiced（跟过完整闭环）、模型架构 introduced、DDP/RDMA 训练基建 introduced"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§2.2 IL covariate shift 缓解手段</strong>显式串联 §1.5 manifest 闭环（DAgger 工业实现）——"评估 E2E 团队成熟度看数据回流闭环是否覆盖部署态失败分布"</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§1.5 manifest 数据闭环工作日志动手练习</strong>：读者把自家训练 cfg 的数据集列表拆成"失败场景→规则 recall→drop 已收敛→拼新 manifest→重训→分桶评测"闭环动作表</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§5.6 TARGET_AREA 生成算法补伪代码/mermaid</strong>——读者数据闭环 PM 最该理解的"自车偏移尺子"，目前只有散文描述</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§3.5 TrajectoryHead 补"为什么不直接回归 pos"</strong>：直接回归 pos 会出物理不可能轨迹（瞬移/侧滑），回归控制量可 clamp 保证运动学合法</li>
+</ol>
+</div>
+
+<!-- ====== D ====== -->
+<div class="book-card" id="bk-D">
+<h3>D-rover5-release-golden-path（ROVER5.0 发版+问题收敛）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade bplus">B+</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：证据最硬、ROI 最清晰；视觉一致性硬伤 + 缺三阶是主要扣分项</span>
+</div>
+<p class="one-line">教育家：用 git 侦察把"四条线断链"诊断到行级，三节点根因框架和暗号→显号杠杆点具体；缺陷是暗色主题破坏系列一致性、未与读者治理结构短板显式对接。架构师：基于 git 侦察逐行钉死 squash/lightweight tag/手输 commitId 三重失效，"模块词表是产品可决定的"own 发力点判断精准；唯一需补强是 Release Flow 迁移成本估算。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1 现状诊断每段都贴 git 侦察证据（recon 行号、git log --merges 实跑输出 0、awk 统计 76% 有前缀但模块名四套并存）——"用数据当权力的单次战役"在工程治理领域的复刻</li>
+  <li><span class="tag both">双</span> §2 三节点（squash/lightweight tag/手输 commitId）合成失效图 + §6 四流对齐把黄金路径设计成"机器可读双向链接"</li>
+  <li><span class="tag arch">架</span> §2.1-2.4 三重失效合成 mermaid + 红色节点精准标三个出血点——launch-review 评审席三秒看懂</li>
+  <li><span class="tag arch">架</span> §1.2 commit 规范执行度精确统计（200 条/76% 有前缀/4 种 Planning 写法/48 条无前缀/仅 2% 真正 conventional）+ "模块词表是产品可决定而非工程可决定"判断</li>
+  <li><span class="tag both">双</span> §8.1-8.5 反事实章节（为何先 commit Fixes 关联、为何保留 merge commit、为何不强行 x.y.z、为何搬进仓库、为何推 A/B 分区）——"决策记录"模板最佳示范</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>唯一暗色主题（var(--bg)=#0f1419）破坏系列教材一致性</strong>——改用与 A/B/C/E/F 一致的白底+左 toc 布局（保留 .evi/.bad/.good 三色证据块），让系列一致性优先</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>§1.6 断点 ABC 与 §5 问题收敛闭环与教材 A §8.3 治理型 PRD 六段模板对接</strong>——"本节的 MR 模板+commit lint CI+annotated tag 是把'变更单 schema+审计字段+SLA'落到 git 这一侧的实例"</li>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§3.1 Release Flow 迁移成本估算</strong>：50 人团队、278 tag、HIL/QA 双流水线迁移至少 2-3 个月并行期，PRD 必须 own 这件事——补"分支策略迁移的并行期管理"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§5.1-5.7 validator × evaluator 决策矩阵</strong>：双轨结论不一致时谁优先？补四象限（都过/validator 过 evaluator 不过/validator 不过 evaluator 过/都不过）的产品处置规则</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——开篇标注"读者校准：治理结构 introduced 是最关键短板"；§7 行动清单每项标"做完升到哪一阶+证据"</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§3.1 反事实不够具体</strong>：车端 OTA 是按 sensor_kit 分包+灰度车队逐步铺开，秒级回滚意味着已上车队的算法包无法召回（只能等下次 OTA），不像 SaaS 可秒级 revert</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§2.2 annotated tag 全部化后的元数据膨胀</strong>：278→数千 tag 后 annotated 独立对象的 git 操作变慢；建议里程碑用 annotated，daily build 保留 lightweight 加 tag message</li>
+</ol>
+</div>
+
+<!-- ====== E ====== -->
+<div class="book-card" id="bk-E">
+<h3>E-embodied-ai-0to100（具身智能龙头盘点）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade bplus">B+</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade aminus">A-</span></span>
+  <span class="grade-note">综合：机构生态地图最全；ReActing 术语硬伤是必须立即修复的硬伤</span>
+</div>
+<p class="one-line">教育家：生态地图最全（机构系谱纠偏+数据规模对照+范式两派），7 层栈总图是元地图；缺陷是盘点味重、路径感弱。架构师：A 派离散 token vs B 派连续 diffusion/flow-matching 范式判断是 PM 转战具身的认知钥匙；硬伤是 ACT 执行机制术语 "ReActing" 写错（应为 temporal ensemble / receding horizon control）。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §0.1 具身系统栈 7 层总图是"看任一具身论文/repo 先定位它在哪层"的元地图</li>
+  <li><span class="tag both">双</span> §0.2 机构生态地图 + 机构归属纠偏（RoboMamba=北大/SpatialVLA=上海 AI Lab/3D-VLA=UMass）防 networking/招聘/选 offer 错位</li>
+  <li><span class="tag arch">架</span> §1.3 Action Token 化 vs 连续动作生成——"量化误差/逐 token 无法并行/单峰输出难表达多模态"三条代价讲清 B 派出现根本原因</li>
+  <li><span class="tag arch">架</span> §3 龙头盘点按"架构/训练/数据/创新点/可复现度"五维拆 + 可复现度排序是读者选入门 repo 硬指南</li>
+  <li><span class="tag edu">教</span> §0.4 范式 A/B 两派（离散 token 自回归 vs 连续 flow matching）迁移判断强（AD 端到端本质就是 VLA）；动手验证 37 处（grep 最高）</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§1.4 ACT 执行机制术语硬伤</strong>（E:250）："ReActing 机制" 改为"receding horizon control + temporal ensemble"（ACT 原论文 Zhao et al. RSS 2023 arXiv:2304.13705）；ReAct 是 Yao et al. 2022 的 LLM 范式与机器人控制无关</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>盘点味重</strong>——§2 每家机构前加"它押注的判断假设是什么、若假设错了会塌在哪"：如清华系"视频生成预训练内部表征当物理先验"，反事实"若内部表征不含物理因果则微调到真机仍需大量数据"</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>仅 10 处三阶标签</strong>——§7 转战补习路线路标三阶：introduced=读懂 OXE/LeRobot 概念；practiced=跑通 OpenVLA 微调+SO-100 采集 50 条 demo；can-decide=能比较"我家 AD 跨车型 schema 该借鉴 OXE 哪部分"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§1.5 RT-2 归入 pretrain→posttrain 二段式略简化</strong>：RT-2 原始论文是 co-fine-tune（已训好 VLM 上协同微调），π0/GR00T 才是典型两段式</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§0.3 数据规模对照表深挖"具身数据闭环与 AD 根本差异"</strong>：AD 价值单位是 frame、具身是 episode（一条 demo），决定 feature store 设计/血缘颗粒度/质量门禁完全不同</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§3.x 机构归属纠偏段落移到章末 aside</strong>——正文保留 SpatialVLA/RoboMamba/3D-VLA inline 提醒即可</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§1.1 补 B 派胜出的工业驱动力</strong>：高频灵巧任务（50-120Hz）离散 token 撑不住 + 多模态动作分布离散化信息损失大</li>
+</ol>
+</div>
+
+<!-- ====== F ====== -->
+<div class="book-card" id="bk-F">
+<h3>F-world-model-0to100（世界模型龙头盘点）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade bplus">B+</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade aminus">A-</span></span>
+  <span class="grade-note">综合：三大分类判断框架精确；盘点路径感弱，与读者业务映射缺失</span>
+</div>
+<p class="one-line">教育家：三大分类（生成式/预测式/控制式）+ 与 simulator/视频生成/VLA 边界区分是世界模型判断元地图，与 AD/具身交叉点强；缺陷是盘点章节路径感弱。架构师：Cosmos Tokenizer 2048× 压缩（8×16×16=2048 数学正确）"隐形护城河"洞察是 PM 评估世界模型 ROI 硬指标；硬伤是 LAM 段落对 VQ-VAE 离散化为"8 类潜在动作"需补边界。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1.1 三大分类（生成式/预测式/控制式）比按架构分（DiT/AR）更能反映产品定位，每类标"PM 用途"</li>
+  <li><span class="tag both">双</span> §1.3 与 simulator/视频生成/VLA 边界区分表是"避免把世界模型和视频生成混为一谈"的认知杠杆（Sora/CogVideoX 不学物理不可控，Cosmos/GAIA/Vista 可控+物理一致）</li>
+  <li><span class="tag arch">架</span> §2.1-2.3 + 与 simulator/视频生成/VLA 边界是判断"任一世界模型属于哪类"的元地图，与 A"渲染层 vs 决策层"完全同构</li>
+  <li><span class="tag arch">架</span> §3 Latent Action Model（LAM）：无监督从视频推断潜在动作 → 任何无标注视频都可作为世界模型训练数据 → 数据成本从标注降到原始视频——降低世界模型数据成本的根本性创新</li>
+  <li><span class="tag edu">教</span> §0 + §10 把世界模型回答的三个工业级问题对应读者最熟悉的采集/仿真/评测三段</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>盘点收口</strong>——§7 末加"读完后读者能回答的 5 个判断问题"：(1)我家该选生成式还是控制式 (2)Cosmos vs 自训视频生成底座代价对比 (3)世界模型当 reward model 需要哪些前置 (4)我家数据闭环哪段可被世界模型造数据替代 (5)若照搬具身合成优先到 AD 安全场景会塌在哪</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——§12 标三阶：introduced=读懂三大分类+与视频生成边界；practiced=跑通 Cosmos-Predict1 或 Vista 推理+改一个 condition；can-decide=能写出"我家该不该投世界模型"决策记录</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§3 LAM 段落补"8 类 token 是 VQ-VAE 码本聚类结果，无监督学到，不与真实 action 一一对应"</strong>——读者容易误以为 8 类 = 8 种真实机器人动作</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§4 NVIDIA Cosmos 自报数字需对标公开榜</strong>：在"比 SOTA 高 8×"后加注"NVIDIA 自报，截至 2026-07 暂无独立第三方 benchmark"</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§10.1 真实/合成数据配比决策矩阵</strong>：维度=安全等级×长尾密度×世界模型保真度×真实数据边际成本；每个组合给推荐配比+代价+故障模式</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§11.1 与 A §3.4、E §0.3 显式交叉引用</strong>——三处讲同一"造数据从补充变主力"范式切换的三个投影</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§8 选架构判断维度</strong>：(1)训练数据是视频还是 occupancy (2)推理要可控还是可交互 (3)算力预算 (4)是否需要 action 条件化</li>
+</ol>
+</div>
+
+<!-- ====== G ====== -->
+<div class="book-card" id="bk-G">
+<h3>G-nn-zero-to-hero（Karpathy Zero→Hero）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade aplus">A+</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：整套教材群的教学法巅峰，几乎无短板</span>
+</div>
+<p class="one-line">教育家：整套教材教学法巅峰，三件套因果链+"每节回答上一节留下的问题"+verify 动手块+最难点反直觉注解；唯一缺三阶定级和诚实声明仓库缺 GPT/Lecture7-8.ipynb。架构师：教学法最纯粹，"三件套+每节 verify 实验"严格践行认知契约的"学习循环"；硬伤是 tanh Kaiming gain 5/3 来源只说"Karpathy 没推但提到了"，实际上 He 2015 论文与 PyTorch init.calculate_gain 都给了推导。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1 三件套（函数逼近/梯度下降/链式法则）把任何神经网络从 micrograd 到 GPT-4 压成同一因果骨架</li>
+  <li><span class="tag both">双</span> §2 micrograd 难点注解密度全场最高：tanh 导数要用输出值 o 不是输入 x（最致命笔误）、+= 而非 = 是梯度累加（PyTorch zero_grad 根源）、反向传播是 O(n) 而非指数爆炸（拓扑排序）</li>
+  <li><span class="tag edu">教</span> verify 动手块（改 h 看 1e-6/1e-1/1e-20 精度炸、把 += 临时改成 = 看 a.grad 从 2.0 变 1.0）是"能说≠会"最佳设计</li>
+  <li><span class="tag arch">架</span> §2.5"为什么是 += 而不是 ="（G:231-235）引了 Karpathy 本人在视频里栽过的坑（exp 注释"incorrectly used = instead of +=, Fixed here"）——"名人都栽过的坑"比抽象规则更让读者记住</li>
+  <li><span class="tag arch">架</span> §6.1 诚实声明（G:148）直接点破"本仓库 lectures/ 只到 makemore_part5，GPT/Tokenizer 的 .ipynb 从未 commit"</li>
+  <li><span class="tag both">双</span> §4 训练健康诊断仪表盘 + 诊断决策树是拿到训不动网络的标准化排查 SOP，与 I 教材 USE/RED 同构</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——每章末加三阶表：micrograd 三件套读完→practiced（能手算 7 节点 DAG 反向）；GPT 读完→introduced（要自己 clone nanoGPT 跑通才 practiced）；训练诊断仪表盘读完→can-decide</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§7 GPT-2 工程化加"最小可跑命令序列"</strong>：clone nanoGPT→shakespeare 数据→./train.py 100 iter→./sample.py 看输出，30 分钟 happy path</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§4.2 tanh Kaiming gain=5/3 来源补推导</strong>：tanh 在输入 ~N(0,σ²) 下 E[1-tanh²(x)]≈1-σ²/2，所以 gain=1/√(1-σ²/2)；引 PyTorch torch.nn.init.calculate_gain('tanh')=5/3</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§3.4 MLP vs bigram 三条因果表"C 固定成 one-hot"表述不严谨</strong>——改为"把 C 冻结为随机值（不可学），观察 dev loss 是否退化到接近 bigram 水平"</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§5 Self-Attention √d_k 缩放补数学</strong>：q,k ~ N(0,1) 独立，则 q·k 方差=d_k，标准差=√d_k；softmax 对大输入敏感所以除以 √d_k 把方差拉回 1</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§6 残差+LayerNorm 设计哲学</strong>：深层无残差会让梯度消失、无 LayerNorm 会让激活分布漂移</li>
+</ol>
+</div>
+
+<!-- ====== H ====== -->
+<div class="book-card" id="bk-H">
+<h3>H-nanochat-workflow（nanochat 本地训练）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade aminus">A-</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade aminus">A-</span></span>
+  <span class="grade-note">综合：G 之后的最佳承接，单一旋钮因果链可审计</span>
+</div>
+<p class="one-line">教育家：G 之后的最佳承接，命令级可复现、单一旋钮 --depth 因果链拆解、uv/torch/CUDA 版本对齐反直觉陷阱；缺陷是读者校准缺失。架构师：'--depth 单一旋钮 + scaling laws 自动算 batch/lr/wd/步数'的 60 行代码精读是全栈最值得反复读的工程教育；硬伤是 Muon 优化的"Newton-Schulz 正交化"只给名字未给直觉。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1.3 单一复杂度旋钮 --depth 因果链（depth→model_dim→num_heads→target_tokens→batch→lr→wd 全自动算）——现代训练理论焊成可审计推导链</li>
+  <li><span class="tag arch">架</span> §5.4 Muon + AdamW 混合优化器 + nanochat 不用 DDP 反直觉设计——"梯度同步塞进 optimizer.step() 三阶段"，"用 DDP 每张卡存全量 optimizer state 显存翻 8 倍 OOM"反事实精确</li>
+  <li><span class="tag arch">架</span> §4.7 bits-per-byte（bpb）tokenizer 词表无关 loss 归一化——'词表从 32K 扩到 128K loss 看起来降 30% 但模型没变好'反事实</li>
+  <li><span class="tag edu">教</span> §1.1 明确定位"nanochat 补齐 nn-zero-to-hero 没教的工程闭环"，把两本教材焊成一条因果链而非拼盘</li>
+  <li><span class="tag both">双</span> §2.2 uv+torch+CUDA 版本对齐"忘了 --extra gpu 得到 CPU torch"反事实陷阱、§2.3 nanochat 主动放弃 autocast 决策因果</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——每章末加三阶表：tokenizer 训练读完→practiced；pretrain→practiced；scaling laws 推导→can-decide；SFT+RL→introduced</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§5 训练运行加 teach-back 检查清单</strong>：(1)为什么 muP 式外推选 d12 做参考基准 (2)SFT 的 SmolTalk+MMLU+GSM8K 各管什么 (3)RL 为什么用 ChatCORE 而非 CORE 评测</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§5.4 Muon Newton-Schulz 正交化补直觉</strong>：梯度下降更新方向对 2D 权重矩阵应限制在正交基上，Newton-Schulz 是矩阵正交化低成本近似（5 次迭代，比 SVD 快一个数量级）；所以 Muon 只对 2D 矩阵参数有效，embedding/lm_head/scalar 必须走 AdamW</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§7.2 warmdown vs cosine decay 取舍</strong>：warmdown 末段线性降更可控、可中途续训；cosine 末段平滑但中途改步数会破坏 schedule</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§7 调优与常见报错加"报错→根因→修复"决策树</strong>：OOM→减 batch/开 grad checkpoint；loss 不降→查 lr（√(B/B_ref) 算对没）；NaN→查 fp16 是否配 GradScaler</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§10 5 个 trick 整体设计意图</strong>：smear/resid_lambdas/value_embeds/backout/logit_softcap 共同服务于"小模型（≤2B）压榨每一份容量"，非通用 LLM 标配</li>
+</ol>
+</div>
+
+<!-- ====== I ====== -->
+<div class="book-card" id="bk-I">
+<h3>I-systems-performance（性能之巅+无人车性能）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade aminus">A-</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade bplus">B+</span></span>
+  <span class="grade-note">综合：USE/RED 方法论骨架精确；EEVDF 缩写硬伤必须立即修复</span>
+</div>
+<p class="one-line">教育家：方法论先行（USE/RED/60s/负载画像）最佳教学，Gregg 方法论迁移到 AD 数据闭环具体且可执行。架构师：USE/RED 二分+60s 命令清单+性能箴言七诀方法论骨架精确；硬伤是 EEVDF 缩写展开错误（应 Earliest Eligible Virtual Deadline First），且 cgroup v2 OOM 优先级描述需补 systemd-oomd 与内核 OOM 实际触发顺序。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §0-§1 方法论先行（USE 资源三态/RED 服务三态/60s 分诊/负载画像/延迟拆解）——"模型先行、方法先于工具"最佳实践</li>
+  <li><span class="tag both">双</span> §5.7 ROS2 实时性章节"CFS 不区分实时线程 → ROS2 实时性短板"根因讲透——跨机器人/具身底层 OS 判断力</li>
+  <li><span class="tag arch">架</span> §3.3 OOM 全链路 PSI 作为"判断是被 throttle 拖慢还是真的 OOM 金标准"，"车上边缘节点 OOM 导致行驶中进程重启的安全风险"——PM 能向车端团队提的可落地方案</li>
+  <li><span class="tag arch">架</span> USE/RED 二分（"和嵌入式团队聊 USE，和 SRE 团队聊 RED"）+ AD 60s 清单改造</li>
+  <li><span class="tag edu">教</span> 反事实 34 处（全场最高之一）+ §9 三个最深性能认知是判断力训练靶</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§3.1（I:272）EEVDF 缩写展开错误</strong>："Early Event Voluntary Delay First" 改为正确的"Earliest Eligible Virtual Deadline First"（Zenkov et al. 2023，Linux 6.6 合入），补 EEVDF 论文/LWN 链接。这是会被嵌入式团队当面问倒的硬伤</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处三阶定级</strong>——每章末加三阶表：USE/RED 读完→introduced；60s 清单在自家 onboard 平台跑一遍→practiced；能在路测卡顿/事故复盘现场用 USE+RED+下钻钉到具体函数→can-decide</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>§5 无人车系统性能对照读者自家 onboard 平台</strong>：PerfStatsFlinkJob（at-least-once+60s checkpoint）对应本书哪段、CK DWS quantileExactIf P99 对应延迟拆解哪步、prod-shadow 链路与本书 USE 该怎么配</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§3.3 OOM 全链路 systemd-oomd 时序</strong>：通常在 PSI 阈值触发时主动 kill（用户态），时序上在 cgroup OOM 之前（预防性）而非之后——重排顺序为 PSI→systemd-oomd→cgroup OOM→kernel OOM</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§3/§4 动手验证</strong>：在读者 JoyDrive-Infra 郑州隔离网 GPU 节点上跑 DCGM+node-exporter+FlameGraph 一遍，对照本书 §5 GPU 段</li>
+  <li><span class="tag p2">P2</span> <span class="tag arch">架</span> <strong>§5.6 与 C §4.2 DDP 章节交叉引用</strong>：C 讲正确性（梯度怎么同步），本节讲性能（同步为什么慢、如何用 nsys 诊断 all-reduce bubble）</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§1.7 反方法论前置</strong>：把"先有锤子再找钉子"作为读者进场前必须内化的纪律——与"判断力领先但实现熟练度待补"画像高度相关</li>
+</ol>
+</div>
+
+<!-- ====== J ====== -->
+<div class="book-card" id="bk-J">
+<h3>J-aicoding-collaboration-audit（aicoding 协作盘点）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade a">A</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：证据最痛的一本，"声明-执行落差"教科书级诊断</span>
+</div>
+<p class="one-line">教育家：对标"顶尖 aicoder"最诚实的审计，8/8 AGENTS.md 信条+6 个 token_budget=None+301 open spawn edge+0 memories 硬数据，三块肌肉（hook/skill/独立验证）诊断精准。架构师：基于 6 份 codex history inventory 硬数据把"声明-执行落差"钉成结构性问题，"advisory vs deterministic"二分是读者从 PM 跨到 aicoding 工程化的认知钥匙；唯一需补强是 Conductor vs Orchestrator 决断。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §0 用 6 个 KPI 卡片（8/8 信条、~70% 规划决策占比、6/6 token_budget=None、301 open spawn edge、4/6 goal-thread blocked、0 memories_1）把"声明层接近顶尖但机制兑现层缺失"讲成可量化对照</li>
+  <li><span class="tag arch">架</span> §1 AGENTS.md 声明 vs 实际行为落差表（J:311-322）7 行对照每行钉到 sqlite 可观察行为——"原则正确但没 binding 到机制"教科书级诊断</li>
+  <li><span class="tag arch">架</span> §4.4 "logs_2 全是 Rust tracing 无可读 verification 事件 → 无法从日志侧审计 reported vs proved"——J 整本最有价值洞察</li>
+  <li><span class="tag both">双</span> §6 短板清单"advisory vs deterministic"二分（CLAUDE.md/AGENTS.md/skill 是 advisory；hook/permission rule/budget 是 deterministic）给出把声明落地唯一路径——把禁令翻译成 PreToolUse hook</li>
+  <li><span class="tag edu">教</span> 三阶定级 21 处（仅次于 A）+ §6 aicoding 进阶路线（i→p→d）+ §7 每会话自检 checklist</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§6 优化路线对 Conductor vs Orchestrator 做决断</strong>：基于 301 open spawn edge + 单父 358 子 + 4/6 goal-thread blocked 硬数据，明确推荐"先退回 Conductor（主协调不做任何下沉，只做转发+批准+gate），把 spawn 边数压到 <50/会话后再考虑 Orchestrator"</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>0 处动手验证</strong>——§5 短板优化每项配"本周必做的机制化动作"：token_budget=None → 给 6 个 goal-thread 全填量化 budget；301 open edge → 写收敛脚本定期清理；memories_1=0 → 把每次会话关键决策落成结构化 memory 条目</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>§1.3 委托与子代理"理念先进落地挣扎"补 open edge 收敛机制</strong>：(1)每个 spawn 必须带收敛条件（success/cancel/timeout）(2)主协调 agent 每 N tick 扫一次 open edge 表 (3)超时未收敛的 edge 自动 fail 给主协调处置——对照教材 B Reconciler 对账+dead_letter 设计</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§3 认知层七维盘点对接读者校准</strong>：每维标"对照读者校准：你的 doc17 Hook+三把锁+Edge Cases 是 Verification 维度的 practiced 爆发点"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§2.5 情绪化指令处理</strong>：改为"情绪释放用单独非 agent 会话（记 journal / 和人吐槽），主指令流严格保持结构化"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§6 凭据治理具体选型</strong>：单机/小团队用 1Password CLI 或 age 加密 .env；多服务用 doppler 或 Vault；CI 用 GitHub Actions secrets + OIDC；Codex CLI 集成示例 env $(op signin)</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§7 checklist 落成 PreToolUse hook</strong>：对照教材 B §7.4 BASH_ENV=.bash_safety.sh 强制层</li>
+</ol>
+</div>
+
+<!-- ====== K-prd ====== -->
+<div class="book-card" id="bk-KP">
+<h3>K-onboard-prd-final（Onboard PRD 终版）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade aminus">A-</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：达 launch-review 评审席水准的治理型 PRD 范本</span>
+</div>
+<p class="one-line">教育家：三方专家+首席+六角色 launch-review 综合的治理型 PRD 范本，北极星复合指标重定义、Quality Gate Override+灰度+RBAC、5 闭环诚实化为 2.5 已闭合+2.5 P1。架构师：全栈最成熟的两本之一，PRD 终版诚实化（"代码落地度 55% / 生产可达度 0%"拆分、generation_publish execution=disabled 首席补盲点、P99 三方口径矛盾）达 launch-review 评审席水准；唯一需补强是 Gate "管理层签字政治意愿"前置 milestone 的可执行性。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §0.3 北极星从单一"准出报告自动覆盖率"重定义为 leading+lagging+业务代理量三层复合，诚实指出"分母无源、分子无引擎→P0 完成前恒 0/NaN"</li>
+  <li><span class="tag arch">架</span> §2.2 实时性能闭环诚实化：v1"已达生产级"降级为"pre-launch 阶段（at-least-once+下游去重）"，首席补三方共同盲点（generation_publish_v2.sql L1 注释 Repository-only; execution is disabled）</li>
+  <li><span class="tag arch">架</span> §2.2 aside（K:413）"v1 标语宣称 DWS P99 从 ODS quantileExact 精确回算，但 ETL 实际 quantileTDigest + least(max)，PRD+DDL+ETL 三方口径自相矛盾"——TDigest 在 P99 相对误差 1-3% 会把真实 P99=102ms 判成 <100ms PASS 导致回归逃逸</li>
+  <li><span class="tag edu">教</span> §9 风险登记册带代码证据（generation_publish_v2 execution=disabled、algo_package 填写率 2/88），每条标 launch-blocker/P0/P1</li>
+  <li><span class="tag both">双</span> §1.2 AlgoPackage 状态机是 v1 漏判补齐；§7 Quality Gate Override+灰度三阶段+RBAC 是 can-decide 级设计</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag arch">架</span> <strong>§0.3 aside 管理层签字不达成时的降级产品形态</strong>：Gate 引擎默认 Advisory 模式（FAIL 仅告警不阻塞），北极星改为"Advisory Gate 被 QA 主动调用次数/月"（衡量采用度而非强制力）。这样即使管理层不签字，Gate 工作不白做，且能积累数据反过来推动签字</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>作为"教材"三阶定级和动手验证完全缺失</strong>——在 PRD 末加"教学附录"：把 12 节每节标"读者读完能 own 什么判断 + 对照自家业务最小动手动作"（如 §0.3 北极星重定义→读者把自家任何 PRD 的北极星按 leading/lagging/代理量三段重写一遍）</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>§10.0 管理层签字谈判剧本</strong>：用 §0.2 价值表（QA/算法 owner 人时释放+回归逃逸规避 N×X）+ §1.4 反事实（回滚 10-100x）做弹药，对照教材 A §8.3 治理型 PRD 六段模板把谈判写成"技术无法拒绝的结构"</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§2.1 HiL 任务闭环 rerun 链补统计功效分析</strong>：N=10 baseline + N=10 candidate + max_rerun=1 → 单场景 20 runs，P99 估计相对误差约 ±15%；warn/crit 阈值差应 ≥30% 才能在 N=20 下达到 α=0.05 显著性</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§0.3 SLA 延迟预算分解读者自练</strong>：读者把自家任何 SLA 按"late-window+Cron+watermark"三段分解，标乐观值/悲观值/承诺值</li>
+  <li><span class="tag p1">P1</span> <span class="tag arch">架</span> <strong>§5.8 SLA 端到端延迟预算补闭合路径</strong>：(1)window 30min → 5min (2)Cron 5min → 1min (3)watermark 2min → 30s——三项叠加 5min 可达</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§1.2 AlgoPackage 状态机旁注对照读者校准</strong>：读者 doc02 数据资产管理是状态清单（缺跳转条件+副作用），本节是状态机范例</li>
+</ol>
+</div>
+
+<!-- ====== K-report ====== -->
+<div class="book-card" id="bk-KQ">
+<h3>K-onboard-quality-report（Onboard 代码/架构质量报告）</h3>
+<div class="grades">
+  <span class="role-line"><span class="tag edu">教</span> <span class="grade a">A</span></span>
+  <span class="role-line"><span class="tag arch">架</span> <span class="grade a">A</span></span>
+  <span class="grade-note">综合：三角校验方法论最锋利的审稿范本</span>
+</div>
+<p class="one-line">教育家：三角校验（声称 vs 代码事实 vs 落差）+ launch-blocker 诊断最锋利，凭证明文/Quality Gate 0 行/P99 三方矛盾的代码证据极硬；缺陷是难点注解偏少、作为教材缺三阶和动手。架构师：全栈最成熟两本之一，§2.2 aside"PRD+DDL+ETL 三方口径自相矛盾"是全套教材里最硬的"代码核实→PRD 改写"闭环，TDigest 在 P99 相对误差 1-3% 会回归逃逸的判断精确。</p>
+
+<h4>核心亮点</h4>
+<ul>
+  <li><span class="tag both">双</span> §1 三角校验表（血缘契约/实时链路/发版准出/P99 口径）把"声称状态 vs 代码事实 vs 落差"三列对照，每条钉 file:line——"设计级已落地≠运行级已生效"是读者做架构判断必备的认知杠杆</li>
+  <li><span class="tag both">双</span> §2.4 技术债 Top 8 + §5 Top 风险 R1-R10 每条标"launch 一票否决/P0/P1"+ 解决方案</li>
+  <li><span class="tag arch">架</span> §2.2 aside 三方口径矛盾 + TDigest 误差分析</li>
+  <li><span class="tag edu">教</span> §7 六角色 launch-review Q&A（算法工程师/系统架构/质控 QA/数据研发/SRE/部门负责人）是读者学"如何被多方评审推动收敛"最佳教材</li>
+  <li><span class="tag both">双</span> §4.2 关键反事实（quantileExact vs quantileTDigest 取舍）+"文档对代码错是最危险的一类缺陷"</li>
+</ul>
+
+<h4>Top 优化点</h4>
+<ol>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>难点注解仅 3 处</strong>（grep 实测），作为"代码质量审稿"反而难点注解最少是反讽——每条技术债/风险后加 aside.note 点破反直觉点："凭据明文入 git history 即使删除也仍在历史提交里（git filter-repo 才能清）"、"quantileTDigest 的 least(...,max) 包装让 P99 永远≤历史最大值，数学上无业务含义"</li>
+  <li><span class="tag p0">P0</span> <span class="tag edu">教</span> <strong>三阶定级和动手验证完全缺失</strong>——报告末加"教学附录"：把三角校验方法论标 can-decide（能对照自家任何 PRD 做）；launch-blocker 识别标 practiced（能跑 grep 验证凭据/0 认证）；六角色 Q&A 标 introduced（要读者在自己项目上跑一次）</li>
+  <li><span class="tag p1">P1</span> <span class="tag edu">教</span> <strong>§6 系统优化方案迁移练习</strong>：读者把本报告的三角校验+launch-blocker 清单+六角色 Q&A 套到自家其他仓库（如 JoyDriver 或 ROVER5.0），产出一份对照审稿报告</li>
+  <li><span class="tag p2">P2</span> <span class="tag edu">教</span> <strong>§2.3 测试金字塔倒立补判断维度</strong>：测试覆盖是否与北极星载体（Quality Gate）对齐、数据面 vs 业务面测试比例是否匹配业务目标</li>
+</ol>
+</div>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 跨教材主题（共识发现）</h2>
+
+<p>两位审稿人独立工作后<strong>独立发现 7 + 7 = 14 条跨教材主题</strong>，合并去重后共得 <strong>10 条核心主题</strong>——这些主题是 12 本教材之间的<strong>同构关系、共用反模式、统一杠杆</strong>，是"系列教材"真正成为"系列"的内在骨架。</p>
+
+<pre class="mermaid">
+graph TB
+  subgraph G1["治理主线"]
+    T1["主题1 治理型 PRD<br/>六段模板<br/>A→B→K→D"]:::t1
+    T6["主题6 声明-执行落差<br/>J/K/D 三本同构"]:::t1
+  end
+  subgraph G2["诚实化"]
+    T2["主题2 设计态 vs 运行态<br/>K→B/D"]:::t2
+    T3["主题3 P99 精度口径<br/>K/I/C/A"]:::t2
+  end
+  subgraph G3["训练同构"]
+    T4["主题4 DDP/NCCL<br/>C 正确性 + I 性能"]:::t3
+    T5["主题5 VLA/世界模型<br/>action head 范式<br/>E/F/A/G"]:::t3
+  end
+  subgraph G4["系统短板"]
+    T7["主题7 三阶定级<br/>系统性缺失 9/12"]:::t4
+    T8["主题8 动手验证两极<br/>G/H/I/E 高 + A/D/K=0"]:::t4
+    T9["主题9 视觉一致<br/>D 暗色主题不一致"]:::t4
+    T10["主题10 迁移练习<br/>普遍缺失"]:::t4
+  end
+  T1 -.输出.-> T7
+  T2 -.解决.-> T6
+  T3 -.需统一.-> T2
+  T7 -.补强.-> T8
+  T8 -.路径.-> T10
+  classDef t1 fill:#0b5394,color:#fff
+  classDef t2 fill:#3a7d44,color:#fff
+  classDef t3 fill:#7c3aed,color:#fff
+  classDef t4 fill:#b3261e,color:#fff
+</pre>
+
+<div class="theme-card">
+<h4>主题1｜治理型 PRD 六段模板是全栈主线（架构师独有）</h4>
+<p>A §8.3 给模板（边界句/状态机/变更单/审计/SLA/失败模式）→ B 用 organization-prd 范本示范 → K §3-§7 用同一模板写 Onboard PRD → D §8 用反事实章节示范决策记录。<strong>这条主线是读者从 PM 跨到 Function Owner 的统一路径，四本教材自洽。</strong>建议在 A §8.3 加一节"本模板在 B/D/K 的实例索引"，让读者跨教材跳转。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题2｜设计态 vs 运行态的诚实化是 K 的核心创新（架构师独有）</h4>
+<p>K §2.2 把 generation_publish execution=disabled 暴露为"设计态非运行态"，这一区分应该<strong>反向扩散到 B</strong>（Agent Gateway 落地度 0% 已用）和 <strong>D</strong>（HIL/QA 流水线 externalDispatch=false 全预览态），形成跨教材的统一诚实化标准：<strong>任何"已设计/已配置/已注释但未执行"的论断都要双标签</strong>。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题3｜P99 精度是 Quality Gate 的命门，需跨教材统一口径（架构师独有）</h4>
+<p>K §2.2 点破 quantileTDigest vs quantileExact 三方口径矛盾，与 <strong>I §5 端到端 100ms 硬约束</strong>、<strong>C §6 评测 brier_fde/minADE_k 多模态轨迹精度</strong>是同一主题（性能数据是重尾分布，均值/P50 会掩盖尖刺）。建议 A §5.2 OLAP 选型表补一行"CK quantileTDigest 精度边界 + quantileExact 性能边界"的 trade-off，统一全栈对 P99 精度的判断。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题4｜DDP/NCCL/InfiniBand 多卡训练工程化在 C/I 重复但视角不同（架构师独有）</h4>
+<p>C §4.2 讲正确性（梯度怎么同步、÷8 的语境），I §5.6 讲性能（all-reduce bubble、nsys 诊断）。两本应交叉引用，且 C 的"梯度平均÷8"表述需补 loss scaling 语境（见 C 的 P0 优化项），I 的 DDP 性能章节应反向引用 C 的正确性章节。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题5｜VLA/世界模型的 action head 范式判断跨 E/F/A/G 一致（架构师独有）</h4>
+<p>E §1.3"A 派离散 token vs B 派连续 diffusion/flow-matching"是元地图，F §2 世界模型三大分类、A §1.4 训练段端到端 VLA、G §6 GPT 拼装都共享同一 transformer 基础。<strong>这条主线口径一致，但 ACT 执行机制术语 'ReActing' 在 E 是硬伤</strong>（应为 temporal ensemble + receding horizon），需在 E 修正后检查 F/A 是否也误用（grep 显示 F/A 未用 ReActing，仅 E 一处，修正成本可控）。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题6｜"声明-执行落差"在 J/K/D 三本同构（架构师独有）</h4>
+<p>J 诊断 AGENTS.md 声明 vs sqlite 行为落差（advisory vs deterministic）、K 诊断 PRD 标语 vs 代码核实落差（设计态 vs 运行态）、D 诊断 MR 模板契约 vs git log body 落差（流程执行断层）。<strong>三本共享同一洞察：原则正确但没 binding 到机制 = 落空。</strong>建议把这条抽象成全栈方法论，在 A 总纲加一节"声明-执行落差是 PM 跨 Owner 的统一反模式"。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题7｜三阶定级系统性缺失（教育家独有 · 最高优先）</h4>
+<p>12 本教材中只有 A（50 处）/J（21 处）/E（10 处）显式标注 introduced/practiced/can-decide，其余 9 本（B/C/D/F/G/H/I/K-prd/K-report）完全缺失——<strong>这是与契约第5条"能说≠会、要指真实运行状态/测试证据"最大的系统性冲突</strong>，读者读完多数教材不知道自己升到哪一阶。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题8｜动手验证两极分化（教育家独有）</h4>
+<p>技能型教材（G/H/I/E）verify/命令级密度高（G 16 处/H 8 处/I 3 处/E 37 处），但概念/治理型教材（A/D/K-prd/K-report）几乎为 0——<strong>而读者最大短板恰是"判断力领先实现熟练度待补"，A/D/K 这些直接服务"治理结构+影响力"跃迁的教材反而最缺动手设计，是把"判断力转化为落地能力"路径上的断点</strong>。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题9｜视觉系统不一致 + 反事实块覆盖良好（教育家独有）</h4>
+<p><strong>反事实块 158 处</strong>几乎每节都有"不这么做会塌在哪"——是契约"先因果后术语"的最佳兑现，应作为系列教材统一规范保留。但 <strong>D（ROVER5）是唯一暗色主题，与另 11 本白底+左 toc 不一致</strong>，破坏系列教材一致性；C（JoyDriver）是唯一居中无左 toc 布局——应统一为 A/B/E/F 的白底+左 toc 模板。</p>
+</div>
+
+<div class="theme-card">
+<h4>主题10｜迁移练习普遍缺失 + 难点注解密度参差（教育家独有）</h4>
+<p>除 B 有"对照自家平台"潜力外，多数教材停留在"读懂标杆"而非"迁移到自家业务"——读者目标是"把判断力稳定映射到 Git/代码/数据/运行时/恢复证据"，迁移练习是把认知变落地的最后一公里。难点注解密度参差：C/G/B 最高（32/25/30 处），K-report/D/E 最弱（3/20/14 处）；<strong>K-report 作为"代码质量审稿"反而难点注解最少是反讽</strong>。</p>
+</div>
+
+<aside class="note">主题 1-6 是<strong>架构师视角发现的"同构关系"——是教材群的内在骨架</strong>；主题 7-10 是<strong>教育家视角发现的"系统性短板"——是返工的杠杆点"</strong>。两组互补：架构师告诉你"教材之间是怎么咬合的"，教育家告诉你"读者会在哪里断裂"。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ Top 优先行动（合并两位审稿人的 top 5）</h2>
+
+<p>两位审稿人各自给出 5 条 top 优先行动，合并去重后按"<strong>修复 → 补强 → 升级</strong>"三阶段排序。所有行动都标了视角来源、P 等级、覆盖教材数。</p>
+
+<pre class="mermaid">
+quadrantChart
+    title 优先行动矩阵（影响 × 紧急度）
+    x-axis "低紧急" --> "高紧急"
+    y-axis "低影响" --> "高影响"
+    quadrant-1 "立即修复（P0+高影响）"
+    quadrant-2 "短期补强（P0/P1+高影响）"
+    quadrant-3 "延后处理（P1/P2+低影响）"
+    quadrant-4 "快速修复（P0+低影响）"
+    "修 3 处技术硬伤": [0.95, 0.55]
+    "9 本补三阶定级": [0.85, 0.95]
+    "4 本补动手设计": [0.80, 0.90]
+    "跨教材统一诚实化": [0.75, 0.85]
+    "Gate 政治风险降级": [0.78, 0.80]
+    "迁移练习补 5 本": [0.55, 0.78]
+    "视觉一致改 D 暗色": [0.50, 0.45]
+    "盘点型收口（E/F）": [0.50, 0.65]
+    "治理型 PRD 闭环引用": [0.65, 0.80]
+</pre>
+
+<table class="action-matrix">
+<thead><tr><th>#</th><th>行动</th><th>视角</th><th>覆盖教材</th><th>P</th></tr></thead>
+<tbody>
+<tr>
+  <td><strong>1</strong></td>
+  <td><strong>立即修 3 处技术硬伤</strong>：①I §3.1 EEVDF 缩写错误（"Early Event Voluntary Delay First"→"Earliest Eligible Virtual Deadline First"，Zenkov et al. 2023，Linux 6.6 合入）；②E §1.4 ACT 执行机制（"ReActing"→"receding horizon control + temporal ensemble"，arXiv:2304.13705）；③C §4.2 DDP 梯度同步图补 loss scaling 语境（DDP 默认 ReduceOp=SUM 在 backward hook 自动 /world_size，若读者用 loss/world_size 手动归一化会双重除法）</td>
+  <td><span class="tag arch">架</span></td>
+  <td>I/E/C</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>2</strong></td>
+  <td><strong>给 9 本教材每章统一加 introduced/practiced/can-decide 三阶表 + 升级证据</strong>（指真实 file/命令/产出文档），消除与契约第5条的最大冲突。<strong>先做 B</strong>（标杆仓库精读）和 <strong>D</strong>（直接补读者"治理结构 introduced"最大短板）两本</td>
+  <td><span class="tag edu">教</span></td>
+  <td>B/C/D/F/G/H/I/K-prd/K-report</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>3</strong></td>
+  <td><strong>给 A/D/K-prd/K-report 4 本"概念/治理型"教材补"每章末最小动手动作"</strong>：A 给"画自家 7 段飞轮标物理不变量"、D 给"冻结模块词表+CI commit lint"、K-prd 给"反事实验证阈值套到历史 88 个已知 PASS/FAIL 包"——把"判断力领先"转化为"落地能力"的唯一路径</td>
+  <td><span class="tag edu">教</span></td>
+  <td>A/D/K-prd/K-report</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>4</strong></td>
+  <td><strong>跨教材统一"声明-执行落差"诚实化标准</strong>：把 K 的"设计态 vs 运行态"双标签抽象成全栈方法论，反向应用到 B（Agent Gateway 落地度 0%）、D（HIL externalDispatch=false 全预览态）、J（AGENTS.md advisory vs sqlite 行为），并在 A 总纲加一节"声明-执行落差是 PM 跨 Owner 的统一反模式"作为收口</td>
+  <td><span class="tag both">双</span></td>
+  <td>A/B/D/J/K</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>5</strong></td>
+  <td><strong>K §0.3 / §7 北极星 + Gate 政治风险降级</strong>：补"管理层签字不达成时的降级产品形态"——Gate 引擎默认 Advisory 模式（FAIL 仅告警），北极星改为"Advisory Gate 被 QA 主动调用次数/月"，让 Gate 工作不依赖管理层签字也能积累数据反过来推动签字。同时 §2.1 rerun 链 max_rerun=1 补统计功效分析（N=20 时 P99 估计 ±15%，warn/crit 阈值差应 ≥30%）</td>
+  <td><span class="tag both">双</span></td>
+  <td>K-prd</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>6</strong></td>
+  <td><strong>治理型 PRD 六段模板闭环交叉引用</strong>：A §8.3 模板 ↔ B organization-prd 范本 ↔ D git 治理（MR 模板/commit lint/annotated tag）↔ K §3-§7 Onboard PRD；显式焊成一个能力闭环并在三本教材互相交叉引用——读者从 PM 跨到 Function Owner 唯一不能跳过的一跃</td>
+  <td><span class="tag both">双</span></td>
+  <td>A/B/D/K-prd</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>7</strong></td>
+  <td><strong>给 B/C/E/F/I 5 本"标杆精读/盘点型"教材补"对照自家业务"迁移任务</strong>：B→把 JoyDrive Outbox/血缘校验对照自家 HilPerformancePlatform 找差距；C→把 cfg manifest 拆成自家数据版本日志；E→把 OXE schema 借鉴到自家跨车型归一化；F→把世界模型造数据配比决策框架套到自家数据预算；I→把 USE/RED 在自家 onboard 平台跑一遍</td>
+  <td><span class="tag edu">教</span></td>
+  <td>B/C/E/F/I</td>
+  <td><span class="tag p1">P1</span></td>
+</tr>
+<tr>
+  <td><strong>8</strong></td>
+  <td><strong>视觉一致 + 盘点收口</strong>：统一所有教材为白底+左 toc 模板（重点改 D 暗色主题）；给 E/F 盘点型教材每家机构/repo 前加"它押注的判断假设+反事实"，把"记 repo 名"升级为"练判断力"，并各补"读完后能回答的 5 个 can-decide 问题"做收口</td>
+  <td><span class="tag edu">教</span></td>
+  <td>D/E/F/C</td>
+  <td><span class="tag p1">P1</span></td>
+</tr>
+<tr>
+  <td><strong>9</strong></td>
+  <td><strong>J Conductor vs Orchestrator 决断</strong>：基于 301 open spawn edge + 单父 358 子 + 4/6 goal-thread blocked 硬数据，明确推荐"先退回 Conductor"——主协调不做任何下沉，只做转发+批准+gate，把 spawn 边数压到 <50/会话</td>
+  <td><span class="tag arch">架</span></td>
+  <td>J</td>
+  <td><span class="tag p0">P0</span></td>
+</tr>
+<tr>
+  <td><strong>10</strong></td>
+  <td><strong>CK JOIN 23.3+ 边界统一更新</strong>：A §5.2 把 CK 定位为"单表压缩聚合"，但 CK ≥23.3 引入 hash join + distributed JOIN 后多表 JOIN 性能显著改善；K §5.4 CK-PG 双库分工是读者自家业务现实——建议 A/K/I 三本统一加"CK JOIN 23.3+ 改善但仍非甜区 >5 表 JOIN"的边界，避免读者用过时信息做选型</td>
+  <td><span class="tag arch">架</span></td>
+  <td>A/K-prd/I</td>
+  <td><span class="tag p2">P2</span></td>
+</tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 如果你想继续打磨</h2>
+
+<p>两位审稿人对"<strong>哪几本最值得返工、返工什么</strong>"有不同侧重。教育家认为<strong>系统性短板教材（D 视觉、A/D/K 动手）</strong>最值得返工；架构师认为<strong>有技术硬伤的教材（I/E/C）</strong>最值得返工。综合两份意见，按 ROI 排序如下：</p>
+
+<pre class="mermaid">
+graph LR
+  subgraph R1["第一梯队 · 立即返工（高 ROI）"]
+    R_I["I 性能之巅<br/>EEVDF 硬伤<br/>~10 分钟"]:::p0
+    R_E["E 具身<br/>ReActing 术语<br/>~10 分钟"]:::p0
+    R_C["C JoyDriver<br/>DDP loss scaling<br/>~30 分钟"]:::p0
+  end
+  subgraph R2["第二梯队 · 短期补强（系统性 ROI）"]
+    R_D["D ROVER5<br/>视觉改白底+左toc<br/>三阶定级补全"]:::p1
+    R_B["B JoyDrive<br/>三阶定级+迁移练习"]:::p1
+    R_K["K-prd<br/>Gate 政治风险降级"]:::p1
+  end
+  subgraph R3["第三梯队 · 升级（认知 ROI）"]
+    R_A["A 总纲<br/>盘点升级决策矩阵<br/>声明-执行落差收口"]:::p2
+    R_KR["K-report<br/>难点注解密集化"]:::p2
+    R_EF["E/F 盘点<br/>5 个 can-decide 收口"]:::p2
+  end
+  R_I --> R_E --> R_C
+  R_D --> R_B --> R_K
+  R_A --> R_KR --> R_EF
+  classDef p0 fill:#b3261e,color:#fff
+  classDef p1 fill:#d4a017,color:#3a2c00
+  classDef p2 fill:#5f6368,color:#fff
+</pre>
+
+<div class="rework-call">
+<h4>第一梯队 · 立即返工（投入小、影响大，<30 分钟内可完成）</h4>
+<ol>
+  <li><strong>I 性能之巅 · EEVDF 缩写错误</strong>（<span class="tag p0">P0</span> 架构师）—— 一行字修复，但这是会被嵌入式团队当面问倒的硬伤。改"Early Event Voluntary Delay First"→"Earliest Eligible Virtual Deadline First" + 补 EEVDF 论文/LWN 链接。<strong>预估 10 分钟</strong></li>
+  <li><strong>E 具身 · ACT "ReActing" 术语误用</strong>（<span class="tag p0">P0</span> 架构师）—— 一段改写，改为"receding horizon control + temporal ensemble" + 补 arXiv:2304.13705 链接；同时检查 F/A 是否误用同术语（grep 显示仅 E 一处）。<strong>预估 10 分钟</strong></li>
+  <li><strong>C JoyDriver · DDP 梯度同步图补 loss scaling 语境</strong>（<span class="tag p0">P0</span> 架构师）—— 在图下补一段说明，点明 JoyDriver run.py:681 未显式 /world_size 依赖 DDP 默认行为；这是 8 卡训练最常见 loss scale bug。<strong>预估 30 分钟</strong></li>
+</ol>
+</div>
+
+<div class="rework-call">
+<h4>第二梯队 · 短期补强（系统性 ROI，是契约最大冲突的解决路径）</h4>
+<ol>
+  <li><strong>D ROVER5 · 视觉改白底+左 toc + 三阶定级补全</strong>（<span class="tag p0">P0</span> 教育家）—— 这是直接服务读者"治理结构 introduced"最大短板的教材。先改视觉一致性（保留 .evi/.bad/.good 三色证据块只换底色），再补三阶定级（开篇标读者校准 + §7 行动清单每项标升级证据）。<strong>预估 半天</strong></li>
+  <li><strong>B JoyDrive · 三阶定级 + 迁移练习</strong>（<span class="tag p0">P0</span> 教育家）—— 作为标杆仓库精读的最佳范本，加 §11 迁移练习（读者把自家 HilPerformancePlatform 与 JoyDrive 对照）能直接补"治理结构 introduced"短板。<strong>预估 半天</strong></li>
+  <li><strong>K-prd · Gate 政治风险降级 + 教学附录</strong>（<span class="tag p0">P0</span> 双视角）—— §0.3 补"Advisory 模式降级" + 报告末加"教学附录"标三阶。<strong>预估 半天</strong></li>
+</ol>
+</div>
+
+<div class="rework-call">
+<h4>第三梯队 · 升级（认知 ROI，把教材从 A 级推到 A+ 级）</h4>
+<ol>
+  <li><strong>A 总纲 · 盘点升级决策矩阵 + 声明-执行落差收口</strong>（<span class="tag both">双</span>）—— §4/§5 选型清单升级"决策矩阵+代价+故障模式"三件套；在 §0 后新增"声明-执行落差是 PM 跨 Owner 的统一反模式"作为跨教材收口。<strong>预估 1 天</strong></li>
+  <li><strong>K-report · 难点注解密集化</strong>（<span class="tag p0">P0</span> 教育家）—— 作为"代码质量审稿"难点注解仅 3 处是反讽。每条技术债/风险后加 aside.note 点破反直觉点。<strong>预估 半天</strong></li>
+  <li><strong>E/F 盘点 · 5 个 can-decide 收口</strong>（<span class="tag p0">P0</span> 教育家）—— 每家机构/repo 前加"它押注的判断假设+反事实"，§7 末加"读完后读者能回答的 5 个判断问题"做收口。<strong>预估 各半天</strong></li>
+</ol>
+</div>
+
+<aside class="note">返工的<strong>最小有效动作</strong>：先把第一梯队的 3 处技术硬伤在 30 分钟内修完（这是会被当面问倒的），然后挑第二梯队里你最在意的一本（推荐 D，因为视觉+治理结构双重服务读者最大短板）做完整返工，第三梯队留作"持续打磨"队列。不要试图一次返工所有 12 本——契约第 7 条"默认输出"要求"每次只引入一个未知变量"，返工也一样。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 附录：双视角 KPI 总览</h2>
+
+<table>
+<thead><tr><th>统计项</th><th>教育家视角（grep 实测）</th><th>架构师视角（精读+二次交叉验证）</th></tr></thead>
+<tbody>
+<tr><td>系统性三阶定级覆盖</td><td>仅 A（50）/J（21）/E（10）三本</td><td>同教育家</td></tr>
+<tr><td>反事实块总数</td><td>158 处（A 32/C 23/I 34/F 13/B 9 等）</td><td>未独立计数，但确认每节都有</td></tr>
+<tr><td>动手验证密度</td><td>G 16/H 8/I 3/E 37；A/D/K=0</td><td>同教育家</td></tr>
+<tr><td>难点注解密度</td><td>C/G/B 最高（32/25/30），K-report/D/E 最弱（3/20/14）</td><td>同教育家</td></tr>
+<tr><td>技术硬伤数</td><td>未独立统计</td><td>3 处：I EEVDF、E ReActing、C DDP loss scaling</td></tr>
+<tr><td>声明-执行落差教材</td><td>未独立识别</td><td>J/K/D 三本同构（advisory vs deterministic / 设计态 vs 运行态 / 契约 vs 执行）</td></tr>
+<tr><td>跨教材主线</td><td>未独立识别</td><td>7 条：治理型 PRD 主线、CK JOIN、DDP/NCCL、VLA action head 等</td></tr>
+</tbody>
+</table>
+
+<blockquote class="why consensus">两位审稿人的<strong>共识</strong>是：12 本教材已经具备"标杆精读 + 训练流水线 + 治理型 PRD + 跨域判断框架"四条主线，整体处于 A 级教材群水位；<strong>分歧</strong>在于教育家更看重"读者读完能否升级一阶"，架构师更看重"数字/术语/缩写是否站得住"——但两者并不冲突，反而是<strong>读者跨 Function Owner 必须同时具备的两条腿</strong>：能升级才能 own，能站得住才能说服别人。</blockquote>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本终审报告基于两位资深审稿人独立终审（教育家视角基于用户认知契约与职业路线；架构师视角基于技术准确性、证据质量、深度、可落地性、跨教材口径一致），逐本抽样精读 TOC + 2-3 个关键段（含 ML/系统性能/数据架构/CK/调度等高风险技术细节），并对若干数字/缩写/术语做了二次交叉验证。所有引用行号均可在对应教材 HTML 内 grep 验证。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true },
+    quadrantChart: { quadrantInternalBorderStrokeWidth: 1, quadrantExternalBorderStrokeWidth: 2 }
+  });
+</script>
+</body>
+</html>
