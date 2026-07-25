@@ -1,0 +1,235 @@
+===== 近 30 merge commit =====
+
+===== 近 60 commit subject =====
+Planning: special interaction scenario checker add bayesian filter
+Planning:fix_de_e2e_log_wbq
+Planning:opt meeting error brake and meeting aggeresive
+planning: queue by stop distance
+E2E: fix not set velocity
+feat(simulation): add offline J6P lidar camera fusion config
+simulation:local_sim_evaluation_opt
+Driver: restore target speed
+实现禾赛ATX雷达的故障上报，数据包CRC校验
+hermes: add gate transfer
+dsl_only_trigger_auto_drive_mode
+tegrastats monitor
+Planning: add traj cut time for meeting/unknown obs with retro prediction
+3d_planning: forbid sliping when expext stopping.
+map: add city-aware on-vehicle baidu ldmap dump pipeline
+Routing:ld
+Control:add fallback for acados
+Planning:clear result in parking gear
+3d_planning: opt perception_attribution.
+planning: fallback_add_traffic_light_wall
+Planning: narrow road fix cuda mppi best traj collision cost
+map: clean map unlock
+perc: opt post process of BARRIER_GATE
+Planning:fix_shutdown_delete_wbq
+chassis: status_report_headlight
+planning: fix bug for queue
+planning: add occ sdf in openspace
+Planning3: clear pnc status sdf output
+planning: limit minco back v, tune min_vt
+Planning:fix_hya_artificial_no_key_obs_wbq
+planning: fix topo_switch time problem
+3d_planning: add passage efficiency event generator.
+Control: add real occ sdf
+Planning:sperate dangerous interaction
+modify chassis cmd send logic
+feat: add PNC msg log and JDE reboot/shutdown retry
+planning: uncross body boundary  process
+Planning: optimize e2e_deviation trigger.
+planning: bokeh visualize real occ
+Degradation : modify battery error code upload logic
+Optimize engine generation to build once and copy via OSS
+E2E: yaw calib in e2e trigger
+3d_planning: add inefficient driving event.
+Planning: use qp_path if ilqr_path is bad
+Hardware:resolve the problem of disk mount
+sim:update planningCustomAreaValidator result
+Planning:opt overtake brake and parallel cutin
+planning: increase acados jerk weight
+sim: add e2e ttc metric for pdms
+E2E: E2E: adapt routting mask model
+repair_task_upload_crash
+E2E: update baseline_0706_input_routing_ta_rout_img_refine_detach_iter400000.onnx
+sim: adjust special interaction validator message
+Fix lost-wakeup race in BreakAllWait
+PERC:fix mc fatal error
+Revert "Planning3: modify narrow road judgement in subspace"
+planning: add parallel acados debug info
+Map: clean stale map versions by active map config
+Control:fix acados solver Nan
+Control:modify solution check min velocity
+
+===== tag 近 40 =====
+QA_20260626_daily_trt1013
+QA_20260627_daily_trt1013
+QA_20260628_daily_trt1013
+QA_20260629_daily_revert8906_trt1013
+QA_20260629_daily_trt1013
+QA_20260630_daily_trt1013
+QA_20260701_daily_trt1013
+QA_20260701_daily_trt1013_engine_trt1013
+QA_20260702_daily_trt1013
+QA_20260703_daily_trt1013
+QA_20260704_daily_trt1013
+QA_20260705_daily_trt1013
+QA_20260706_daily_trt1013
+QA_20260707_daily_trt1013
+QA_20260707_daily_trt1013_trt1013
+QA_20260708_daily_trt1013
+QA_20260709_daily_trt1013
+QA_20260710_daily_trt1013
+QA_20260711_daily_trt1013
+QA_20260712_daily_trt1013
+QA_20260713_daily_trt1013
+QA_20260714_daily_trt1013
+QA_20260715_daily_trt1013
+QA_20260716_daily_trt1013
+QA_20260717_daily_trt1013
+QA_20260718_daily_trt1013
+QA_20260719_daily_trt1013
+QA_20260720_daily_trt1013
+QA_20260721_daily_trt1013
+QA_20260722_daily_trt1013
+QA_20260723_daily_trt1013
+QA_20260724_daily_trt1013
+QA_20260725_daily_trt1013
+add_occ_compare_0721_trt1013
+bugfix/fix_acados_nan_trt1013
+devel_8786_0625_trt1013
+factory_mr_plane_constraint_temp_trt1013
+ld-0628-3_trt1013
+new_boot_logic_for_test_0615_trt1013
+pnc_0721_complex_trt1013
+
+===== branch -r =====
+  origin/HEAD -> origin/devel
+  origin/devel
+
+===== 根脚本/py =====
+/home/cheche/Workspaces/Learning/ROVER5.0/binary_upload.py
+/home/cheche/Workspaces/Learning/ROVER5.0/build_release.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/build.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/ci-scripts_build_upload.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/docker_init.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/docker_run.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/extract_core_info.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/format_all.py
+/home/cheche/Workspaces/Learning/ROVER5.0/format_pre_push.py
+/home/cheche/Workspaces/Learning/ROVER5.0/format.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/gdb_run_rover.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/kill_process.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/launch_gperf.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/launch.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/launch_sim2.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/launch_sim.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/prepare_engine.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/run_logsim.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/start.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/test.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/watch.sh
+
+===== docs 前30 =====
+aftersale_calibration_error_codes_zh.html
+how_to_get_start.md
+how_to_install_gtest.md
+how_to_run_cpu_docker.md
+how_to_run_gpu_docker.md
+how_to_use_AriesEye.md
+how_to_use_clang_format.md
+how_to_use_online_docker.md
+how_to_use_qt.md
+protobuf安装(python版).pdf
+readme.md
+
+===== 顶层目录 =====
+aatst.txt
+agent
+bifrost
+bin
+binary_upload.py
+BLADE_ROOT
+BUILD
+build_release.sh
+build.sh
+ci-scripts_build_upload.sh
+commander
+common
+component
+conf
+config
+CPPLINT.cfg
+data_miner
+data_miner2
+data_miner.cc
+degradation_monitor
+docker_init.sh
+docker_run.sh
+docs
+engine_generation
+evaluator
+evaluator.cc
+exclude.list
+extract_core_info.sh
+format_all.py
+format_pre_push.py
+format.sh
+frame_detector
+gdb_run_rover.sh
+guardian
+guardian.cc
+hardware_selfcheck
+hermes
+hermes.cc
+kill_process.sh
+launch_gperf.sh
+launch.sh
+launch_sim2.sh
+launch_sim.sh
+log.txt
+main.cc
+Makefile
+multi_server
+netStatic.dat
+offboard
+offline
+perc_engine_config.json
+power_manager
+prepare_engine.sh
+provider
+readme.md
+recorder.cc
+rpc_server
+run_logsim.sh
+scripts
+simulation
+simulation2
+simulation.cc
+start.sh
+state_manager
+store
+supervisior
+teleoperation
+test.sh
+third_party
+tools
+updater
+updater_v2
+volta
+watch.sh
+x
+x2
+
+===== release/ci 相关文件 =====
+/home/cheche/Workspaces/Learning/ROVER5.0/hermes/uploader
+/home/cheche/Workspaces/Learning/ROVER5.0/scripts/record-upload.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/engine_generation/compress_upload.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/engine_generation/generate_upload_all_versions.py
+/home/cheche/Workspaces/Learning/ROVER5.0/engine_generation/build_release.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/tools/uploader
+/home/cheche/Workspaces/Learning/ROVER5.0/data_miner2/uploader
+/home/cheche/Workspaces/Learning/ROVER5.0/binary_upload.py
+/home/cheche/Workspaces/Learning/ROVER5.0/ci-scripts_build_upload.sh
+/home/cheche/Workspaces/Learning/ROVER5.0/build_release.sh

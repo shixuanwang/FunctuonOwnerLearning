@@ -20,6 +20,7 @@
 | [JoyDrive-Infra 架构分析](joydrive-arch-analysis.md) | 三层架构（产品/技术/数据）+ aicoding 工程实践 | introduced |
 | [数仓物理存储三件套](warehouse-physical-storage.md) | ClickHouse 分区/排序键/TTL —— 从因果模型到代码证据 | practiced |
 | [设计能力校准报告](joyspace-design-calibration.md) | 22 篇 joyspace 文档实测：19 项能力图谱、影响力诊断、3 个月路线 | — |
+| [教材B·JoyDrive-Infra 0→100](textbooks/B-joydrive-infra-0to100.html) | 产品/工程/训练/评测/数据/基建六视角，吃透训练+评测（单 HTML+mermaid） | — |
 
 ## ⚠️ 机密提醒
 

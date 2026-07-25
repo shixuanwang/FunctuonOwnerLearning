@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从 0 到 100 吃透 JoyDrive-Infra（训练 + 评测）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .badge { font-size:12px; padding:2px 6px; border-radius:4px; background:#eef; color:#336; margin-left:6px;}
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · 0→100 路线</h2>
+<ol>
+  <li><a href="#sec-0">① 一句话定位与它解决的问题</a></li>
+  <li><a href="#sec-1">② 产品视角：8 工作区 / 旅程 / 状态机 / RBAC / 审计</a>
+    <div class="sub">
+      <a href="#s1-1">8 工作区</a> · <a href="#s1-2">主旅程闭环</a> ·<br>
+      <a href="#s1-3">状态机</a> · <a href="#s1-4">RBAC</a> · <a href="#s1-5">变更单</a> ·<br>
+      <a href="#s1-6">双层审计</a> · <a href="#s1-7">血缘门禁</a> · <a href="#s1-8">跳转契约</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">③ 工程视角：13 entrypoint / 服务拓扑 / BFF</a></li>
+  <li><a href="#sec-3">④ 训练：Determined / 提交 / 回调 / Agent Gateway</a></li>
+  <li><a href="#sec-4">⑤ 评测：行云缺陷 → 自动触发推理 → 状态回填</a></li>
+  <li><a href="#sec-5">⑥ 数据闭环：artifact 三级 / 血缘 / Outbox 三件套</a></li>
+  <li><a href="#sec-6">⑦ 工程内功：CI/CD / 纵深防御 / sqlc/pgtest / GPU 多集群 / 可观测</a></li>
+  <li><a href="#sec-7">⑧ 学习路径（按顺序读哪些 file）</a></li>
+  <li><a href="#sec-8">⑨ 关键设计决策 rationale + 反事实</a></li>
+  <li><a href="#sec-9">⑨' 训练与评测的本质总结</a></li>
+  <li><a href="#sec-10">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>从 0 到 100 吃透 JoyDrive-Infra（训练 + 评测）</h1>
+<p class="lede">一份写给"想成为数据闭环 + 基建 Function Owner"读者的单文件教材。覆盖产品、工程、训练、评测、数据、基建六视角，每条论断带 <code>file:line</code> 证据。</p>
+<p class="meta">仓库：<code>/home/cheche/Workspaces/Learning/JoyDrive-Infra</code> · 编写日期：2026-07-26 · 面向：判断力领先、需要补工程熟练度的 PM 转架构师读者</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 一句话定位与它解决什么</h2>
+
+<p>JoyDrive-Infra 是一套自动驾驶<strong>"数据 → 实验 → 训练 → 评测 → 交付"</strong>的可复现、可审计闭环平台，建在 K8s + PostgreSQL + Determined 之上，跨越京东云控制面与郑州隔离 GPU 网。它解决的不是"如何训一个模型"，而是<strong>"半年后这版模型上了车出事，能不能反查出当时用了哪批数据、哪段代码、谁批的交付"</strong>。</p>
+
+<blockquote class="why">系统强制把每一跳的产物都固化为"不可变引用 + 血缘边"，把"可交付"定义为"通过血缘校验"。一切设计——状态机、变更单、审计、Outbox、对账 Reconciler——都是为了让这条因果链在 6 个月后依然可信可查。</blockquote>
+
+<p>下面从 0（产品骨架）走到 100（GPU 节点的 DiskPressure 怎么处理），按"先因果后术语、先模型后实现"的顺序展开。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② 产品视角：8 工作区 / 主旅程 / 状态机 / RBAC / 变更单 / 审计</h2>
+
+<h3 id="s1-1">2.1 用「事实归属 + 权限边界」而非「页面」切分 8 个工作区</h3>
+<p>JoyDrive 不按页面切，而是先确定每个工作区"拥有哪些<strong>不可变事实</strong>、谁能写、归哪个领域服务"，再倒推主导航。<strong>业务侧 5 个</strong>（工作台/数据/实验/评测/交付）回答"我的产出怎么推进"；<strong>平台侧 3 个</strong>（组织/资源/监控）回答"谁能在什么项目用多少 GPU、配额和告警"。资产血缘不是一级工作区——它只是从既有对象的关系投影"下钻"进入的关联视图。</p>
+<ul>
+  <li><code>doc/domain-model.html</code>：工作区到领域对象逐区列出事实归属（数据区拥有 DataProductionJob/DatasetVersion/QualityReport；实验区拥有 Experiment/TrainingJob/Artifact；交付区拥有 DeliveryRequest/Deployment）。</li>
+  <li><code>doc/architecture-design.html</code>：Portal 入口页 + 8 工作区；组织/资源/监控拆为三个平台侧边界，避免"一个运维后台承载所有职责"。</li>
+  <li><code>doc/ui-interaction-design.html</code>：导航只承载稳定工作区；资产血缘作为跨工作区上下文页，不进一级导航。</li>
+</ul>
+<blockquote class="why">按页面切会让"实验页"和"数据页"都来写 TrainingJob 摘要，事实归属一旦发散，血缘回溯必然断裂。按事实归属切则强制每个对象只有<strong>一个权威写入服务</strong>，血缘校验才能成立。反事实：若血缘做成一级工作区，会出现"血缘页改对象状态"的越权写入。</blockquote>
+<aside class="note">"事实归属"是抽象杠杆。看到任一按钮先问"这一写落到哪个服务的哪张表、谁是权威源"，而不是"这个按钮在哪个页面"。血缘是只读投影这一点最反直觉——它看似是"资产关系的家园"，实则无写权限。</aside>
+
+<h3 id="s1-2">2.2 主旅程闭环：数据 → 实验 → 训练 → 评测 → 交付</h3>
+<p>主线是单向推进的可复现闭环：生产/挖掘数据 → 发布 <strong>DatasetVersion</strong>（不可变训练输入）→ 创建 <strong>Experiment</strong>（冻结 commit/镜像/超参/数据快照）→ 提交 <strong>TrainingJob</strong> 训练 → 登记 ModelPackage/Checkpoint/MetricReport 资产 → 用 EvalSet 跑评测出 EvaluationReport → 模型对比标候选 → 发起 <strong>DeliveryRequest</strong> → 负责人确认 → <strong>Deployment</strong> 执行交付。每一跳都把上一跳产物作为"不可变引用"固化，从而任一交付版本能反查全部上游。</p>
+<ul>
+  <li><code>doc/ui-interaction-design.html</code>：PRD 业务流程主线（实验创建→选数据版本→训练→产物登记→评测→结果对比→交付）与支线（数据生产/挖掘→样本复核→质检→发布→DatasetVersion）。</li>
+  <li><code>doc/prototype/experiment.html</code>：实验详情标签固定为 配置/训练状态/日志/指标/资源/输出资产/评测/审计；按钮区含 终止/克隆/重跑/发起评测/申请交付/查看资产血缘。</li>
+  <li><code>doc/prototype/delivery.html</code>：交付记录固化链路 申请提交→血缘校验→等待补充→交付信息确认→Delivering/Delivered，每步带操作者和时间。</li>
+  <li><code>doc/architecture-design.html</code>：主写入数据流五段——dataset 创建 DataProductionJob→Outbox→workflow；metadata 创建 Experiment 快照→cluster 提交 TrainingJob；eval 写 EvaluationReport；deploy 调 metadata 做血缘校验。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 数据供给
+    DPJ["DataProductionJob<br/>Draft→Submitted→Running→QualityChecking→Published"]
+    DV["DatasetVersion<br/>不可变 Draft→Published→Deprecated"]
+    DPJ -- 发布 --> DV
+  end
+  subgraph 训练
+    EXP["Experiment<br/>不可变快照 Submitted→Running→Succeeded/Failed/Canceled"]
+    TJ["TrainingJob<br/>8态含 Paused/Preempted"]
+    EXP -- 提交 --> TJ
+    TJ -- 登记 --> MP["ModelPackage/Checkpoint/MetricReport<br/>Registering→Available→Deprecated"]
+  end
+  subgraph 评测
+    ES["EvalSet Draft→Published"]
+    ET["EvaluationTask"]
+    ER["EvaluationReport Generating→Ready"]
+    ES -- 发起 --> ET
+    MP --> ET
+    ET -- 产出 --> ER
+  end
+  subgraph 交付
+    DR["DeliveryRequest<br/>Draft→Submitted→Ready→Delivering→Delivered/Canceled"]
+    DEP["Deployment 派生"]
+    ER -- 标候选 --> DR
+    MP --> DR
+    DR -- 血缘校验+确认 --> DEP
+  end
+  DV -- 引用 --> EXP
+</pre>
+
+<blockquote class="why">这套闭环的存在理由是自动驾驶交付的"可复现 + 可审计"强约束。把每一步产物固化为不可变引用，就是为反查留链路。反事实：若 Experiment 允许提交后改超参，TrainingJob 的结果就和"记录的实验配置"脱钩，复现失败时无法定位是代码问题还是配置被篡改。</blockquote>
+<aside class="note">关键区分：<strong>Experiment = 不可变配置快照</strong>（What you intend），<strong>TrainingJob = 一次执行实例</strong>（What you ran）。一次 Experiment 可派生多个 TrainingJob（重跑/克隆），但 Experiment 本身冻结。这是"复现"概念在数据结构上的落地。</aside>
+
+<h3 id="s1-3">2.3 状态机：状态决定按钮、风险提示、是否需要审批</h3>
+<p>JoyDrive 的状态不是展示标签，而是"决定这个状态下哪些按钮可点、风险提示显示什么、是否需要审批"的控制变量。每类对象有显式状态枚举和允许动作矩阵。</p>
+<ul>
+  <li><strong>DeliveryRequest</strong>：Draft 可编辑/提交；Submitted 可撤回/补充/确认/取消；Delivering 只能查看执行；Canceled 只能归档（<code>doc/prototype/delivery.html</code> 把六态画成状态轨迹条）。</li>
+  <li><strong>Experiment</strong> 是极端情况——<strong>无 Draft 态</strong>（草稿在 ExperimentDraft 层处理），创建即不可变，所有状态下都禁止编辑字段，要变更只能克隆派生新 Experiment（<code>doc/ui-interaction-design.html</code>）。</li>
+  <li><strong>TrainingJob</strong> 8 态含 <code>Paused</code>（用户主动暂停）和 <code>Preempted</code>（被高优任务抢占，Determined 自动从最近 checkpoint 续训，<strong>仅查看不可手动操作</strong>）。</li>
+  <li><strong>ChangeRequest</strong>：<code>doc/organization-prd.md §7.5</code> 完整状态机 Draft→PendingApproval→Approved→Executing→Succeeded/Failed/Cancelled。</li>
+</ul>
+
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> PendingApproval: 提交
+  PendingApproval --> Approved: 平台管理员审批(≠申请人)
+  PendingApproval --> Rejected
+  PendingApproval --> Cancelled: 撤回/7天超时
+  Approved --> Executing
+  Executing --> Succeeded
+  Executing --> Failed: 整单回滚
+  Failed --> [*]: 复制为新单(retry_parent_id)
+  Succeeded --> [*]
+  Rejected --> [*]: 新建单不可复用
+  Cancelled --> [*]
+</pre>
+
+<blockquote class="why">状态机前置定义的好处是按钮规则一处确定，前后端不漂移：前端按状态渲染按钮，后端按状态校验合法性，双重保险。反事实：若状态是"软标签"，会出现 Submitted 态还能改候选模型、Delivering 态还能撤回这种破坏血缘的操作，交付审计链断裂。</blockquote>
+<aside class="note"><strong>Preempted</strong> 态是难点：它不是失败而是"被抢占后自动续训中"，所以页面禁止手动操作（不能强制重试也不能取消），只让 Determined 调度器续训。状态机不只编码业务流转，也编码"系统自治 vs 人工干预"的边界。</aside>
+
+<h3 id="s1-4">2.4 RBAC：全局角色 + 项目内角色二级 + 权限快照克隆</h3>
+<p>权限模型分两层。第一层 <strong>GlobalRole</strong> 是固定枚举（Admin/SRE/ProjectOwner/Researcher），不可由用户新建；第二层用户"加入某项目"时，按其 GlobalRole 对应的 PermissionTemplate<strong>克隆出 ProjectMember.permissions 字符串数组快照</strong>。这样后续可通过 ChangeRequest 单独增删某条权限，不影响全局模板。权限字符串格式 <code>&lt;domain&gt;:&lt;action&gt;</code>（如 <code>experiment:create</code>），<strong>不允许通配符</strong>。MVP 砍掉 Team 实体（D6），用户↔项目走多对多，一个用户可在 A 项目当 Owner、B 项目当 Researcher。</p>
+<ul>
+  <li><code>doc/organization-prd.md §0.2 D1</code>：全局角色是固定枚举；用户加入项目时按模板克隆生成 ProjectMember.permissions 快照，后续可通过 ChangeRequest 单独增删某条权限。</li>
+  <li><code>doc/organization-prd.md §6.1</code>：权限字符串词表 experiment:create/read/approve、template:*、quota:read、audit:read/export；不允许通配符。</li>
+  <li><code>doc/organization-prd.md §5</code>：角色权限矩阵——SRE 默认全局只读（D4）；项目负责人只读本项目成员/配额/队列授权；算法工程师只看所属项目。</li>
+</ul>
+<blockquote class="why">"模板克隆成快照"是为了解耦：项目内权限可个性化调整而不污染全局模板，全局模板升级也不反向覆盖已个性化项目。禁通配符是为了审计可枚举——审计日志能精确说出哪条权限被授予/撤销。砍 Team 避免部门/二级组织树这类半成品标签带来归属二义性。反事实：若用通配符 <code>experiment:*</code>，审计时无法区分 create 还是 approve 被滥用。</blockquote>
+<aside class="note">"权限快照克隆"反直觉——直觉是"运行时查模板"。但快照的意义是<strong>时间冻结</strong>：审计能还原"当时这个人当时拥有哪些权限"，即使模板后来改了。这和审计只追加不修改是同一设计哲学。</aside>
+
+<h3 id="s1-5">2.5 ChangeRequest 变更单：申请-审批-执行-回滚四段式</h3>
+<p>组织域的关键操作（负责人变更、项目内角色调整、GPU 总配额调整、资源池/队列授权、Namespace 绑定）<strong>不能直接改库</strong>，必须先生成 ChangeRequest：Draft→PendingApproval→Approved→Executing→Succeeded/Failed/Cancelled。<strong>审批人≠申请人</strong>（D3，统一由平台管理员审批）。执行原子保证，失败整单回滚到 Failed；<strong>不在原单重试，必须"复制为新单"并带 retry_parent_id 指向旧单</strong>（保留审计血缘）。</p>
+<ul>
+  <li><code>doc/organization-prd.md §0.1</code>：MVP-1 以"直接生效 + 强审计 + 关键操作走变更单"为原则。</li>
+  <li><code>doc/organization-prd.md §8.6</code>：失败与重试——执行失败时整单回滚；不在原单上重试；用户基于失败单"复制为新单"，新单 retry_parent_id 指向旧单，便于审计血缘。</li>
+  <li><code>doc/organization-prd.md §4.2</code>：创建项目时 Namespace 绑定、初始 GPU 配额、初始池/队列授权与项目创建在<strong>同一事务</strong>内生成首批 ChangeRequest 并<strong>自动审批通过</strong>，避免冷启动死锁。</li>
+</ul>
+<blockquote class="why">把"高危且不可逆"的操作纳入审批和回滚，避免单人误操作毁掉整个项目的训练能力。retry_parent_id 保证失败重试不丢审计血缘。创建项目首批变更单自动审批通过是个反例设计：若死守审批流程，新项目冷启动会卡死（没配额就没法跑实验）。反事实：若允许原单重试，审计会看到同一单多次执行结果，无法判断哪次成功。</blockquote>
+<aside class="note">"不在原单重试，复制为新单"对习惯"重试同一个请求"的读者很反直觉。审计要求每条记录代表<strong>一次确定性的执行尝试</strong>。原单 Failed 已是终态事实，重试是"另一次尝试"，必须是新记录。这和 Experiment 不可变、克隆派生新 Experiment 是同一思想。</aside>
+
+<h3 id="s1-6">2.6 双层审计：AuditRecord（业务）vs OpsAuditRecord（平台）+ 只追加不修改</h3>
+<p>审计分两类：<strong>AuditRecord</strong> 记业务动作（实验创建/终止、数据发布/废弃、评测发起、交付提交/确认/取消）；<strong>OpsAuditRecord</strong> 记平台动作（成员变更、配额授权、队列授权、节点处置、平台 Job 终止/重试、告警规则变更、告警处置、<strong>审计导出本身</strong>）。两类都<strong>只追加不修改</strong>，导出动作本身也写一条审计（防导出泄密无据可查）。项目负责人只看本项目审计，平台管理员和 SRE 看全量，只有平台管理员可导出。</p>
+<ul>
+  <li><code>doc/architecture-design.html</code>：业务动作写 AuditRecord，平台动作写 OpsAuditRecord，审计记录只追加不修改，导出动作也写审计。</li>
+  <li><code>doc/organization-prd.md §6.2</code>：OpsAuditRecord 字段含变更前值/变更后值 JSON 快照、影响项目、影响责任人、关联变更单 ID、关联资源/监控 URL、最近导出时间/批次 ID。</li>
+  <li><code>doc/organization-prd.md §9.3</code>：项目负责人只能看本项目相关审计；平台管理员和 SRE 看完整记录；只有平台管理员可导出。</li>
+</ul>
+<blockquote class="why">双层审计的存在理由是"业务事实"和"平台治理"分离：业务审计回答"这版模型怎么来的"，平台审计回答"谁给了这个项目 256 卡时"。只追加不修改是审计可信的根基——一旦可改，审计就失去证据效力。导出动作也写审计是闭环：否则有人批量导出敏感审计后无据可查。</blockquote>
+<aside class="note">"只追加不修改"和 Event Sourcing、不可变 Experiment、变更单不重试是<strong>一脉相承</strong>的——系统状态是"事件序列的折叠"，任何修改都是新事件而非覆盖。这条贯穿全平台，是理解 JoyDrive 的认知钥匙。</aside>
+
+<h3 id="s1-7">2.7 边界约束：血缘校验是交付的强制门禁 + 平台不让用户绕过</h3>
+<p>交付前 <strong>deploy-service 必须调 metadata-service 做血缘校验</strong>：候选模型能否反查到训练数据版本、评测数据版本、代码 commit、TrainingJob、评测报告，缺一不可提交 DeliveryRequest。同时平台封堵绕过路径——用户不能绕过 Portal/API 直接创建训练 Pod 或任意 kubectl；外部系统（Determined/K8S）状态不作为唯一事实，必须同步回平台并对账。</p>
+<ul>
+  <li><code>doc/architecture-design.html</code>：metadata 负责血缘校验，交付前必须能反查数据、代码、参数、训练任务、模型包和评测报告；用户不能绕过 Portal / API 直接创建训练 Pod 或任意 kubectl；外部系统状态不作为 Portal 唯一事实，必须同步回平台服务并对账。</li>
+  <li><code>doc/ui-interaction-design.html</code>：缺少 Ready 评测报告、候选模型被 Blocked、权限不足、目标环境或风险说明缺失时禁止提交（交付申请异常）。</li>
+  <li>资源页 K8S 安全封装：只展示平台任务相关对象，支持查看事件/日志/资源申请/调度原因/终止/重试平台 Job，<strong>不开放任意 kubectl 操作</strong>。</li>
+  <li>项目审计辅助视图的业务风险记录含：疑似绕过平台登记、血缘缺失、使用废弃资产、交付材料缺失——把绕过行为纳入风险监测。</li>
+</ul>
+<blockquote class="why">血缘校验门禁是"可交付"的硬定义：没通过校验的模型不允许出车端。封堵绕过是为了"平台是唯一事实源"——若允许 kubectl 直接建训练 Pod，就会出现没有 Experiment 记录的孤儿训练，血缘账本失效。对账机制同理：Determined 状态漂移必须同步回 cluster-service，否则平台显示 Succeeded 但实际已 Failed，决策错误。</blockquote>
+<aside class="note">"平台是唯一事实源"是个需内化的原则：外部系统（K8S/Determined/Rancher）只是执行底座，平台不把它们的态当事实，而是定期对账拉回。这解释了为什么架构里有大量"对账任务"——cluster 对账 Determined/K8S Job、dataset 对账文件 URI、deploy 对账 DeliveryRequest 状态。</aside>
+
+<h3 id="s1-8">2.8 跨页跳转的「上下文契约」</h3>
+<p>所有跨工作区跳转必须通过 <strong>URL Query 携带白名单参数</strong>（<code>project_id / change_request_id / pool_id / queue_id / namespace / audit_id / user_id / from</code>），前后端用同一白名单。业务任务→组织页必须带 project_id+from；组织页→资源/监控必须带 project_id；审计详情可由 audit_id 单参直达。原型 <code>doc/prototype/js/app.js</code> 用 <code>jumpMap</code> 集中管理 11 个工作区跳转，确保入口收敛（<code>doc/organization-prd.md §8.11</code>）。</p>
+<aside class="note">这是"契约先于实现"的范例：跳转协议在 PRD 层定义为白名单表，前端 jumpMap、后端路由、审计 URL 生成全部消费同一契约。改协议等于改 PRD，不是改代码。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 工程视角：13 entrypoint / 服务拓扑 / BFF 读写分离 / 调用链</h2>
+
+<h3>3.1 服务拓扑与端口约定</h3>
+<p>系统由一组同命名空间微服务组成，每个服务一个 cmd entrypoint。关键服务及其监听端口：</p>
+<ul>
+  <li><code>cmd/web-service</code>：BFF（:8080），唯一对 Portal 暴露的入口，做鉴权 + 读聚合 + 写转发。</li>
+  <li><code>cmd/identity-service</code>：身份/会话/RBAC。</li>
+  <li><code>cmd/metadata-service</code>：血缘账本与对象摘要（Artifact/Checkpoint/ModelPackage/MetricReport/EvaluationReport），交付前血缘校验执行方。</li>
+  <li><code>cmd/data-service</code>：数据工作区（artifact/package/frame 三级 + 三位置同步），<strong>独占独立 PG 实例</strong>。</li>
+  <li><code>cmd/workflow-service</code>：消费 ExperimentCreated 事件→向 cluster 请求 TrainingJob。</li>
+  <li><code>cmd/cluster-service</code>：对接 Determined，提交/对账训练任务。</li>
+  <li><code>cmd/evaluation-data-service</code>（:8087）：行云缺陷→评测数据→触发推理流水线。</li>
+  <li><code>cmd/prefect-scheduler</code>（:8085）：对接 Prefect Server，发起推理 flow run、回填状态。</li>
+  <li><code>cmd/deploy-service</code>：DeliveryRequest 生命周期 + Deployment 执行 + 血缘校验编排。</li>
+  <li>另有 monitor/alert/audit 等平台侧服务。</li>
+</ul>
+
+<pre class="mermaid">
+flowchart LR
+  Portal["Portal / Next.js"] -->|"/bff/v1/*"| BFF["web-service BFF :8080<br/>鉴权+读聚合+写转发"]
+  BFF --> ID["identity-service"]
+  BFF --> MD["metadata-service<br/>血缘账本+校验"]
+  BFF --> DS["data-service<br/>独立 PG 实例"]
+  BFF --> ES["eval-data-service :8087"]
+  BFF --> WF["workflow-service"]
+  BFF --> DP["deploy-service"]
+  WF --> CL["cluster-service"]
+  CL --> DET["Determined Master"]
+  ES -->|"同命名空间短名<br/>http://prefect-scheduler:8085"| PFS["prefect-scheduler :8085"]
+  PFS --> PF["Prefect Server (独立 PG)"]
+  PF -->|"按节点标签调度<br/>gpu-type=h20/h800"| GPU["郑州 GPU 集群<br/>37 节点 288 GPU"]
+  DET --> GPU
+  MD -.->|"血缘边回写"| MD
+  DP -->|"交付前血缘校验"| MD
+</pre>
+
+<h3>3.2 BFF 的读写分离与外部代理原则</h3>
+<p>BFF（web-service）既是<strong>读聚合层</strong>（合并多服务返回给前端），也是<strong>写鉴权层</strong>（注入身份头转发到权威服务）。关键原则：</p>
+<ul>
+  <li><strong>BFF 聚合失败允许局部降级</strong>，但写入失败必须明确提示（<code>doc/architecture-design.html</code>）。</li>
+  <li>外部系统状态不作为 BFF 唯一事实，必须同步回平台服务并对账。</li>
+  <li>对 data-service 等带 Push Token 的<strong>无认证代理</strong>：BFF 注入 system 身份（带 Push Token），再转发（<code>doc/data-artifact-push-guide.md</code>）。</li>
+  <li>对评测推理链，BFF 注入 <code>X-Inference-User</code> 头透传调用者身份（<code>services/web-service/evaluation_data.go</code> L64-86）。</li>
+</ul>
+
+<h3>3.3 调用链样例：评测推理一条请求的完整路径</h3>
+<pre class="mermaid">
+sequenceDiagram
+    autonumber
+    participant QA as QA/Portal
+    participant BFF as web-service BFF (:8080)
+    participant EDS as evaluation-data-service (:8087)
+    participant DB as PostgreSQL
+    participant Worker as EDS 后台 worker
+    participant PFS as prefect-scheduler (:8085)
+    QA->>BFF: POST /bff/v1/eval/eval-data/import
+    BFF->>EDS: POST /api/eval-data/import (X-Inference-User)
+    EDS->>DB: BEGIN + pg_advisory_xact_lock(defect_id)
+    EDS->>DB: INSERT defect_records + eval_data (ON CONFLICT DO NOTHING)
+    EDS->>DB: COMMIT (pipeline_status=PENDING_TRIGGER)
+    EDS-->>QA: 200 imported (准入立即返回)
+    Note over EDS,PFS: 异步：worker 每 15s tick
+    loop 每 15s
+        Worker->>DB: ListPendingTriggers(limit=5)
+        Worker->>DB: ClaimPendingTrigger (PENDING_TRIGGER→TRIGGERING, RowsAffected==1)
+        Worker->>PFS: POST /api/eval/submit (单 mcap key + defect_code)
+        PFS-->>Worker: flow_run_id + batch_id
+        Worker->>DB: MarkPipelineTriggered (status=RUNNING)
+        Worker->>PFS: GET /api/status/{id} (取 progress.stage)
+        PFS-->>Worker: stage=2/3
+        Worker->>DB: UpdatePipelineStatus
+    end
+</pre>
+<aside class="note">同命名空间短名调用：<code>http://prefect-scheduler:8085</code> 不带命名空间后缀，K8s DNS 自动补全，每个环境都解析到"自己命名空间里的 prefect-scheduler"。这避免了一份 manifest 在 test 命名空间误调到 prod 的灾难（<code>services/evaluation-data-service/prefect.go</code> L17-21）。环境差异全靠 DATABASE_URL secret 注入。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ 训练：Determined / 提交 / 回调 / Agent Gateway</h2>
+
+<h3>4.1 Determined 是实验调度层，不跨集群调度 Pod</h3>
+<p>Determined Master 部署在 local 集群（rancher-02 上一个 K8s Pod），通过<strong>同一隧道代理</strong>调度训练 Pod 到郑州的 default namespace，<strong>按节点标签</strong> <code>joydrive.jd.com/gpu-type=h20|h800</code> + <code>pool=formal|debug</code> 选择节点（<code>doc/k8s-cluster.md</code> L88-104）。<strong>Determined 不跨集群调度</strong>——它在每个 Rancher 集群内部用节点标签做资源池映射。</p>
+
+<h3>4.2 提交训练任务：从 ExperimentCreated 到 TrainingJob</h3>
+<ol>
+  <li>用户创建 Experiment → metadata-service 在<strong>业务事务</strong>里写 experiments 表 + outbox_events（<code>migrations/0001_init.sql</code> L173-182）。</li>
+  <li>AFTER INSERT 触发器在 commit 后调 <code>pg_notify('platform_outbox', row_id)</code>（<code>migrations/0001_init.sql</code> L281-292）。</li>
+  <li>workflow-service 持有专用连接 LISTEN 'platform_outbox'，收到通知 SELECT outbox 行、按 topic 过滤 ExperimentCreated、转发到本地 platform.Bus（<code>internal/platform/eventbus/listener.go</code>）。</li>
+  <li>workflow-service 消费 ExperimentCreated → 调 cluster-service 请求 TrainingJob（<code>services/workflow-service/server.go</code> L23-52）。</li>
+  <li>cluster-service 提交到 Determined，并周期对账 Determined/K8S Job 状态（设计契约；当前实现是纯事件驱动 + UNIQUE(experiment_id) 防重，<code>migrations/0001_init.sql</code> L296-299）。</li>
+</ol>
+<aside class="note">核心权衡是"NOTIFY 在 commit 后才发"——这把"业务事务原子性"和"事件通知"绑在一起。读者容易误以为 trigger 在 INSERT 时立即 NOTIFY（实际是 commit 时），这恰恰是 transactional outbox 模式的精髓。重放机制是"at-least-once"语义的兜底——消费方必须幂等。</aside>
+
+<h3>4.3 训练回调：从 Determined 状态到平台血缘</h3>
+<p>训练完成时，cluster-service 把 Checkpoint/Artifact 摘要和<strong>血缘边</strong>回写到 metadata-service（<code>doc/architecture-design.html</code> L547-563 主写入数据流第三段"产物登记"）。这条血缘边就是后续交付校验的反查依据。状态机：TrainingJob 8 态——Queued/Scheduled/Running/Paused/Preempted/Succeeded/Failed/Canceled。其中 Preempted 由 Determined 自动从最近 checkpoint 续训，平台仅展示不可手动操作。</p>
+
+<h3>4.4 Agent Gateway：Zero Trust 设计 vs 落地度 0%</h3>
+<p><code>doc/determined-agent-gateway.md</code> 设计了 Zero Trust 架构：agent↔proxy(mTLS, Hop2 本地)↔gateway(mTLS, Hop1 公网)↔master(DET_SESSION_TOKEN, Hop3 端到端)，3 跳凭证制 + OPA ext_authz 基于 SPIFFE 证书 SAN 做 agent_id+resource_pool+route 三级授权。</p>
+<p>但 <code>doc/k8s-security.md</code> 实测：<strong>这套设计落地度约 6%</strong>——Envoy+OPA 未部署（NotFound）、4 个设计 Secret 全不存在、agent 无客户端证书 volume、<code>CATTLE_INSECURE=true</code> 跳过校验、:2000 全程 HTTP 明文，<strong>mTLS Total Implementation: 0%</strong>（<code>doc/k8s-security.md</code> L224-234）。当前生产环境接受这个风险（内网+CDN 网络层防护），但 P0 风险真问题：<code>doc/k8s-security.md</code> L39-47 列出 P0-1 Rancher 引导弱密码 admin、P0-3 DB 密码硬编码 postgres、P0-7 Det /info 无认证公网泄露、P0-8 Det login 公网暴力破解面。</p>
+<aside class="note">最有价值的是"<strong>设计文档 ≠ 实际状态</strong>"的认知。读者做架构判断时分清三层：设计意图（doc/）→ 部署清单（manifests/）→ 运行时实际（kubectl get/ss/openssl）。审计方法是"从运行时反推"，而非"从文档正推"。这是 Function Owner 必备的判断力。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 评测：行云缺陷 → 自动触发推理 → 状态回填</h2>
+
+<h3>5.1 闭环总览：从缺陷到推理结果的一条自动链路</h3>
+<p>评测数据服务（evaluation-data-service，:8087）把 QA 在<strong>行云缺陷平台</strong>登的缺陷单，自动变成 Prefect 推理流水线的输入。机制是：行云缺陷先被定时同步落库，QA 在 Portal 勾选已回传的 mcap 文件做"准入"，准入只把数据行打个"待触发"标记，<strong>真正的推理触发和状态回填由后台 goroutine 异步完成</strong>。这样用户点完"准入"立刻返回，不用等几十秒的 Prefect 调用（<code>doc/evaluation-data-service.md</code> L8-15）。</p>
+
+<h3>5.2 准入的事务边界：advisory lock + 首写优先 + 评论回写非阻断</h3>
+<p>准入要做三件事且必须原子：写 defect_records、为每个 mcap 写一行 eval_data、回写行云评论。两个 QA 可能同时点同一缺陷。解法：事务里 <code>SELECT pg_advisory_xact_lock(hashtext(defect_id))</code> 串行化；再用 <code>(defect_code, data_package)</code> 唯一约束 + <code>ON CONFLICT DO NOTHING</code> 实现"首写优先"——后到的 import 跳过、不重复写评论。评论回写放在事务外，失败只记 comment_error，绝不回滚准入（<code>services/evaluation-data-service/repository.go</code> L300-391；<code>services/evaluation-data-service/handlers.go</code> L735-772）。</p>
+<aside class="note"><code>pg_advisory_xact_lock</code> 是 PG 特有：锁的不是某行数据，而是一个整数 key（这里用 hashtext(defect_id) 把字符串压成整数）。事务结束自动释放，不会泄漏。这是"我只想串行化一段逻辑、又不想加一张锁表"的惯用法。<strong>比 FOR UPDATE 行锁更关键</strong>，因为缺陷可能尚未落库，FOR UPDATE 锁不住不存在的行。</aside>
+
+<h3>5.3 后台 worker 的节流：per-tick 上限 + 抢占式 claim + 重试退避</h3>
+<p>后台 worker 每 <strong>15s 一个 tick</strong>，先触发后回填。节流三层：(1) 每 tick 最多触发 5 个、最多回填 20 个；(2) 两次提交间隔 500ms；(3) 同一行触发用"条件更新"抢占——<code>UPDATE ... WHERE pipeline_status='PENDING_TRIGGER'</code>，看 <code>tag.RowsAffected()==1</code> 才算抢到。提交失败不立刻判死，retry_count++ 后退回 PENDING_TRIGGER，<strong>最多 3 次才落 TRIGGER_FAILED</strong>，一次网络抖动能自愈（<code>services/evaluation-data-service/pipeline_worker.go</code> L11-19、L38-72；<code>services/evaluation-data-service/pipeline_repo.go</code> L181-223）。</p>
+<aside class="note">"抢占式 claim = 条件 UPDATE + 看 RowsAffected"是无分布式锁去重的核心模式。记住口诀：任何"我想确保一段副作用只执行一次"的场景，都先想能不能用一条带 WHERE 的 UPDATE 来做。比 SELECT FOR UPDATE 轻，比分布式锁简单。</aside>
+
+<h3>5.4 两级状态语义：顶层 state vs progress.stage（避免过早显示"已完成"）</h3>
+<p>Prefect 的 onboard 主 flow 一跑完，顶层 state 就翻 COMPLETED，但 onboard 只是整条链（onboard → offboard → download）的第一段。如果直接用顶层 state 当 UI 状态，评测数据会过早显示"已完成"。<strong>GetStatus 优先取 progress.stage</strong>：只有当 download 也 COMPLETED 才报 COMPLETED。stage 是 0/3、1/3、2/3、3/3 的进度串，由调度服务沿子 flow 链逐级探测得到（<code>services/evaluation-data-service/prefect.go</code> L131-138；<code>services/prefect-scheduler/client.go</code> L386-429、L518-531）。</p>
+<aside class="note">关键认知：UI 状态要映射到"用户关心的事件"（整链完成），而不是"系统内部的事件"（某一段 flow 完成）。progress.stage 就是为这个映射专门设计的二级字段。</aside>
+
+<h3>5.5 状态回填的容错：瞬时错误保留原值、未知状态不覆盖</h3>
+<p>worker 回填时对 prefect GET /api/status 调用失败直接 continue，保留当前 pipeline_status 不动，下个 tick 再试。prefect 返回的状态串经 normalizePipelineState 映射成 SCHEDULED/RUNNING/COMPLETED/FAILED；映射不出（空串）的也跳过，<strong>避免把缓存的好状态用未知值覆盖</strong>。ListActivePipelines 只捞非终态行，终态行不再轮询，省 Prefect API 调用（<code>services/evaluation-data-service/pipeline_worker.go</code> L74-95；<code>services/evaluation-data-service/pipeline_repo.go</code> L231-251）。</p>
+
+<h3>5.6 专用自动触发路径 /api/eval/submit：与手动提交解耦、带 defect 溯源</h3>
+<p>prefect-scheduler 给 eval-data-service 开了<strong>专用接口</strong> POST /api/eval/submit，不复用面向用户的 /api/submit。区别：(1) 只收单个 mcap key；(2) <strong>必带 defect_code 作为 source</strong>，让这次触发在"提交历史"里能溯源到具体缺陷；(3) 同步返回 flow_run_id + batch_id。手动批量提交走 /api/submit 的异步队列（5 worker、200 容量、满返回 503）。自动触发走同步路径，因为 worker 自己已做节流和重试（<code>services/prefect-scheduler/handlers.go</code> L225-293；<code>services/evaluation-data-service/prefect.go</code> L41-98）。</p>
+<aside class="note">"同一类操作（提交推理）开两个接口"不是冗余，是"调用方语义不同"。手动要异步（用户不等）、要批量；自动要同步（worker 需要 id 回填）、要单条。接口分离让两边的容错策略（重试、限流）各自演化，不互相污染。</aside>
+
+<h3>5.7 部署踩坑：xauto-discovery / Prefect PG 独立 / Ingress 僵尸 Pod</h3>
+<p>Prefect 流水线在生产里踩过三个工程坑并固化成设计（<code>doc/prefect_deployment.md</code>）：</p>
+<ol>
+  <li><strong>xauto-discovery.jd.com</strong> 解析到两个内网 IP，K8s 集群只通其中一个且要 Host 头，用 hostAliases 把域名钉死到可通 IP（L14-31）。</li>
+  <li><strong>Prefect Server 和主业务共享 PG 导致 CPU 打满超时</strong>，给 Prefect 部署独立 PG（L33-42）。</li>
+  <li><strong>Ingress Controller 出现僵尸 Pod</strong>（containerd 丢状态），单副本扛全站流量间歇性不响应，强制清理并扩到 2 副本（L44-63）。</li>
+</ol>
+<aside class="note">这类"部署踩坑文档"是判断一个系统成熟度的金矿。读法是看"根因"一栏——共享资源打满、僵尸 Pod、编译时 vs 运行时配置，这些是分布式系统的经典反模式，会跨项目复现。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 数据闭环：artifact 三级 / 血缘 / Outbox 三件套</h2>
+
+<h3>6.1 三级对象模型 Artifact → Package → Frame</h3>
+<p>为了让外部数据管线能用最小动作上报又能在前端浏览到帧级，把一个"数据版本"拆成三层：最外层 <strong>Artifact</strong>（一个版本，全局唯一版本号即主键值 artifact_id）、中间 <strong>Package</strong>（按场景打包的目录，一个 artifact 几十万包）、最里层 <strong>Frame</strong>（一包里几千个 .zst 帧文件，全表可达数亿行）。包级做"拥有/未拥有"判定和差异对比，帧级做精确索引。<code>migrations/data/0002_data_artifacts.sql</code> L4-59 三表 + frames 按 package_id HASH 分 32 区。</p>
+<aside class="note">HASH 分区按 package_id 散列，让"某包的帧"物理上聚在一个分区，写入和查询都只动一片，正是 CopyFrom 批量写和按包浏览能扛住数亿帧的关键。反事实：若按 artifact_id 分区，同一 artifact 的所有帧挤在 1 个分区，热点直接打爆。联合主键 <code>PK(frame_id, package_id)</code> 不是冗余，是 PG 分区表硬性要求——分区键 package_id 必须出现在主键里。</aside>
+
+<h3>6.2 固定三位置同步模型：location × package 矩阵 + CFS/S3 非对称上报</h3>
+<p>同一份数据落在<strong>三个固定位置</strong>（北京 CFS=源、郑州 CFS=跨地域、S3 训练桶=整包）。系统维护 (location_id, package_id) 矩阵表 <code>artifact_location_packages</code>：<strong>行存在=该位置拥有该包</strong>。CFS 位置上报每包实际帧数 frame_count，<strong>S3 位置只上报整包大小 frame_count=0</strong>；同一包在两个 CFS 位置的帧数不一致，前端标红告警。total_synced_packages 是这张矩阵的 COUNT 缓存，专门给前端进度条做 O(1) 渲染（<code>doc/data-artifact-registry-design.md</code> L111-148；<code>migrations/data/0002_data_artifacts.sql</code> L65-88）。</p>
+<aside class="note">读者常困惑"frame_count=0 到底算同步了吗"。答：行存在即代表同步，frame_count 只承载"一致性强弱"，S3 故意记 0 让前端显示"-"而非误报缺帧。<code>(xmax = 0)</code> 是 PG 技巧——INSERT...ON CONFLICT...RETURNING 时 xmax=0 表示真 INSERT（新行），用来区分"新增同步"还是"刷新已有"，避免 total_synced_packages 重复自增。</aside>
+
+<h3>6.3 两接口幂等推送：管线只调"注册版本"+"推送包"</h3>
+<p>外部管线接入只需两个 HTTP：POST /api/data-artifacts/（注册版本 + 声明一个 location）和 POST /api/data-artifacts/{version}/packages（推送一个包）。<strong>注册可对同一 version 多次调用，每次追加位置（幂等）</strong>；推包时同 package_name 重复推送是"追加帧"而非报错，frame_index 用 MAX(frame_index)+1 自动续号（<code>doc/data-artifact-push-guide.md</code> L4-5、L237-238；<code>services/data-service/repository/data_artifacts.go</code> L557-604）。</p>
+
+<h3>6.4 血缘账本与交付前置血缘校验（闭环的"门禁"）</h3>
+<p>所有产物（数据版本、实验、训练任务、Checkpoint、ModelPackage、MetricReport、EvalSet、EvaluationReport、DeliveryRequest、Deployment）都是 metadata-service 维护的<strong>血缘图</strong>的节点。这条边是交付的门禁：deploy 创建 DeliveryRequest 时必须先调 metadata 做血缘校验——能从模型包反查回数据、代码、参数、训练任务、评测报告，反查不到任何一环，就不允许进入 Delivering（<code>doc/architecture-design.html</code> L478-479、L547-563、L625）。</p>
+
+<pre class="mermaid">
+flowchart LR
+  DP["DataProductionJob"] --> DV["DatasetVersion"]
+  DV --> EXP["Experiment"]
+  EXP --> TJ["TrainingJob"]
+  TJ --> MP["ModelPackage"]
+  MP --> ET["EvaluationTask"]
+  ET --> ER["EvaluationReport"]
+  ER --> DR["DeliveryRequest"]
+  DR --> DEP["Deployment"]
+  DV -.-> META["metadata 血缘账本"]
+  EXP -.-> META
+  MP -.-> META
+  ER -.-> META
+  DR -.->|"交付前置血缘校验<br/>反查数据/代码/参数/训练/模型/评测"| META
+  DEP -.-> META
+</pre>
+<aside class="note">"设计目标 vs 实现现状"有落差：<code>onnx_deliveries.source_checkpoint</code> 当前是 free text（<code>migrations/data/0003_onnx_deliveries.sql</code> L8-9 自承），血缘边表在 metadata 里尚未完整落地，但架构图把"血缘校验作为交付前置"写进了风险收口硬约束——这是面向未来演进的契约设计。架构文档声明的是系统"应该"长成的样子，迁移文件声明的是"现在"长成的样子，两者差的就是 backlog。</aside>
+
+<h3>6.5 Outbox + pg_notify + LISTEN/Replay：可靠事件分发的实现骨架</h3>
+<p>跨服务推进（实验创建→训练提交、训练完成→评测、评测完成→交付）不能靠 RPC 直连。做法：业务事务里把业务表和 <code>outbox_events</code> 表一起提交；提交时一个 AFTER INSERT 触发器调 <code>pg_notify('platform_outbox', row_id)</code> 把行 ID 推给所有 LISTEN 的连接。每个消费服务起一个 eventbus.Listener，独占一条连接 LISTEN，收到通知回查 outbox 行、按 topic 过滤、发到进程内 platform.Bus。<strong>LISTEN/NOTIFY 是 at-most-once</strong>（断线期间的通知会丢），所以每次重连都先 replay outbox WHERE created_at &gt; last_seen，冷启动 floor=now()-5min（<code>migrations/0001_init.sql</code> L173-294；<code>internal/platform/eventbus/listener.go</code>）。</p>
+
+<pre class="mermaid">
+sequenceDiagram
+  participant Biz as 业务服务事务
+  participant DB as PostgreSQL
+  participant Trig as AFTER INSERT 触发器
+  participant L as eventbus.Listener
+  participant Bus as 进程内 platform.Bus
+  participant Wf as workflow-service
+  Biz->>DB: BEGIN; 写业务表 + INSERT outbox_events; COMMIT
+  DB->>Trig: commit 后触发
+  Trig->>L: pg_notify('platform_outbox', row_id)
+  L->>DB: SELECT * FROM outbox_events WHERE id=row_id
+  L->>Bus: 按 topic 过滤后 Publish
+  Bus->>Wf: 收到 ExperimentCreated
+  Note over L: 断线重连时先 replay<br/>WHERE created_at > last_seen
+</pre>
+<aside class="note">模型先行读者常误以为"消息队列"就是 Kafka/RabbitMQ。这里的关键认知：PostgreSQL 的 LISTEN/NOTIFY + 一张 outbox 表，就是一个进程内的"事务性消息队列"，省掉了一个独立中间件。三层抽象：(1) 触发器在事务里写 notify（notify 只在 commit 后才发）；(2) Listener 收到 notify 后回查 row 拿 payload；(3) replay 弥补断线窗口。三层缺一不可。</aside>
+
+<h3>6.6 Reconciler 对账 + 幂等键：闭环的"最终一致"兜底</h3>
+<p>两层兜底：(1) <strong>幂等</strong>——每个 POST 写接口要求 idempotency_key，目标服务按 event_id 和 business_key 去重。data-service 推包用 ON CONFLICT、training_jobs 用 UNIQUE(experiment_id) 防重（<code>migrations/0001_init.sql</code> L184-193、L296-299）。(2) <strong>Reconciler</strong>——cluster 对账 Determined/K8S Job，dataset 对账文件 URI/checksum，deploy 对账 DeliveryRequest 状态，metadata 扫描悬挂血缘引用，超过重试次数进 dead_letter 表并告警。<strong>注意：当前 workflow-service 实现是纯事件驱动 bus 消费，尚未落地周期 ticker Reconciler</strong>——这是设计 vs 实现的真实缺口（<code>services/workflow-service/server.go</code> L23-52）。</p>
+<aside class="note">读者要警惕"文档说了就算实现"的陷阱。<code>doc/architecture-design.html</code> L578-596 描述的 Reconciler/dead_letter 是目标架构，但 workflow-service 当前实现只有事件消费没有 ticker。这种"设计先行、实现追赶"是大型平台常态，正是 Function Owner 要会读的"契约 vs 交付"差距。</aside>
+
+<h3>6.7 DB 物理隔离：data-service 独占 PG 实例</h3>
+<p>为不让数据生产那种"数亿帧、HASH 分区、高频 CopyFrom"的写入压力污染平台主库，把 data workspace 所有表放进<strong>独立 PostgreSQL 实例</strong>（data-db namespace），由 data-service 独占连接。平台主 repository 保持单 pool <code>repository.New(pool)</code>，绝不 import data sqlc 或 data repository；<code>platform.Store</code> 接口不含任何 data workspace 方法。迁移用单进程双 URL：DATABASE_URL→migrations/，DATA_DATABASE_URL→migrations/data/（<code>doc/data-service-db-isolation-plan.md</code> L5-22、L32-53；<code>migrations/data/0001_data_workspace.sql</code> L1-2）。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 工程内功：CI/CD / 纵深防御 / sqlc/pgtest / GPU 多集群 / 可观测</h2>
+
+<h3>7.1 三端点 webhook + 四阶段 CI/CD</h3>
+<p>一个仓库同时承载 release/devel/test 三条线。做法：暴露三个独立 ingress 路径（VALID_PATHS = {三个端点}），每个路径对 payload 校验不同——<strong>release 仅接受 devel→release 的 merge_request 且 action=merge；devel 接受任意→devel 的 merge；test 仅接受 push 且最新 commit 必须带 [cicd] 标记</strong>。webhook-server.py 的 if/elif 分支把请求转译成一个 batch/v1 Job（<code>manifests/cicd.yaml</code> L120、L187-243）。Job 跑五阶段：STAGE1 checkout+setup → STAGE2 db migrate → STAGE3 go vet+build → STAGE4 docker build+push → STAGE5 deploy（<code>manifests/cicd/pipeline.sh</code> L241/564/627/708/727）。</p>
+<p>per-branch 去抖：dedupe_key = path + ':' + branch 做 3s 窗口去抖，避免两个 test 分支同时 push 互相抑制；LAST_TRIGGERS 还有 60s 清理（<code>manifests/cicd.yaml</code> L245-265）。STAGE5 部署目标：release→joydrive ns（Fleet CD）、devel→joydrive-devel、test→joydrive-{br} ns + 24H TTL。</p>
+
+<h3>7.2 脚本分层：frozen bootstrap + branch-traveling pipeline</h3>
+<p>CI 脚本本身要能迭代，但又必须能跑通 CI（鸡生蛋）。切成两层：<strong>bootstrap.sh 极薄且冻结在 ci-script ConfigMap</strong>（改它需要 merge），只做三件事——每 job 独立 clone、checkout 目标分支、exec 仓库内 pipeline.sh；真正的五阶段逻辑随分支走（<code>manifests/cicd/pipeline.sh</code> 注释 'travels with branch'），新功能只改 pipeline.sh 就能在该分支生效，不必动 ConfigMap（<code>manifests/cicd.yaml</code> L19-94；<code>doc/k8s-lessons.md</code> L78 自更新段）。</p>
+
+<h3>7.3 并行 Job 隔离：mktemp 独立 clone + git --reference 共享对象库</h3>
+<p>多个 CI Job 同时跑会抢同一份 checkout。解法：<code>BUILD_DIR=$(mktemp -d /src/.ci-${CI_MODE}-XXXXXX)</code> 每 job 独立 + <code>git clone --reference '$POD_SRC'</code> 共享 git objects 接近 instant；stale-dir cleanup 60min 后清旧目录（<code>manifests/cicd.yaml</code> L31-58）。<strong>不能 fallback 到 host</strong>，注释明确 'would corrupt git state'。早期 bug：旧设计按 CI_MODE 共用 1 个 clone 目录，作者被迫让 Go build 读宿主机代码——结果宿主机 stale 时新 tag 镜像里是旧 binary（<code>doc/k8s-lessons.md</code> L244-280）。验证手段：<code>kubectl exec ... strings /usr/local/bin/web-service | grep &lt;feature&gt;</code> 直接验镜像内 binary 内容。</p>
+
+<h3>7.4 AI coding 纵深防御：绝对禁令 + 2 步预检 tag + bash wrapper</h3>
+<p>AI agent 在生产 GPU 集群上误执行 <code>rm -rf</code> / <code>killall -9</code> / <code>docker pull</code> 会造成 P0。三层纵深：</p>
+<ol>
+  <li><strong>语义层</strong>——<code>AGENTS.md</code> 顶部 ABSOLUTE PROHIBITIONS 列出 6 条铁律（rm -rf、pull 公网镜像、killall -9、systemctl restart rke2/docker stop unknown、kubectl delete --force 无备份、git commit、改生产 config/iptables/network/system），声明 override 所有其他指令。</li>
+  <li><strong>流程层</strong>——每次 bash 调用必须先在 description 字段打 tag（<code>[READ]/[MODIFY]/[DELETE]/[RESTART]/[NETWORK]/[DOCKER]/[GIT]</code>），仅 [READ] 可自动执行，其余必须先 question 等用户批准。</li>
+  <li><strong>强制层</strong>——BASH_ENV 挂 .bash_safety.sh，在 shell 层拦截 rm/docker pull/systemctl restart/killall/kubectl delete/git commit，除非 <code>BYPASS_SAFETY=1</code>。</li>
+</ol>
+<p>经典 Defense in Depth：任何一层失败，下一层兜底。prompt 忘了→预检 tag 拦住；预检 tag 写错了→bash wrapper 在 shell exec 前拒掉。</p>
+
+<pre class="mermaid">
+flowchart TD
+  START["AI agent 接到任务"] --> BASH["要执行 bash 命令"]
+  BASH --> L1{"L1 语义层<br/>AGENTS.md 6 条绝对禁令"}
+  L1 -->|命中| STOP["STOP 违反即 P0"]
+  L1 -->|未命中| L2{"L2 流程层<br/>description 字段打 tag"}
+  L2 -->|"tag = READ"| EXEC["自动执行"]
+  L2 -->|"tag = MODIFY/DELETE/<br/>RESTART/NETWORK/DOCKER/GIT"| ASK["question 等用户批准"]
+  ASK -->|批准| WRAPPER
+  EXEC --> WRAPPER{"L3 强制层<br/>BASH_ENV=.bash_safety.sh"}
+  WRAPPER -->|拦截| BLOCK["拒绝执行"]
+  WRAPPER -->|放行| RUN["真正执行"]
+</pre>
+
+<h3>7.5 文档驱动收敛：把 doc/ 当作事故记忆库</h3>
+<p>同一个坑（BFF 路径、镜像缓存、DiskPressure、TLS 证书分裂）会被不同的 agent、不同的工程师反复踩。JoyDrive 把所有 &gt;30min 的排查、重复错误、关键故障强制写进 <code>doc/k8s-lessons.md</code>，结构化为"问题/根因/修复/教训"四段；遇到新问题时 SOP 第一步就是 <code>grep doc/</code>（<code>AGENTS.md</code> L70、L132-133）。<code>doc/k8s-lessons.md</code> 整文 3602 行分四节（开发交付/平台运维/H800-H20/规范参考），如 L97-102 "静默吞错掩盖长期构建失败"、L510-528 TB/JL 跨库外键案。</p>
+
+<h3>7.6 sqlc 工程范式：手写 SQL + 生成强类型 Go</h3>
+<p>纪律：<code>.sql</code> 改完必须 <code>make sqlc</code> 重新生成；<strong>生成的 db/ 目录禁止手改</strong>（<code>AGENTS.md</code> L107 'Never manually edit sqlc generated files'）；<code>Store interface</code>（<code>internal/platform/store.go</code>）是 domain 层与存储层的契约，sqlc 生成的 querier 满足它；<strong>新增 migration 必须把文件加进 sqlc.yaml 的 schema 列表</strong>，否则 sqlc 看不到新表（<code>sqlc.yaml</code> L1-22）。应急修复反例：手动建表后必须同步三件事——建迁移文件→标记 schema_migrations→更新 sqlc.yaml（<code>doc/k8s-lessons.md</code> L451-467）。</p>
+
+<h3>7.7 pgtest：每测试一个临时 PG 库（CREATE DATABASE TEMPLATE）</h3>
+<p>集成测试需要真实 PG（mock 测不出 SQL 语义 bug，如别名/列碰撞/类型不匹配）。<code>internal/testutil/pgtest/pg.go</code> 解法：首次调用 lazily 建一个"模板库"（把 migrations 下所有 .sql 按文件名排序跑一遍），后续每个测试用 <code>CREATE DATABASE xxx TEMPLATE template_yyy</code> <strong>毫秒级克隆</strong>独立库，测试结束 DROP。sync.Once 保证模板只建一次，没有 PG 则 t.Skipf 跳过（L42-44、L49-54、L62-65、L86-88）。<code>AGENTS.md</code> L107：除 <code>internal/auth/password_test.go</code> 外所有测试都是集成测试。</p>
+
+<h3>7.8 GPU 多集群管理：三集群拓扑 + remotedialer WSS + 按标签调度</h3>
+<p>训练 GPU 在郑州隔离网（10.24.60.x，GFW 阻断 443），Rancher 控制面在京东云。拓扑：local 集群（Rancher Server）+ gpu-cluster-00（L40S）+ gpu-cluster-zhengzhou（H20+H800 一体化 37 节点 288 GPU）。managed cluster 上的 cattle-cluster-agent <strong>主动发起 remotedialer WebSocket</strong>（wss://，agent 源码硬编码，<code>CATTLE_INSECURE=true</code> 跳过证书校验）出站到 CDN :2001（TCP Stream 模式）→ Envoy → Rancher（<code>doc/k8s-cluster.md</code> L62-66、L82、L152-161）。</p>
+<p>Determined Master 在 local 集群，通过同一隧道代理调度训练 Pod 到郑州 default namespace，按节点标签 <code>joydrive.jd.com/gpu-type=h20|h800</code> + <code>pool=formal|debug</code> 选择节点（<code>doc/k8s-cluster.md</code> L88-104）。</p>
+<aside class="note">核心心智模型是"<strong>隧道方向反转</strong>"——服务器（Rancher）想管理客户端（GPU 节点），但客户端在隔离网，所以让客户端主动出站建立 WSS，服务器把 K8s API 调用 multiplex 到这条隧道上。这是 NAT 穿透的工业实现。读者要分清：RKE2 是节点本地的 K8s，Rancher 是多集群管理层（不管 Pod 调度），Determined 是实验调度层（跨集群只通过资源池抽象）。</aside>
+
+<h3>7.9 GPU 节点接入：CA 注入 + hostAliases + CATTLE_INSECURE 三件套</h3>
+<p>三件套：<code>hostAliases</code> 把 jdx-infra-rancher.jdl.cn 钉到 CDN 出口 IP；initContainer 从 tls-ca Secret 复制 CA 证书到 /etc/kubernetes/ssl/certs/serverca；<code>CATTLE_INSECURE=true</code> 跳过 HTTP 客户端 TLS 校验（<strong>这只作用于 HTTP 客户端，不作用于 remotedialer 的 TLS dialer，所以仍需 CA 注入</strong>）。Envoy 用 tcp_proxy 而非 TLS termination，让 Rancher 自己终结 TLS（<code>doc/k8s-lessons.md</code> L1241-1265；<code>doc/k8s-security.md</code> L165-173）。失败方案表（L1076-1090）总结了 F-K 共 6 条失败方案。</p>
+<aside class="note">最难的是分清"tcp_proxy 透传 vs TLS termination"。前者 Envoy 不解密，只看 SNI 转发字节；后者 Envoy 解密后再加密到上游。选错会导致信任链断裂。读者应记住：agent 用 wss 直连 Rancher，中间任何"解密"都会破坏端到端信任。</aside>
+
+<h3>7.10 RKE2/Rancher 配置路径：托管 vs 手动，别手动改托管节点</h3>
+<p>RKE2 节点配置两类：手动 rke2 server 启动的（config.yaml 可直接编辑 + systemctl restart），和 Rancher UI 创建/导入的（<code>config.yaml.d/50-rancher.yaml</code> 不可手改，Rancher controller 会持续回滚）。50 的含义：RKE2 按文件名字母序合并，数字越大优先级越高；Rancher 用 50 压过默认值，给用户留 51-99 做本地覆盖。JoyDrive 纪律：<strong>Rancher 托管节点配置异常时不手动改不重启，经 Rancher UI 重新注册或下发证书</strong>（<code>doc/k8s-lessons.md</code> L291-302）。</p>
+<aside class="note">核心认知是"谁是 source of truth"——Rancher 托管节点的 SoT 是 Rancher controller 的内存状态，不是节点本地文件。手动改本地文件是"对抗声明式系统"，必输。正确做法是改 Rancher 的期望状态（UI/CRD），让 controller 把状态收敛到节点。</aside>
+
+<h3>7.11 可观测性：去单点 + remote_write push + DaemonSet 一致性</h3>
+<p>郑州 GPU 集群指标要让用户在 local 已有 Grafana 看到，但 local 反向 scrape 不到郑州。三原则（<code>doc/k8s-observability.md</code> L13-18）：</p>
+<ol>
+  <li><strong>采集面在郑州内闭环</strong>——DCGM + node-exporter 各为 DaemonSet 就地采集，Prometheus 单副本钉 monitoring-store 节点（带 NVMe），本地 TSDB 仅 6h 缓冲。</li>
+  <li><strong>访问面用 Prometheus remote_write（出站 push）</strong> 经 CDN:2000 把指标推到 local P40 节点上独立的 zz-receiver（与现役 prometheus-k8s 隔离故障域）。</li>
+  <li><strong>去单点</strong>——Prometheus 单副本 + 持久源在异地，不钉 nodeName（xl006 K8s Ready 但 SSH 失联，"K8s 健康 ≠ 可运维"）。</li>
+</ol>
+<aside class="note">两个反直觉点：(1)<strong>"Prometheus 单副本反而比双副本 HA"</strong>，因为 vanilla 接收端不做去重，双副本制造问题而非解决问题（L181-186）；(2)<strong>"DaemonSet 是一致性引擎"</strong>，脚本只管 K8s 管不到的宿主机层（L452-461）。读者要建立"隔离网下 push 优于 pull"的直觉。</aside>
+
+<pre class="mermaid">
+flowchart TD
+  subgraph 郑州隔离网
+    DS1["DCGM DaemonSet :9400 每 GPU 节点"]
+    DS2["node-exporter DaemonSet :9100 全节点"]
+    KSM["kube-state-metrics"]
+    PROM["Prometheus 单副本<br/>钉 monitoring-store 节点<br/>TSDB 6h"]
+    DS1 --> PROM
+    DS2 --> PROM
+    KSM --> PROM
+  end
+  PROM -->|"remote_write push<br/>writeRelabel DCGM/node/kube"| CDN["x-proxy.jdl.cn:2000"]
+  CDN -->|TCP Stream| ENVOY["rancher-01 Envoy:8200"]
+  ENVOY -->|"/zz-rw/api/v1/write"| ZZR["zz-receiver<br/>local P40 节点<br/>30d retention"]
+  ZZR --> GRAF["local Grafana<br/>按 cluster=gpu-cluster-zhengzhou 过滤"]
+  USER["用户浏览器"] --> GRAF
+</pre>
+
+<h3>7.12 离线镜像铁律 + containerd/Docker 镜像库分裂</h3>
+<p>GPU 节点无外网（hub.jdcloud.com、PyPI、GitHub 全被 GFW/DPI 阻断），任何 docker pull/ctr pull 必超时挂起。<strong>铁律：所有镜像走 NFS 缓存逐节点 ctr -n k8s.io import 预导入，禁止公网拉取</strong>（<code>doc/k8s-deploy.md</code> L124-157）。两个分裂陷阱：(1) containerd 有独立 CRI 镜像数据库，ctr import 不入 CRI 库（ctr image ls 能看到但 crictl images 看不到）；(2) 磁盘 ≥85% 时 containerd GC 无差别删镜像，包括手动 import 的——必须用本地 registry (:5000) 或推到 Docker volume 抗 GC（<code>doc/k8s-lessons.md</code> L600-635）。</p>
+<aside class="note">"TCP 握手成功 ≠ HTTP 能用"是 DPI 教训——不能靠 ping/curl 测连通性下结论，要测到应用层。Det entrypoint pip install 连 PyPI → DPI 拦截 → 永久挂起；解法是 <code>PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/</code>（L1117-1125）。</aside>
+
+<h3>7.13 DiskPressure 三层故障 + kubelet 状态锁死</h3>
+<p>GPU 节点磁盘小（183G）+ 训练临时数据大，磁盘 ≥85% 触发 containerd GC，GC 失败时 kubelet 进入 FreeDiskSpaceFailed 锁死状态。<strong>三层故障模型</strong>（<code>doc/k8s-lessons.md</code> L331-348）：Layer1 磁盘满 → Layer2 kubelet GC 失败锁 DiskPressure → Layer3 critical pod 被驱逐（cattle-agent 被 evicted → Rancher Unavailable）。<strong>关键认知：即使清出空间，DiskPressure 仍不解除——只有重启 kubelet（systemctl restart rke2-server）才能强制重设</strong>。根治是迁移 kubelet/containerd 数据到 NVMe 大盘（bind-mount + rsync -aHAX --numeric-ids），并给 cattle-agent 加 DiskPressure toleration（L351-403）。</p>
+<aside class="note">核心心智是"<strong>kubelet 状态机有粘性</strong>"——DiskPressure 一旦进入 FreeDiskSpaceFailed 就不会自动恢复，必须外部强制重设。这违背"声明式系统会自愈"的直觉。迁移后旧 root-disk 副本保留为 rollback anchors（<code>/var/lib/rancher/rke2.pre-nvme-*</code>），多次成功实验 + 显式变更窗口后才删——这是变更纪律。</aside>
+
+<h3>7.14 运行时配置同步：MF 三处一致 + TTL 双标签</h3>
+<p>新增运行时配置（env/Secret/CM key）时，代码改了但 CI 部署的 Secret 没同步 → 前端 503（如 DATA_SERVICE_URL 漏注入，<code>doc/k8s-lessons.md</code> L104-105）。纪律（<code>AGENTS.md</code> L68）：新配置必须同步到三处——<code>mfs/web-svc.yaml</code>（运行时 Secret 模板）、<code>mfs/cicd.yaml</code> 的三个 web-service-env block（AUTO_SETUP + main + STAGE5 部署时）、CI 脚本。<strong>STAGE5 部署时的 sync 会覆盖 Secret，所以只改初始化路径会被刷掉，三处必须一致</strong>。TTL 标签也有双标签问题：CI 每次 push 重新部署后 TTL 仍从首次创建 ns 时间倒数——STAGE5 必须同时更新 <code>joydrive.io/ttl-hours</code> 和 <code>joydrive.io/created</code> 两个标签（L69-75）。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 学习路径（按顺序读哪些 file）</h2>
+
+<h3>8.1 第一遍：产品骨架（建议 1 天）</h3>
+<ol>
+  <li><code>doc/ui-interaction-design.html</code> — 先读总 PRD，建立 8 工作区 + 主线流程 + 状态/权限/审计矩阵的全景认知（业务侧+平台侧两段都要读）。</li>
+  <li><code>doc/domain-model.html</code> — 读"工作区到领域对象"+"核心业务对象"+"状态机枚举"，把 PRD 的按钮落到对象和状态上。</li>
+  <li><code>doc/organization-prd.md</code> — 单独精读，理解 RBAC 二级模型 + ChangeRequest 四段式 + 双层审计的细节（D1-D6 决策记录是 rationale 金矿）。</li>
+  <li><code>doc/architecture-design.html</code> — 读"服务与对象归属""主写入数据流""权限与审计""风险收口"，把产品流程映射到服务边界和血缘校验门禁。</li>
+  <li>原型按主线旅程顺序点一遍：<code>doc/prototype/index.html → login.html → workbench.html → data.html → data-run.html → experiment.html → evaluation.html → delivery.html → lineage.html → organization.html → resource.html → monitor.html</code>，验证状态机和按钮规则在 UI 上的落地。</li>
+</ol>
+
+<h3>8.2 第二遍：评测流水线（建议 1 天）</h3>
+<ol>
+  <li><code>doc/evaluation-data-service.md</code> 全篇，建立产品骨架——§1 概述、§2 架构、§3 数据模型、§4 核心流程、§4.6 两级状态是重点。</li>
+  <li><code>doc/prefect_deployment.md</code>，读"遇到的问题与解决方案"+"硬编码配置清单"。</li>
+  <li><code>services/evaluation-data-service/server.go</code> L57-77（New()：worker/poller 启动时机）。</li>
+  <li><code>services/evaluation-data-service/handlers.go</code> L643-782（ImportEvalSet：准入路径）。</li>
+  <li><code>services/evaluation-data-service/repository.go</code> L300-391（ImportDefectAtomic：advisory lock + 首写优先）。</li>
+  <li><code>services/evaluation-data-service/pipeline_worker.go</code> 全文 113 行（触发循环、节流、回填、normalize）。</li>
+  <li><code>services/evaluation-data-service/pipeline_repo.go</code> L147-259（状态机落库）。</li>
+  <li><code>services/evaluation-data-service/prefect.go</code> 全文（client 封装 + 两级状态取舍）。</li>
+  <li><code>services/prefect-scheduler/handlers.go</code> L225-321（SubmitEvalTask 专用路径 + GetStatus）。</li>
+  <li><code>services/prefect-scheduler/client.go</code> L195-531（CreateFlowRun pack 路由 + GetPipelineProgress 两级状态核心）。</li>
+  <li><code>services/web-service/evaluation_data.go</code> L64-86（BFF 鉴权 + X-Inference-User 透传）。</li>
+</ol>
+
+<h3>8.3 第三遍：数据闭环（建议 1 天）</h3>
+<ol>
+  <li><code>doc/data-artifact-registry-design.md</code> 全文（artifact/package/frame 三级、三位置同步、API）。</li>
+  <li><code>doc/data-artifact-push-guide.md</code>（两接口幂等接入）。</li>
+  <li><code>migrations/data/0002_data_artifacts.sql</code>（7 表 + HASH 32 分区）。</li>
+  <li><code>services/data-service/repository/data_artifacts.go</code> L540-677（push 事务 7 步）。</li>
+  <li><code>migrations/0001_init.sql</code> L173-299（outbox_events + 触发器）。</li>
+  <li><code>internal/platform/eventbus/listener.go</code> 全文（LISTEN/replay/fetchAndPublish）。</li>
+  <li><code>services/workflow-service/server.go</code> L23-52（事件消费实现，对照 <code>doc/architecture-design.html</code> L578-596 找 Reconciler 设计 vs 实现差距）。</li>
+  <li><code>internal/storage/db/metadata.sql.go</code> L297-309、L640-666 + <code>migrations/0001_init.sql</code> L184-193、L296-299（幂等键表 + training 防重唯一索引）。</li>
+  <li><code>doc/data-service-db-isolation-plan.md</code>（为什么 data workspace 要独立 PG 实例）。</li>
+  <li><code>doc/prototype/lineage.html</code>（血缘作为详情下钻视图）。</li>
+</ol>
+
+<h3>8.4 第四遍：工程内功（建议 2-3 天）</h3>
+<ol>
+  <li><code>AGENTS.md</code> 全文——AI agent 行为约束的语义层（绝对禁令+2步预检+bash wrapper）。</li>
+  <li><code>doc/k8s-lessons.md</code> §1（L14-280 开发交付）——CI/CD 真实踩坑史。</li>
+  <li><code>manifests/cicd.yaml</code> 全文（webhook 路由 L120、三分支校验 L187-243、Job 构造 L274-308）。</li>
+  <li><code>manifests/cicd/pipeline.sh</code>（grep STAGE 定位五阶段 + services.conf 表驱动）。</li>
+  <li><code>internal/testutil/pgtest/pg.go</code> 全文（CREATE DATABASE TEMPLATE 模板库机制）。</li>
+  <li><code>sqlc.yaml</code> + <code>internal/platform/store.go</code> L10-150（sqlc 生成 + Store interface 契约）。</li>
+  <li><code>doc/k8s-cluster.md</code> §1+§2（三集群 + 三层映射的心智模型）。</li>
+  <li><code>doc/k8s-lessons.md</code> §3（L1144-1350 H20 接入），对照 L1076-1090 失败方案表。</li>
+  <li><code>doc/k8s-deploy.md</code> §1（L103-280 RKE2 部署坑）+ §2（L295-400 GPU 驱动坑）。</li>
+  <li><code>doc/k8s-observability.md</code> §1-§4（采集面闭环 + remote_write push + 去单点）。</li>
+  <li><code>doc/k8s-security.md</code> §2+§4+§10-11（风险清单 + Gateway 设计 vs 实际 + SOP）。</li>
+  <li><code>doc/k8s-lessons.md</code> §2（L282-840 平台运维）——DiskPressure 三层故障、Det AI 集成坑、TB checkpoint 全记录。</li>
+</ol>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑨ 关键设计决策 rationale + 反事实</h2>
+
+<p>下表把全书最关键的 10 个设计决策的"为什么这么做"+"不这么做会怎样"集中呈现。Function Owner 的判断力 = 能讲清楚这张表。</p>
+<table>
+<thead><tr><th>决策</th><th>Rationale（为何如此）</th><th>反事实（不这么做的崩塌路径）</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td>事实归属切分工作区，血缘是只读投影</td><td>强制每对象只有一个权威写入服务，血缘校验才能成立</td><td>实验页和数据页都来写 TrainingJob 摘要 → 血缘回溯断裂，交付反查不到</td><td><code>doc/domain-model.html</code></td></tr>
+<tr><td>Experiment 创建即不可变</td><td>保证任一复现查询都拿到冻结配置</td><td>提交后改超参 → TrainingJob 结果与"记录的实验配置"脱钩，复现失败无法定位</td><td><code>doc/ui-interaction-design.html</code></td></tr>
+<tr><td>权限按模板克隆成快照</td><td>项目内权限个性化不污染全局模板；审计能还原"当时拥有哪些权限"</td><td>运行时查模板 → 模板后改 → 审计无法还原历史权限</td><td><code>doc/organization-prd.md §0.2 D1</code></td></tr>
+<tr><td>变更单不原单重试，复制为新单 + retry_parent_id</td><td>审计每条记录代表"一次确定性执行尝试"</td><td>原单重试 → 审计看到同一单多次执行，无法判断哪次成功</td><td><code>doc/organization-prd.md §8.6</code></td></tr>
+<tr><td>创建项目首批变更单自动审批通过</td><td>避免冷启动死锁（没配额就没法跑实验）</td><td>死守审批 → 新项目无法启动</td><td><code>doc/organization-prd.md §4.2</code></td></tr>
+<tr><td>审计只追加不修改，导出动作也写审计</td><td>审计可信的根基；闭环防导出泄密无据可查</td><td>可改 → 失去证据效力；导出不记 → 批量泄密无据</td><td><code>doc/architecture-design.html</code></td></tr>
+<tr><td>准入与触发解耦：标记待触发 + 后台异步捞</td><td>"慢下游 + 快上游"的标准答案，用户不等 Prefect 调用</td><td>同步触发 → 每点等 30s+ → 前端超时 → 用户重复点击 → 重复提交</td><td><code>doc/evaluation-data-service.md</code></td></tr>
+<tr><td>抢占式 claim = 条件 UPDATE + 看 RowsAffected</td><td>数据库原生 CAS，比分布式锁简单</td><td>先查再改 → 两 pod tick 重叠都查到 PENDING_TRIGGER → 重复 flow run</td><td><code>pipeline_repo.go</code> L181-190</td></tr>
+<tr><td>两级状态：顶层 state vs progress.stage</td><td>消费者视角（整链完成）优先于生产者视角（某段 flow 完成）</td><td>用顶层 state → onboard 完成就显示已完成 → QA 取空产出 → 误报工单</td><td><code>prefect.go</code> L131-138</td></tr>
+<tr><td>data-service 独占独立 PG 实例</td><td>不让数亿帧 CopyFrom 写入压力污染平台主库</td><td>共享 PG → artifact 批量导入锁竞争 → 所有用户登录卡顿</td><td><code>doc/data-service-db-isolation-plan.md</code></td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">⑨' 训练与评测的本质总结</h2>
+
+<h3>9.1 训练的本质：把意图冻结成不可变引用</h3>
+<p>训练系统不是"跑一个模型"，而是"<strong>把'我打算用 A 数据 + B 代码 + C 超参跑一次训练'冻结成 Experiment 这条不可变记录</strong>"。TrainingJob 只是这条记录的执行实例，可重跑可克隆，但 Experiment 本身永不改。所有血缘回写、checkpoint 摘要、metric 上报都是"挂"在 Experiment 上的——交付时反查的是 Experiment，不是 TrainingJob。</p>
+<p>这把"训练"从"一次 GPU 计算"升格为"一次可复现、可审计的事实声明"。半年后这版模型上事故，团队能回答"用哪批数据、哪段代码、谁批的"——这是 JoyDrive 训练子系统的<strong>唯一存在理由</strong>。</p>
+
+<h3>9.2 评测的本质：把缺陷变成可触发、可回填、可溯源的自动事件</h3>
+<p>评测系统的核心张力是"<strong>用户期望立即反馈 vs 外部推理流水线需要几十秒</strong>"。JoyDrive 的解法是<strong>解耦</strong>：</p>
+<ul>
+  <li><strong>准入是同步的标记动作</strong>（DB 写一行 PENDING_TRIGGER，advisory lock 保证幂等）。</li>
+  <li><strong>触发是异步的副作用</strong>（后台 worker 每 15s 捞 5 个，抢占式 claim 去重）。</li>
+  <li><strong>回填是宽容的最终一致</strong>（瞬时错误保留原值、未知状态不覆盖、最多 15s 延迟）。</li>
+  <li><strong>状态是消费者视角</strong>（progress.stage 优先于顶层 state，避免过早"已完成"）。</li>
+</ul>
+<p>同时每次推理触发都带 <code>defect_code</code> 作为 source，把"评测数据"和"推理执行"两条线缝起来——一次推理跑完，能反查它是为了验证哪个缺陷。这是评测系统的<strong>闭环价值</strong>。</p>
+
+<h3>9.3 闭环的本质：让 6 个月后的反查可信</h3>
+<p>训练 + 评测 + 数据 + 交付四条线最终汇聚到<strong>一份不可变的血缘账本</strong>。每个事实的产生（数据发布、实验创建、训练完成、评测完成、交付确认）都<strong>在同一事务里</strong>同时写业务表和 outbox_events；每个跨服务推进都<strong>靠事件 + 对账兜底</strong>而非 RPC；每个权威写入服务都<strong>只有一个</strong>；每条审计都<strong>只追加不修改</strong>。</p>
+<p>这套设计的<strong>唯一存在理由</strong>是：让"半年后这版模型出事故，能否反查根因"这个问题有肯定答案。所有工程复杂度——状态机、变更单、advisory lock、抢占式 claim、Outbox 三件套、Reconciler 对账、独立 PG、同命名空间短名——都是为这个目标服务的。</p>
+<aside class="note">"只追加不修改"是贯穿全平台的设计哲学：Event Sourcing、不可变 Experiment、变更单不重试、审计只追加、权限快照克隆——都是同一思想的不同投影。系统状态是"事件序列的折叠"，任何修改都是新事件而非覆盖。这条认知是理解 JoyDrive 的钥匙，也是判断力领先于实现熟练度的 Function Owner 的真正杠杆。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">延伸阅读</h2>
+<ul>
+  <li><strong>Transactional Outbox 模式</strong>：Microservices Patterns (Chris Richardson) 第 3 章——本平台 outbox_events + pg_notify + replay 是该模式的 PG 原生实现。</li>
+  <li><strong>PostgreSQL LISTEN/NOTIFY</strong>：PG 官方文档 §9.9。关键认知——NOTIFY 在 commit 后才发、at-most-once per connection、payload 8KB 上限。</li>
+  <li><strong>Determined AI</strong>：官方文档 Preemption/Checkpoint 续训——理解 TrainingJob 的 Preempted 态为何只能自治续训。</li>
+  <li><strong>Prefect Flow 嵌套</strong>：sub-flow + parent_task_run_id 的遍历——理解为何 progress.stage 要专门设计。</li>
+  <li><strong>Defense in Depth</strong>：OWASP 经典模式——JoyDrive 的 AI coding 三层（语义/流程/强制）是它的工业实现。</li>
+  <li><strong>K8s 同命名空间 DNS</strong>：官方文档 Services §DNS——理解为何 &lt;service&gt; 短名在每环境都解析到自己命名空间。</li>
+  <li><strong>声明式系统与 controller 模式</strong>：理解 Rancher 托管节点为何不能手改 config——controller 会持续回滚。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 JoyDrive-Infra 仓库 5 视角素材整理。所有 <code>file:line</code> 证据均可在仓库内 grep 验证。读者按 §8 学习路径依次精读即可。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
