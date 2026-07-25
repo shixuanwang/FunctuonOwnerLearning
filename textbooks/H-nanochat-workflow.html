@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nanochat 本地训练工作流保姆式教材（Zero-to-Hero 之后）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .badge { font-size:12px; padding:2px 6px; border-radius:4px; background:#eef; color:#336; margin-left:6px;}
+  .cmd { border-left:3px solid #6a3aa1; background:#f4effb; padding:10px 14px; margin:14px 0; border-radius:0 6px 6px 0; font-size:13.5px; }
+  .cmd::before { content:"命令级｜"; font-weight:600; color:#5a2a91; }
+  .cmd code, .cmd pre { background:transparent; border:0; padding:0; }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · nanochat 工作流</h2>
+<ol>
+  <li><a href="#sec-1">① 定位：nanochat 是什么、为什么极简、与 G 的承接</a></li>
+  <li><a href="#sec-2">② 环境搭建：uv / GPU / CUDA 命令级</a></li>
+  <li><a href="#sec-3">③ 模型架构速览（对照 G 的 GPT）</a></li>
+  <li><a href="#sec-4">④ 数据与 tokenizer</a></li>
+  <li><a href="#sec-5">⑤ 训练运行：pretrain / SFT / RL 命令级</a></li>
+  <li><a href="#sec-6">⑥ 评测与生成</a></li>
+  <li><a href="#sec-7">⑦ 调优与常见报错（显存 / lr / batch）</a></li>
+  <li><a href="#sec-8">⑧ 从 zero 到训出模型的完整命令序列</a></li>
+  <li><a href="#sec-9">⑨ 学习路径（按顺序读哪些 file）</a></li>
+  <li><a href="#sec-10">⑩ 关键设计 rationale + 反事实</a></li>
+  <li><a href="#sec-11">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>nanochat 本地训练工作流保姆式教材（学完 Zero-to-Hero 之后）</h1>
+<p class="lede">一份写给"刚学完 Karpathy nn-zero-to-hero、第一次要把 LLM 真训出来"读者的单文件教材。命令级可复现，每个论断带 <code>file:line</code> 证据，难点用 <code>&lt;aside class="note"&gt;</code> 标出。</p>
+<p class="meta">仓库：<code>/home/cheche/Workspaces/Learning/nanochat</code> · 编写日期：2026-07-26 · 面向：4 年数据闭环 PM、判断力领先于实现熟练度的读者 · 前置：教材 G（Zero-to-Hero）已掌握 backprop / attention / GPT 底层</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">① 定位：nanochat 是什么、为什么极简、与 G 的承接</h2>
+
+<h3>1.1 它是 Karpathy 亲手铺的因果链上"补齐全栈"的最后一环</h3>
+<p>你在 Zero-to-Hero 里走过的因果链：<strong>micrograd（反向传播）→ makemore（语言建模）→ nanoGPT（最小可跑预训练）</strong>。这条链的终点是"<strong>能读懂预训练代码</strong>"。nanochat 在这条链上补齐的，是 nn-zero-to-hero 没有教的<strong>工程闭环</strong>——把分词训练、SFT、RL、评测、推理全部接上，让你第一次拥有"我亲手训过一个能聊天的 ChatGPT"的体验。</p>
+<p>定位句很直接：<code>README.md:6</code> —— <em>"nanochat is the simplest experimental harness for training LLMs. It is designed to run on a single GPU node, the code is minimal/hackable, and it covers all major LLM stages including tokenization, pretraining, finetuning, evaluation, and inference."</em> <code>pyproject.toml:4</code> 更直白：<em>"the minimal full-stack ChatGPT clone"</em>。</p>
+<p>能力锚点：<code>README.md:6,24</code> —— <strong>在 8xH100 上 ~1.5 小时、~48 美元复现 GPT-2 级能力</strong>（2019 年成本约 43000 美元，7 年降本约 1000 倍）。这是可验证的能力锚点，不是吹的。</p>
+<p><code>README.md:207-208</code> 给出明确血统：<em>"The name (nanochat) derives from my earlier project nanoGPT, which only covered pretraining ... nanochat is also inspired by modded-nanoGPT."</em></p>
+
+<blockquote class="why">如果 nanochat 像 nn-zero-to-hero 那样停留在"单阶段教学"（只讲预训练），读者毕业后会卡在"我懂 attention，但怎么把原始模型变成能聊天的 ChatGPT"。nanochat 的价值恰在于把 nn-zero-to-hero 教过的每个零件（attention、优化器、反向传播）重新组装成一条端到端流水线。不读这句定位，会把 nanochat 当成又一个 nanoGPT 而错过它的全栈教学意图。</blockquote>
+
+<aside class="note">你已经"在脑子里"跑过 micrograd 的反向传播和 makemore 的语言建模——这里不要重新学 attention，要把注意力放在"同一段 forward+backward 怎么被组装进 tokenizer → pretrain → SFT → eval → inference 的工业流水线"。模型先行：先在脑中画出这条流水线，再去读每一站的代码。</aside>
+
+<h3>1.2 全栈流水线全景（对应 speedrun.sh 的 7 站）</h3>
+<pre class="mermaid">
+flowchart LR
+  A["dataset<br/>下载 ClimbMix parquet"] --> B["tok_train<br/>rustbpe 训 BPE"]
+  B --> C["base_train<br/>预训练 d24+fp8"]
+  C --> D["base_eval<br/>CORE / bpb / sample"]
+  D --> E["chat_sft<br/>SmolTalk+MMLU+GSM8K"]
+  E --> F["chat_eval<br/>ChatCORE"]
+  F --> G["chat_cli<br/>对话推理"]
+  style C fill:#eaf1f8
+  style E fill:#fff4e1
+  style G fill:#ffe1f5
+</pre>
+<p><code>runs/speedrun.sh</code> 用 7 行 shell 把这条链串起来（L50-79）。你以后定位任何 bug，第一件事就是判断它卡在哪一站。</p>
+
+<h3>1.3 为什么极简：单一复杂度旋钮 <code>--depth</code></h3>
+<p>传统做法是同时面对 <code>n_layer / n_embd / n_head / lr / batch / weight_decay / 步数</code> 等十几个互相耦合的超参。nanochat 的设计决定：<strong>用户只暴露一个整数 <code>--depth</code>（Transformer 层数），其余全部由 scaling laws + muP 式外推自动算出</strong>（<code>README.md:108</code>）。这 60 行代码（<code>scripts/base_train.py:260-304</code>）是全 repo 最值得反复读的部分。</p>
+<p>因果链：depth → model_dim=depth×64（<code>base_train.py:51</code>）→ num_heads=model_dim//head_dim（<code>base_train.py:129-143</code>）→ target_tokens=ratio×scaling_params（Chinchilla，<code>base_train.py:269</code>）→ batch=Bopt∝D^0.383（Power Lines，<code>base_train.py:277-283</code>）→ lr∝√(B/B_ref)（<code>base_train.py:286-294</code>）→ weight_decay=λ_ref·√(B/B_ref)·(D_ref/D)（T_epoch，<code>base_train.py:296-304</code>）。全部以 d12 为参考基准（<code>base_train.py:271-274</code>）。</p>
+
+<blockquote class="why">如果像 HuggingFace transformers 那样给每个超参一个独立旋钮，读者立刻被配置对象淹没、读不下去，更无法审计"这个 lr 为什么是这个值"。单一旋钮的因果是：少暴露耦合超参 → 读者能审计每一行推导 → 理解现代训练理论为什么这么设参 → 反过来能改、能 fork。这就是 Karpathy 把"认知复杂度"和"美元成本"并列当成 accessibility 的原因（<code>README.md:201</code>）。</blockquote>
+
+<h3>1.4 极简不等于简陋：与"框架"的对抗性定位</h3>
+<p><code>README.md:201</code> 原话：<em>"nanochat is not an exhaustively configurable LLM 'framework'; there are no giant configuration objects, model factories, or if-then-else monsters ... It is a single, cohesive, minimal, readable, hackable, maximally-forkable 'strong baseline' codebase."</em></p>
+<p>极简哲学的微观证据无处不在：</p>
+<ul>
+  <li><code>nanochat/__init__.py</code> 是 <strong>0 字节空文件</strong>——一个 package 但不预导入任何东西，没有魔法。</li>
+  <li><code>nanochat/common.py:216-223</code> 的 <code>DummyWandb</code> 类——"Useful if we wish to not use wandb but have all the same signatures"。连"可选依赖"都用同签名的空对象实现，而不是 <code>if-wandb-else</code>。</li>
+  <li><code>tasks/common.py:21-42</code> 的 <code>HubDataset</code>——"Minimal stand-in for a HuggingFace datasets Dataset"，宁可自己写 60 行 wrapper 也不引 datasets 库。</li>
+</ul>
+<p>整个 repo 核心库 <code>nanochat/</code> 14 个 .py 文件约 3800 行，入口脚本 <code>scripts/</code> 9 个约 3000 行，加 tests/tasks/runs 合计约 7000 行 Python+shell——<strong>真的可以通读</strong>。</p>
+
+<aside class="note">读 nanochat 时克制住"这工程上不够工程"的评判欲——它的目标不是生产级框架，而是让你能 hold 住整个系统的心智模型。先通读、建模型，再谈工程化。Function Owner 视角会注意到这正是"认知复杂度也是成本"的产品判断。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">② 环境搭建：uv / GPU / CUDA 命令级</h2>
+
+<h3>2.1 硬件自检：跑命令前先回答两件事</h3>
+<p>在敲任何 <code>uv sync</code> 之前，先回答：(1) 有没有 CUDA？(2) SM 算力是多少？这两件事决定 dtype、是否走 FP8、是否走 FA3、是否需要 GradScaler。nanochat 的设计：模型权重始终 fp32（为优化器精度），但 <code>Linear</code> 在 forward 时把权重 cast 到全局 <code>COMPUTE_DTYPE</code>（<code>nanochat/common.py:16-32</code>），由硬件自动决定：</p>
+<table>
+<thead><tr><th>硬件</th><th>默认 dtype</th><th>为什么</th></tr></thead>
+<tbody>
+<tr><td>CUDA SM 80+（A100/H100/4090/L4...）</td><td><code>bfloat16</code></td><td>原生 bf16 tensor cores</td></tr>
+<tr><td>CUDA SM &lt; 80（V100/T4...）</td><td><code>float32</code></td><td>无 bf16；可手动 <code>NANOCHAT_DTYPE=float16</code>+GradScaler</td></tr>
+<tr><td>CPU / MPS</td><td><code>float32</code></td><td>安全默认；新版 macOS MPS 可手动开 bf16 省 ~25% 显存</td></tr>
+</tbody>
+</table>
+<p>覆盖：<code>NANOCHAT_DTYPE=float32|bfloat16|float16</code> 环境变量（<code>README.md:124-129</code>）。</p>
+
+<div class="cmd">
+<pre>nvidia-smi                         # 看 driver/CUDA 版本
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_capability())"
+# 输出例：True (9, 0) → H100 (sm90)，自动 bf16，可用 fp8/FA3
+# 输出例：True (8, 9) → 4090 (sm89)，自动 bf16，FA3 Ada kernel
+# 输出例：True (7, 5) → V100 (sm75)，自动 fp32，建议 NANOCHAT_DTYPE=float16
+# 输出例：False → CPU/MPS 路径，用 runcpu.sh</pre>
+</div>
+
+<h3>2.2 uv + torch + CUDA 版本对齐（最容易卡住的一步）</h3>
+<p>nanochat 用 <strong>uv</strong>（Astral 的极快 Python 包/虚拟环境管理器）替代 <code>pip+venv+requirements.txt</code> 三件套。Python 要求 >=3.10。关键在 <code>pyproject.toml:36-51</code> 的 <code>[tool.uv.sources]</code> 把 torch 路由到两个 PyTorch 官方 index：<code>--extra gpu</code> 拉 <code>torch==2.9.1+cu128</code>，<code>--extra cpu</code> 拉 <code>+cpu</code>。两者<strong>互斥</strong>（<code>pyproject.toml:62-69</code> conflicts 声明），装错 extra 会得到错误的后端。</p>
+
+<aside class="note">反事实陷阱：忘了带 <code>--extra gpu</code>，或系统已有 CPU torch，会出现 <code>torch.cuda.is_available()=False</code> 而 <code>nvidia-smi</code> 一切正常。根因是 PyPI 上的 torch 默认是 CPU 版。<code>pyproject.toml:37-41</code> 的 dual-index 把 torch 通过 extra 精准切到 <code>download.pytorch.org/whl/cu128</code>——这是 uv 的 index 选择机制。</aside>
+
+<div class="cmd">
+<pre># GPU 用户（A100/H100/4090 等）
+curl -LsSf https://astral.sh/uv/install.sh | sh   # 装 uv（如果还没装）
+uv sync --extra gpu                                # 拉 torch 2.9.1+cu128
+source .venv/bin/activate
+
+# CPU / MPS 用户（MacBook 等）
+uv sync --extra cpu
+source .venv/bin/activate
+
+# 开发依赖（pytest/matplotlib/transformers 等）
+uv sync --extra gpu --group dev</pre>
+</div>
+
+<p>运行时依赖只有 9 个（<code>pyproject.toml:7-17</code>）：<code>filelock / kernels / numpy / psutil / pyarrow / rustbpe / tiktoken / torch==2.9.1 / wandb</code>——刻意最小。CUDA 12.8 是 cu128 wheel 的目标运行时，你的驱动要支持 CUDA 12.8+。</p>
+
+<h3>2.3 dtype 决策的代码落点</h3>
+<p><code>nanochat/common.py:16-32</code> 的 <code>_detect_compute_dtype</code> 实现"NANOCHAT_DTYPE 优先；否则按 CUDA capability 选 bf16/fp32"。<code>README.md:114-133</code> 给出三档硬件默认表。<code>dev/LOG.md:72-103</code> 记录 2026-03-04 去 autocast、改显式 dtype、加 fp16 GradScaler 的决策因果：<em>autocast 只在 Linear 上有用，显式化获得细粒度控制</em>。</p>
+
+<aside class="note">nanochat 主动放弃了 <code>torch.amp.autocast</code>。模型权重存 fp32，<code>Linear.forward</code> 把权重 cast 到 <code>x.dtype</code>（<code>nanochat/gpt.py:45-50</code>），embedding 直接存 COMPUTE_DTYPE 省一半显存。fp16 因 GradScaler 不能 unscale fp16 梯度，embedding 例外保 fp32（<code>dev/LOG.md:85-87</code>）。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">③ 模型架构速览（对照 G 的 GPT）</h2>
+
+<p>你在 nn-zero-to-hero 第 8 讲见过的 nanoGPT 风格代码，nanochat 把每个细节换成了 2024-2026 年的 SOTA 选择：<strong>rotary 位置编码（替代 learned positional embedding）+ RMSNorm 无参数（替代 LayerNorm）+ QK norm + GQA + logit softcap + untied embedding + relu² MLP + sliding window attention + Flash Attention 3</strong>。</p>
+
+<h3>3.1 GPTConfig 默认值（<code>nanochat/gpt.py:28-39</code>）</h3>
+<pre class="mermaid">
+flowchart LR
+  A["token id (B,T)"] --> B["wte 查表 (B,T,n_embd)"]
+  B --> C["norm (RMSNorm 无参)"]
+  C --> D["smear 门控混入上一 token"]
+  D --> E["Block × N: pre-norm 残差"]
+  E --> F["attn: RoPE+QK norm+GQA+滑窗+FA3"]
+  E --> G["mlp: relu^2"]
+  F --> H["backout 减中间层残差"]
+  G --> H
+  H --> I["norm + lm_head (untied)"]
+  I --> J["logit softcap tanh ×15"]
+  J --> K["cross_entropy(ignore_index=-1)"]
+</pre>
+<p><code>GPTConfig</code> 默认 <code>sequence_len=2048, vocab_size=32768, n_layer=12, n_head=n_kv_head=6</code>（GQA 退化为 MHA）, <code>n_embd=768, window_pattern='SSSL'</code>。这些默认值只在 <code>--depth</code> 没指定时生效；实际训练时 <code>build_model_meta</code>（<code>base_train.py:129-143</code>）会按 depth 重算 <code>n_embd = depth×64</code>、<code>n_head = model_dim // head_dim</code>。</p>
+
+<h3>3.2 五个非标准 trick（Karpathy 风格的精华）</h3>
+<p>这是 nanochat 区别于 vanilla nanoGPT 的核心创新，全部塞在 GPT 里：</p>
+<ul>
+  <li><strong>smear</strong>（<code>gpt.py:185, 476-492</code>）：把上一个 token 的嵌入按门控混入当前 token，提供便宜的 bigram 信息。训练时切片，推理时从 KV cache 取。</li>
+  <li><strong>resid_lambdas / x0_lambdas</strong>（<code>gpt.py:181-188, 234-241</code>）：每层残差的可学缩放系数，让网络自己决定"残差传多强"和"把初始嵌入混回多少"。早层强、深层弱。</li>
+  <li><strong>value_embeds（ResFormer 风格）</strong>（<code>gpt.py:53-55, 82, 94-97</code>）：隔层再查一次 token embedding 加到 value 上，由 <code>ve_gate</code> 门控，gate=3·sigmoid(...)，范围 (0,3)。</li>
+  <li><strong>backout</strong>（<code>gpt.py:188, 497, 506-507</code>）：在最后一层前减掉中间层的残差，去掉低层特征。backout_layer = n_layer//2。</li>
+  <li><strong>logit softcap=15</strong>（<code>gpt.py:511-515</code>）：用 tanh 把 logits 压进 [-15,15]，平滑掉训练末期 logit 漂移。</li>
+</ul>
+
+<aside class="note">这 5 个 trick 在任何 Transformer 教材里都不会一起出现，它们是"读源码才能学到的当代经验"。建议对每个 trick 单独画一张"数据怎么流"的图，并问：如果把这个 lambda 设成常数 0 或 1，forward 退化成什么？这是检验自己真懂的方式。<code>gpt.py:103-104</code> 的 QK norm ×1.2 锐化是一个 magic number，作者自己标了 TODO——它在补偿 RMSNorm 把方差压成 1 带来的 scale 损失。</aside>
+
+<h3>3.3 代码地图（别去错地方找训练循环）</h3>
+<ul>
+  <li><strong>训练循环</strong>：在 <code>scripts/base_train.py:416-543</code>（while True 事件驱动：eval/core/sample/checkpoint/单步）。<span class="danger">不在 nanochat/engine.py</span> ——那个 engine 是<strong>推理引擎</strong>。</li>
+  <li><strong>模型定义</strong>：<code>nanochat/gpt.py</code>（555 行）。<code>GPT.forward(idx, targets)</code> 在 <code>gpt.py:459-524</code>：targets 非 None 时返回 cross_entropy 标量 loss（L520），否则返回 logits（L524）。</li>
+  <li><strong>优化器</strong>：<code>nanochat/optim.py</code>（459 行）。<code>MuonAdamW</code> 类 docstring 在 <code>optim.py:184-259</code>，明确写 <em>"nanochat does not use DDP"</em>。</li>
+  <li><strong>数据加载</strong>：<code>nanochat/dataloader.py</code>。</li>
+  <li><strong>推理/KV cache</strong>：<code>nanochat/engine.py</code>。</li>
+</ul>
+
+<blockquote class="why">反事实：以为 <code>engine.py</code> 是训练循环的人，会去那里改 lr，结果推理才走那条路径，训练 loss 根本不动。知道"训练循环在 scripts/、模型在 nanochat/gpt.py、优化器在 nanochat/optim.py"，才能在三分钟内定位任何 bug。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">④ 数据与 tokenizer</h2>
+
+<h3>4.1 三阶段数据形态对比（先建立心智模型）</h3>
+<table>
+<thead><tr><th>阶段</th><th>数据形态</th><th>loss 颗粒度</th><th>packing 策略</th></tr></thead>
+<tbody>
+<tr><td>预训练</td><td>纯文本文档（ClimbMix-400B parquet）</td><td>每个 token 都监督</td><td>BOS-aligned best-fit，<strong>敢裁 35%</strong></td></tr>
+<tr><td>SFT</td><td>对话（SmolTalk/MMLU/GSM8K），用特殊 token 包段</td><td>只 assistant 段监督，mask=1</td><td>best-fit + PAD，<strong>绝不裁</strong></td></tr>
+<tr><td>RL</td><td>对话但 assistant 段由模型 rollout 采样</td><td>策略梯度 -logp·advantage</td><td>prompt 段 target=-1，只在采样段算 loss</td></tr>
+</tbody>
+</table>
+<p>三者共用同一个 tokenizer（GPT-4 风格 tiktoken BPE，<code>nanochat/tokenizer.py:9-21</code> 的 9 个 SPECIAL_TOKENS 只定义一次），但走三种截然不同的"上下文构造 + batching"路径。</p>
+
+<pre class="mermaid">
+flowchart TB
+  subgraph 预训练
+    A1["parquet ClimbMix-400B"] -->|dataset.py list_parquet_files| A2["parquets_iter_batched 按 row_group 流式"]
+    A2 -->|dataloader.py BOS-aligned best-fit| A3["(inputs, targets) 无 mask, 35% 裁剪"]
+  end
+  subgraph SFT
+    B1["SmolTalk/MMLU/GSM8K HF Hub"] -->|tasks/common.py TaskMixture shuffle42| B2["conversation dict"]
+    B2 -->|tokenizer.py render_conversation| B3["(ids, mask) assistant 段 mask=1"]
+    B3 -->|chat_sft.py best-fit+PAD| B4["(inputs, targets) pad 段 targets=-1"]
+  end
+  subgraph RL
+    C1["GSM8K question"] -->|render_for_completion| C2["prompt + assistant_start 点火"]
+    C2 -->|engine.generate_batch ×16| C3["16 条采样 + mask"]
+    C3 -->|gsm8k.reward| C4["rewards → advantages=r-mean"]
+    C3 --> C5["targets: prompt 段 & tool-output 段 = -1"]
+    C5 --> C6["loss = -sum(logp × advantage)"]
+  end
+</pre>
+
+<h3>4.2 数据准备·预训练：ClimbMix-400B parquet 分片</h3>
+<p><code>nanochat/dataset.py:23-27</code>：<code>BASE_URL</code> 指向 <code>karpathy/climbmix-400b-shuffle</code>，<code>MAX_SHARD=6542</code>，<code>DATA_DIR = base_data_climbmix</code>。每个 parquet ~100MB（zstd 压缩），只有一列 <code>text</code>。</p>
+<p>val 切法巧妙：<code>dataset.py:75</code>——<strong>train = parquet_paths[:-1]，val = parquet_paths[-1:]</strong>。最后一个 shard 永远是 val，无需手动维护 split。</p>
+<p>下载 <code>dataset.py:98-133</code>：5 次重试、指数退避 2^attempt 秒、先写 <code>.tmp</code> 再 <code>os.rename</code>（原子），断点续传靠"文件存在就 skip"。</p>
+
+<div class="cmd">
+<pre>export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat"
+python -m nanochat.dataset -n 8      # 先下 8 个 shard（~800MB）够训 tokenizer
+python -m nanochat.dataset -n 170 &  # 后台下 170 个 shard 够 GPT-2 级预训练
+DATASET_DOWNLOAD_PID=$!
+# ... 训 tokenizer + base_train 前先 wait $DATASET_DOWNLOAD_PID</pre>
+</div>
+
+<aside class="note">为什么不直接用 <code>HuggingFace datasets.load_dataset</code>？那个库会把整个数据集 tokenize 后物化到磁盘（几小时+几十 GB），nanochat 选择"流式+行内实时 tokenize"——dataloader 名字里 tokenizing 的由来。row_group 是"数据集的随机访问单位"，理解了它你才能看懂 DDP 的 start/step sharding（每张卡按 <code>rank, rank+world_size, rank+2·world_size, ...</code> 跳着读 row_group）。</aside>
+
+<h3>4.3 tokenizer·训练与推理：rustbpe + tiktoken 双引擎</h3>
+<p>因果：训练时要在 2B 字符语料合并出 vocab_size=32768 的词表，这一步很慢且需要 Rust，用 <strong>rustbpe</strong>；推理时（训练循环每秒几百万 token）要极致速度，把训练出的 <code>mergeable_ranks</code> 喂给 <strong>tiktoken</strong>（OpenAI 的 Rust 加速库）做编码。两步通过 pickle 保存的 <code>tiktoken.Encoding</code> 衔接。</p>
+<p><code>nanochat/tokenizer.py:9-21</code> 的 9 个 SPECIAL_TOKENS：<code>&lt;|bos|&gt;</code>（预训练用）+ user/assistant/python/output 的 start/end（SFT/RL 用）。它们不参与 BPE 训练，在 Encoding 构造时追加（<code>tokenizer.py:42-61</code>），ID 连续递增。</p>
+<p><code>tokenizer.py:23-26</code> SPLIT_PATTERN 故意用 <code>\p{N}{1,2}</code> 而非 GPT-4 的 <code>{1,3}</code>——作者注释"为小词表省 token，验证 2 是 32K 词表的甜点区"。这是词表设计的取舍，不是抄来的。</p>
+
+<div class="cmd">
+<pre>python -m scripts.tok_train                           # 默认 vocab=32768, max-chars=2B, doc-cap=10000
+python -m scripts.tok_train --max-chars=2000000000     # runcpu.sh 路径，M3 Max 约 34 秒
+python -m scripts.tok_eval                             # 报告压缩率</pre>
+</div>
+
+<h3>4.4 上下文构造·预训练：BOS-aligned Best-Fit packing</h3>
+<p><code>nanochat/dataloader.py:1-17</code> 模块 docstring 直白：<em>"BOS-aligned loses ~35% of tokens to cropping, but ensures every token can attend back to the BOS token"</em>。每一行强制以 BOS 开头，best-fit 算法挑"能整段放进去的最大文档"，放不下就裁一段补满。代价是丢 35% token，换来"每个 token 都能 attend 回 BOS"——上下文质量更高。</p>
+<p>核心算法在 <code>dataloader.py:122-152</code>。row_capacity = T+1（<code>dataloader.py:98</code>）：多一位让 targets = inputs[1:] 对齐。这就是"下一个 token 预测"的物化。</p>
+
+<blockquote class="why">反事实：如果用 nanoGPT 旧式"拼接+硬裁"（不强制 BOS 对齐），T=2048 时一行有 5-6 个文档，第 2-6 个文档的 token 看不到 BOS，bpb 会明显变差。best-fit（挑最大能放的）比 first-fit（顺序放）能减少裁剪次数——这是 bin-packing 经典启发式。35% 听起来多，但 Karpathy 实验证明"质量换数量"在这个尺度值得。</blockquote>
+
+<h3>4.5 batching：单次 HtoD 传输 + state_dict 断点续训</h3>
+<p>每生成一个 batch 要把 B 行 × row_capacity 的 Python int 装进 tensor 再搬 GPU。nanochat 预分配三块连续 buffer（<code>dataloader.py:111-120</code>）：<code>row_buffer</code>（CPU 组装）、<code>cpu_buffer</code>（pinned memory，2·B·T 一维）、<code>gpu_buffer</code>（GPU 上 2·B·T 一维），<code>.view()</code> 切 inputs/targets 视图。最终只有一次 <code>gpu_buffer.copy_(cpu_buffer, non_blocking=True)</code>，和 GPU 计算重叠。</p>
+<p>每个 batch 附带 <code>state_dict(pq_idx, rg_idx, epoch)</code>，写进 checkpoint 后能精确续训（<code>dataloader.py:40-71</code>）。</p>
+
+<aside class="note">base_train.py:518 <code>x, y, dataloader_state_dict = next(train_loader)</code> 出现在 backward 之后——这是"异步预取"的关键位置，GPU 还在算 backward 时 CPU 已在准备下个 batch。这就是为什么 dataloader 要 yield 而不是 return——让控制权在 CPU 装填和 GPU 计算之间交替。也是为什么 nanochat 不用 PyTorch DataLoader（它的 num_workers 抽象会破坏这种细粒度重叠控制）。</aside>
+
+<h3>4.6 SFT 数据：Task 抽象 + bestfit-PAD packing（绝不裁）</h3>
+<p>SFT 数据是对话，来自 SmolTalk/MMLU/GSM8K，统一抽象成 <code>Task</code>（<code>tasks/common.py:85-123</code>）。<code>TaskMixture</code>（<code>tasks/common.py:129-161</code>）展开 (task_idx, local_idx)，用 <code>random.Random(42).shuffle</code> 打散——同一 task 传多次就过采样。</p>
+<p>SFT packing 跟预训练本质差异：<strong>不能裁剪</strong>——一条对话被裁了，loss mask 就错位，监督信号全乱。所以 SFT 用 best-fit + 填充：能整段放就放，放不下就 pad 到行尾，pad 位置 target 设 -1（<code>cross_entropy</code> 的 ignore_index，<code>chat_sft.py:280-296</code>）。</p>
+<p><code>tokenizer.py:140-224</code> 的 <code>render_conversation</code>：user 段全 mask=0；assistant 文本/python_call 段 mask=1；<strong>python_output 段 mask=0</strong>（因为是解释器生成的，不该监督模型去"生成"）；system message 被"缝合"进下一条 user message（<code>tokenizer.py:156-165</code>）。</p>
+
+<aside class="note">mask 的设计就是 SFT 区别于预训练的本质——"不是每个 token 都该被预测"。mask=0 的 token 仍然在前向里被 attention 使用（提供上下文），但反向时不产生梯度。看 <code>tests/test_tokenizer.py:73-75</code> 的断言把规则记死。</aside>
+
+<h3>4.7 bits-per-byte (bpb)：tokenizer 词表无关的 loss 归一化</h3>
+<p>朴素 mean cross-entropy 依赖 vocab size——词表越大每个 token 携带信息越多，loss 看起来越低，但模型实际能力没变。bpb 解决：不除以 token 数，除以这些 token 对应的字节数。</p>
+<p><code>nanochat/loss_eval.py:9-65</code>：<code>loss2d = model(x, y, loss_reduction='none')</code> 拿逐 token loss；<code>num_bytes2d = token_bytes[y_safe]</code>；<code>total_nats += (loss2d × (num_bytes2d &gt; 0)).sum()</code>（同时屏蔽特殊 token，它们 num_bytes=0）；<code>bpb = total_nats / (log(2) × total_bytes)</code>（L64）。</p>
+<p><code>token_bytes.pt</code> 在 <code>scripts/tok_train.py:76-91</code> 训完 tokenizer 立刻构建：每个 id 用 <code>decode_single_token_bytes</code> 拿原始字节数（不能用 decode 成字符串，否则非 UTF-8 token 会损坏），特殊 token 记 0。</p>
+
+<blockquote class="why">反事实：如果只用 mean loss，把词表从 32K 扩到 128K，loss 看起来降 30%，但模型没变好——你会被误导继续扩大词表。bpb 是 perplexity 的"去 vocab 化版本"，让跨 tokenizer 实验可比。这就是为什么 README 排行榜主指标是 val_bpb 而不是 val_loss。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑤ 训练运行：pretrain / SFT / RL 命令级</h2>
+
+<h3>5.1 一个训练 step 的数据流（先刻进脑子）</h3>
+<pre class="mermaid">
+flowchart LR
+  A["dataloader 产出 (x, y)"] --> B["model x, y 返回 CE loss"]
+  B --> C["loss/grad_accum .backward × N"]
+  C --> D["optimizer.step MuonAdamW"]
+  D --> E["zero_grad set_to_none=True"]
+  D --> F["Phase1 异步 reduce_scatter/all_reduce"]
+  F --> G["Phase2 算更新+异步 all_gather"]
+  G --> H["Phase3 gather 完拷回"]
+</pre>
+<p><code>scripts/base_train.py:506-540</code>：内层 <code>for micro_step in range(grad_accum_steps)</code>，每次 <code>loss = model(x, y)</code>（L511）、<code>loss / grad_accum_steps</code> 归一化（L513）、<code>.backward()</code>（L517）、<code>next(train_loader)</code> 预取（L518）；外层算三个 schedule multiplier 写回 param_groups（L519-527）、<code>optimizer.step()</code>（L539）、<code>zero_grad(set_to_none=True)</code>（L540）。</p>
+<p>整个外层 <code>while True</code>（L416）同时做 eval/sample/checkpoint/save——<strong>训练循环是事件驱动的状态机</strong>，不是单纯 forward-backward。</p>
+
+<h3>5.2 pretrain 命令：<code>--depth</code> 这一个旋钮</h3>
+<div class="cmd">
+<pre># 8 卡 H100（speedrun 实参）
+torchrun --standalone --nproc_per_node=8 -m scripts.base_train -- \
+    --depth=24 --target-param-data-ratio=8 --device-batch-size=16 --fp8 \
+    --run=$WANDB_RUN
+
+# 快速实验档（~5 分钟，d12）
+OMP_NUM_THREADS=1 torchrun --standalone --nproc_per_node=8 -m scripts.base_train -- \
+    --depth=12 --run=d12 --core-metric-every=999999 --sample-every=-1 --save-every=-1
+
+# 单卡（自动梯度累积，慢 8 倍，结果几乎一致）
+python -m scripts.base_train -- --depth=12 --run=d12
+
+# CPU / MacBook（教学版）
+python -m scripts.base_train -- \
+    --depth=6 --head-dim=64 --window-pattern=L --max-seq-len=512 \
+    --device-batch-size=32 --total-batch-size=16384 --num-iterations=5000</pre>
+</div>
+
+<p>核心设计：用户只调 <code>--depth</code>（<code>base_train.py:50</code> 默认 20），其余超参全部自动算。训练 horizon 三选一（按优先级，<code>base_train.py:338-353</code>）：</p>
+<ol>
+  <li><code>--num-iterations</code> 显式指定；</li>
+  <li><code>--target-flops</code> 按 FLOPs 预算算；</li>
+  <li><code>--target-param-data-ratio</code>（默认 12，Chinchilla=20）按 tokens:params 算。</li>
+</ol>
+<p>num_iterations = target_tokens // total_batch_size（<code>base_train.py:348-351</code>），target_tokens = ratio × num_scaling_params。</p>
+
+<h3>5.3 scaling laws 怎么自动算出 batch / lr / wd / 步数</h3>
+<p><code>scripts/base_train.py:260-304</code> 是全 repo 最值得反复读的 44 行，把四套现代训练理论压缩成可审计的数学：</p>
+<ul>
+  <li><strong>Chinchilla</strong>（L261-269）：target_tokens = ratio × scaling_params。</li>
+  <li><strong>Power Lines</strong>（L277-283）：B ∝ D^0.383，round 到最近的 2 的幂。</li>
+  <li><strong>AdamW sqrt scaling</strong>（L286-294）：η ∝ √(B/B_ref)。Muon 盲跟 AdamW 理论（L292 注释承认）。</li>
+  <li><strong>T_epoch 框架</strong>（L296-304）：λ = λ_ref · √(B/B_ref) · (D_ref/D)，引 arxiv 2405.13698。</li>
+  <li>全部以 <strong>d12 为参考基准</strong>（<code>B_REF = 2^19 = 524288</code>，L274），muP 思路。</li>
+</ul>
+
+<aside class="note">换 batch size 不是独立操作，必须同时按 √(B/B_ref) 调 lr、按 √(B/B_ref)·(D_ref/D) 调 weight decay。你以后看任何训练框架，先问它"换 batch 时 lr/wd 怎么跟着变"——没有这套连锁缩放的框架都是不严肃的。</aside>
+
+<h3>5.4 Muon + AdamW 混合优化器（nanochat 不用 DDP 的关键）</h3>
+<p>因果：纯 AdamW 在大模型上慢且占内存（每个参数要存一阶+二阶矩）。KellerJordan 的 <strong>Muon</strong>（MomentUm Orthogonalized by Newton-schulz）对 2D 矩阵参数做"动量+正交化"，收敛快、效果稳。但 Muon 不能用在 embedding/lm_head/scalar（必须 2D）。所以 nanochat 用混合：<strong>矩阵参数走 Muon，其余走 AdamW</strong>。</p>
+<p>更进一步：<strong>nanochat 干脆不用 PyTorch DDP，把"梯度同步 + ZeRO-2 分片"直接写进 <code>MuonAdamW.step()</code></strong>（<code>nanochat/optim.py:184-259</code>）。step() 三阶段（<code>optim.py:428-459</code>）：(1) 异步 reduce（<code>_reduce_adamw/_reduce_muon</code>，L274-318），(2) 等待 reduce 完成、算更新、异步 gather（<code>_compute_adamw/_compute_muon</code>），(3) 等 gather 完成拷回（<code>_finish_gathers</code>）。<code>world_size==1</code> 时所有通信短路，退化为单卡。</p>
+<p>Muon 的四个 2025 年微创新全在 <code>muon_step_fused</code>（<code>optim.py:111-180</code>）：MuonEq 行均衡、Polar Express 正交 5 次迭代、NorMuon 方差归约、cautious weight decay（只对 update 和参数同号的维度衰减）。</p>
+
+<pre class="mermaid">
+flowchart TB
+  T["torchrun --nproc_per_node=8<br/>设 RANK/LOCAL_RANK/WORLD_SIZE"] --> CI["compute_init nccl init_process_group"]
+  CI --> M["model 不包 DDP<br/>forward/backward 单卡跑"]
+  M --> OS["optimizer.step: ZeRO-2 三阶段"]
+  OS --> P1["Phase1: 异步 reduce_scatter/all_reduce<br/>大参 reduce_scatter(每卡 1/N)<br/>小参 all_reduce"]
+  P1 --> P2["Phase2: 算更新(Muon正交/AdamW)+异步 all_gather"]
+  P2 --> P3["Phase3: gather 完拷回参数"]
+  P3 --> NG["zero_grad set_to_none=True"]
+  WS["world_size==1"] -.短路.-> P3
+  style OS fill:#eaf1f8
+</pre>
+
+<blockquote class="why">这是 nanochat 工程上最反直觉、最值得学的一块。90% 的 PyTorch 教程教你 <code>model = DDP(model)</code>，nanochat 说"不，我把同步塞进 optimizer"，这样能精细控制通信-计算 overlap，还能 ZeRO-2 分片省显存。反事实：用 DDP 每张卡存全量 optimizer state，8 卡 d20 显存翻 8 倍可能 OOM；用纯 AdamW 不用 Muon，矩阵参数收敛慢 30-50%。</blockquote>
+
+<aside class="note">不要被 ZeRO-1/2/3 的术语吓到。先在 <code>world_size==1</code> 路径下读懂 <code>optimizer.step</code>，再去读 reduce_scatter/all_gather。关键洞察：nanochat 的"分布式"只在 optimizer 里，model forward/backward 完全不知道分布式——这跟 DDP（每层 hook 同步）是两种截然不同的哲学。debug 多卡问题时，先确认 world_size、再确认 <code>shape[0] % world_size == 0</code>（<code>optim.py:288</code> 的 assert）。</aside>
+
+<h3>5.5 SFT 命令：继承 pretrain 超参 + 三数据 mixture</h3>
+<div class="cmd">
+<pre># speedrun.sh SFT
+torchrun --standalone --nproc_per_node=8 -m scripts.chat_sft -- --run=$WANDB_RUN
+
+# CPU / MacBook SFT（~10 分钟）
+python -m scripts.chat_sft -- \
+    --eval-every=200 --eval-tokens=524288 --num-iterations=1500 --run=$WANDB_RUN</pre>
+</div>
+<p>关键设计（<code>scripts/chat_sft.py:96-115</code>）：SFT 默认从 base checkpoint <strong>继承 max_seq_len/device_batch_size/total_batch_size/三个 lr</strong>（CLI 不传就用 checkpoint meta 里的值），并 <strong>warm-start 优化器</strong>（<code>load-optimizer=1</code>，只取 momentum buffer，<strong>LR 重置</strong>，<code>chat_sft.py:139-149</code>）。数据 mixture：<code>chat_sft.py:162-173</code>——SmolTalk（~460K 通用对话）+ MMLU × mmlu-epochs（默认 3）+ GSM8K × gsm8k-epochs（默认 4）。</p>
+<p>LR 调度用 progress（0→1）而非绝对 step，因为 SFT 数据驱动停止、事先不知 num_iterations。lr 先乘 init_lr_frac（默认 0.8）再走 warmup/constant/warmdown。SFT 把 weight decay 设为 0（pretrain 末段已 warmdown 到 0）。</p>
+
+<aside class="note">两个工程点容易踩：(1) 优化器 warm-start 只继承 momentum 不继承 LR——因为 pretrain 的 warmdown 已把 LR 压到 ~0，直接继承会让 SFT 一开始学不动；(2) 数据用 bestfit-pad 打包，padding 位 target 置 -1，保证不丢 token 也不在 padding 上算 loss。反事实：用全新优化器或继承全部 state 含 LR，SFT 前 100 步 loss 几乎不动，会误以为数据有问题。</aside>
+
+<h3>5.6 RL 命令：GRPO 简化成 REINFORCE，在 GSM8K 上跑</h3>
+<div class="cmd">
+<pre># 单卡
+python -m scripts.chat_rl -- --run=default
+
+# 8 卡
+torchrun --standalone --nproc_per_node=8 -m scripts.chat_rl -- --run=default</pre>
+</div>
+<p>RL 从 sft checkpoint 加载（phase=eval），用 <code>Engine</code> 做 rollout 采样。流程（<code>scripts/chat_rl.py:96-146</code>）：①<code>render_for_completion</code>（<code>tokenizer.py:241-259</code>）把对话的 user 部分渲染成 token，去掉最后一条 assistant，末尾补 <code>&lt;|assistant_start|&gt;</code>"点火"；②<code>engine.generate_batch</code>（num_samples=16, max_new_tokens=256, temp=1.0, top_k=50）采样，同时返回 mask（forced token=0，采样 token=1）；③用 GSM8K 的 reward 函数给每个采样打分；④reward 减均值变 advantage（不用 z-score，作者注释说简化成 REINFORCE，<code>chat_rl.py:1-17</code>）；⑤loss = <code>-sum(logp × advantage)</code>（<code>chat_rl.py:262-273</code>）。</p>
+
+<aside class="note">这是整章最难的部分。RL 的 inputs/targets 不是从磁盘读的，是模型 forward 两次——第一次采样（eval 模式 no_grad），第二次算 logp（train 模式）。mask 在这两次之间传递"哪些 token 是模型选的，哪些是环境强制的"。建议先读 <code>engine.py:238-270</code> 的 mask 逻辑，再回头看 <code>chat_rl.py</code> 的 loss。RL 当前不支持 fp16（<code>README.md:133</code>）。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑥ 评测与生成</h2>
+
+<h3>6.1 评测一分为二：概率侧 vs 序列侧</h3>
+<p>两个不同问题：(1)"这个模型对真实文本感到多意外？"（训练监控，越小越好）；(2)"这个模型能解多少道题？"（能力体检，越准越好）。回答方式根本不同——<strong>前者不采样、只算概率读数；后者要么看选项 logits 选答案（categorical），要么真采样生成再判对错（generative）</strong>。</p>
+<p>"不采样"是为了可复现——采样引入随机性，bpb/CORE 想要确定性概率读数。证据：<code>scripts/base_eval.py:130</code> <code>--eval</code> 默认 <code>core,bpb,sample</code> 三连；<code>chat_eval.py:28</code> <code>run_generative_eval</code>（采样）vs <code>chat_eval.py:87</code> <code>run_categorical_eval</code>（不采样、只 argmax）。</p>
+
+<pre class="mermaid">
+flowchart LR
+  L["logits B,vocab"] --> T0{"temperature==0?"}
+  T0 -->|yes| G["argmax 确定性"]
+  T0 -->|no| T1{"top_k>0?"}
+  T1 -->|yes| K["topk 取 k 个, vals/temperature, softmax over k, multinomial"]
+  T1 -->|no| F["logits/temperature, softmax 全词表, multinomial"]
+  K --> O["next token"]
+  F --> O
+  G --> O
+</pre>
+
+<h3>6.2 bpb：训练监控的"标准化量尺"</h3>
+<p>已在 §4.7 详述。<code>loss_eval.py:64</code> <code>bpb = total_nats / (log(2) × total_bytes)</code>。这个公式里 nats 是以 e 为底的 loss，除以 log(2) 转成 bits，再除以字节数——本质是"平均猜对一个字节需要多少比特"。perplexity 在 nanochat 里几乎不出现，因为 Karpathy 认为它依赖 vocab size，直接用 bpb 替代。</p>
+
+<h3>6.3 CORE / ChatCORE：centered accuracy 去随机基线</h3>
+<p>裸准确率没法跨任务比——ARC 4 选 1 随机 25%，GSM8K 随机 0%。Karpathy 用 <strong>centered accuracy</strong>：<code>(acc - random_baseline) / (1 - random_baseline)</code>（<code>base_eval.py:112</code>），把随机基线映射成 0、完美映射成 1，再对所有任务求平均（<code>base_eval.py:117</code>）。</p>
+<p>base 模型这套叫 <strong>CORE</strong>（DCLM 论文 ICL 基准），三类任务（<code>nanochat/core_eval.py:232-237</code>）：(1) multiple_choice（如 ARC）上下文相同、选项是不同续写，找平均 loss 最低；(2) schema 上下文变、续写相同；(3) language_modeling 上下文是续写前缀，看 argmax 能否逐 token 命中。<strong>三类都不采样</strong>，全靠 <code>forward_model</code>（<code>core_eval.py:144-164</code>）拿逐 token loss + argmax 判定。这是 logits-based scoring——base 模型还没 SFT，不能用"生成一个字母"评。</p>
+<p>chat 模型这套叫 <strong>ChatCORE</strong>（<code>chat_eval.py:203-208, 235-237</code>）。GPT-2 的 CORE 分是 0.256525（<code>README.md:24</code>），整个 speedrun 就是冲这个数。</p>
+
+<h3>6.4 生成/sampling：temperature 和 top-k 改了什么</h3>
+<p><code>nanochat/engine.py:141-156</code> <code>sample_next_token</code> 全部逻辑：temperature=0 直接 argmax（确定性，等同于 greedy）；temperature&gt;0 先除以温度再 softmax；top-k 先取 logits 最大的 k 个、其余置 -inf 再 softmax，强制只在 top-k 候选里采。两者可叠加。</p>
+<p>对照阅读：<code>chat_cli.py:18-19</code> 默认 temperature=0.6, top_k=50（Karpathy 给 chat 的"甜点区"）；<code>base_eval.py:184</code> conditioned sample 用 temperature=0（确定性看模型"最想说"什么）；<code>base_eval.py:192</code> unconditioned sample 用 temperature=1.0 + num_samples=8（看模型"自由发挥"分布广不广）。</p>
+<p>采样用独立 <code>torch.Generator(device=device)</code> + 固定 <code>seed=42</code>（<code>engine.py:182-183</code>），保证同 prompt 可复现。</p>
+
+<h3>6.5 评测/生成的工程胶水</h3>
+<ul>
+  <li><strong>KV cache</strong>（<code>engine.py:82-138</code>）：prefill + decode 二段式，<code>KVCache.prefill()</code> 把 batch=1 的 cache 复制到 batch=num_samples（L123-137）。没有 KV cache，生成慢几十倍。</li>
+  <li><strong>分布式聚合</strong>（<code>core_eval.py:249-261</code>，<code>loss_eval.py:54-58</code>）：<code>for idx in range(rank, len(data), world_size)</code> 按 stride 切片，<code>dist.all_reduce(SUM)</code> 汇总。</li>
+  <li><strong>安全沙箱</strong>（<code>nanochat/execution.py:47-71, 74-134</code>）：HumanEval 要执行模型生成的 Python，用 subprocess + rlimit + 把 <code>os.system/shutil.rmtree/subprocess.Popen</code> 等危险 builtin 置 None。注意文档第 20-22 行自承 <em>"not safe against malicious adversarial code"</em>。</li>
+</ul>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑦ 调优与常见报错（显存 / lr / batch）</h2>
+
+<h3>7.1 显存（VRAM）：OOM 第一时间调 <code>--device-batch-size</code></h3>
+<p>OOM 几乎都来自 device-batch-size 太大（它决定单次 forward 的激活显存）。官方降档顺序：<strong>32 → 16 → 8 → 4 → 2 → 1</strong>（<code>README.md:83</code>）。三处脚本都按 depth 分档：miniseries/scaling 里 d&gt;=28 用 8、d&gt;=20 用 16、否则 32（<code>runs/miniseries.sh:60-67</code>）；speedrun 因 d24+fp8 直接用 16（<code>runs/speedrun.sh:67</code>）。</p>
+
+<div class="cmd">
+<pre># 报错：CUDA out of memory. Tried to allocate ... GB
+# 第一时间动作：
+torchrun ... -m scripts.base_train -- \
+    --depth=24 --device-batch-size=16 ...   # 从 32 降到 16
+# 还 OOM：
+... --device-batch-size=8 ...
+# 还 OOM 且 depth 太大：
+... --depth=20 ...   # 或降 max-seq-len</pre>
+</div>
+
+<p>底层两个省显存机制：</p>
+<ul>
+  <li><code>base_train.py:15</code> <code>PYTORCH_ALLOC_CONF=expandable_segments:True</code>（让显存分配器复用碎片）。</li>
+  <li>embedding 直接存 COMPUTE_DTYPE 省一半显存；fp16 例外保 fp32（GradScaler 不能 unscale fp16 梯度，<code>dev/LOG.md:85-87</code>）。FP8 还能再省 ~9GB 激活（<code>dev/LOG.md:358</code>）。</li>
+  <li>最后一道防线：<code>gc.freeze()+gc.disable()</code>（<code>base_train.py:591-592</code>），避免 Python GC 周期性扫几百毫秒。</li>
+</ul>
+
+<aside class="note">降 device-batch-size 时盯住 <code>base_train.py:409</code> 的 assert：<code>total_batch_size % world_tokens_per_fwdbwd == 0</code>。world_tokens_per_fwdbwd = device_batch_size × max_seq_len × world_size。如果你让 total_batch_size 不能整除它，会直接 assert 崩。</aside>
+
+<h3>7.2 学习率与调度：warmup / constant / warmdown 三段式</h3>
+<p>nanochat 用三套 lr：embedding_lr（Adam，默认 0.3）、unembedding_lr（Adam，默认 0.008）、matrix_lr（Muon，默认 0.02），外加 scalar_lr=0.5 和 weight_decay=0.28（仅 Muon）。<strong>调度是 linear warmup（warmup-steps 默认 40）→ constant → linear warmdown（warmdown-ratio 默认 0.65，即后 65% 线性降到 final-lr-frac=0.05）</strong>（<code>base_train.py:360-369</code>）。</p>
+<p>Muon 还有独立动量调度（<code>base_train.py:372-382</code>）：前 400 步从 0.85 升到 0.97，warmdown 段再从 0.97 降到 0.90。weight decay 走 cosine 到 0（<code>base_train.py:384-386</code>）。batch 变化时所有 lr 乘 batch_lr_scale=√(B/B_ref)，weight_decay 额外乘 (D_ref/D)。</p>
+<p>fp16 训练自动启用 GradScaler（<code>base_train.py:324-326</code>）。SFT 支持 fp16，<strong>RL 暂不支持 fp16</strong>（<code>README.md:133</code>）。</p>
+
+<aside class="note">"warmdown 占 65%"是一个很激进的选择（传统 cosine 是全程衰减），来自 modded-nanogpt 经验。不要问"为什么是 0.65"，而要问"warmdown 期 lr 降到 5% 配合 momentum 降到 0.90 是在做什么"——答案：让训练末期进入"精细微调"模式，动量小、步长小，把 loss 压到最低。</aside>
+
+<h3>7.3 batch size 与梯度累积：单卡自动等价多卡</h3>
+<p><code>total_batch_size</code> 是每步全局 token 数；<code>device_batch_size</code> 是每卡每次 forward 的样本数。两者通过 grad_accum_steps 桥接（<code>base_train.py:406-413</code>）：<code>grad_accum_steps = total_batch_size // (device_batch_size × max_seq_len × world_size)</code>。</p>
+<p>8 卡 device-batch-size=32 一步出 8×32×2048=524288 token（=2^19，正是 d12 最优 batch），单卡 device-batch-size=32 自动累积 8 步达到同样的 524288。所以 README 说"omit torchrun 自动切梯度累积，结果几乎一致，但慢 8 倍"。</p>
+
+<h3>7.4 常见报错速查表</h3>
+<table>
+<thead><tr><th>症状</th><th>根因</th><th>动作</th></tr></thead>
+<tbody>
+<tr><td><code>torch.cuda.is_available()=False</code> 但 nvidia-smi 正常</td><td>装了 CPU 版 torch（忘了 --extra gpu）</td><td><code>uv sync --extra gpu</code></td></tr>
+<tr><td>CUDA OOM</td><td>device-batch-size 太大</td><td>32→16→8→4→2→1，或降 depth/max-seq-len</td></tr>
+<tr><td><code>total_batch_size must be a multiple of ...</code> assert 崩</td><td>device_batch_size 改后不能整除 total_batch_size</td><td>把 total_batch_size 也改成新 device_batch_size 的倍数</td></tr>
+<tr><td><code>shape[0] % world_size == 0</code> assert 崩</td><td>多卡 ZeRO-2 分片要求</td><td>调 depth 或 world_size 使 n_embd 等维度可分</td></tr>
+<tr><td>Flash Attention 3 not available, using SDPA fallback</td><td>非 Hopper 卡或非 bf16（正常）</td><td>若 window_pattern≠L 会警告；建议 <code>--window-pattern L</code></td></tr>
+<tr><td>训练 loss 不降/发散</td><td>warmup 太短 / batch 变了 lr 没缩放 / fp16 没 GradScaler</td><td>查 warmup-steps、batch_lr_scale、COMPUTE_DTYPE</td></tr>
+<tr><td>SFT 前 100 步 loss 不动</td><td>用了全新优化器或继承了 LR</td><td>确保 load-optimizer=1（只继承 momentum）</td></tr>
+<tr><td>RL 报 fp16 相关错</td><td>RL 暂不支持 fp16</td><td>用 bf16 或 fp32</td></tr>
+<tr><td>eval 时形状变化触发 recompile 慢</td><td>torch.compile dynamic=False</td><td>eval 用 <code>orig_model</code>（未 compile），见 base_train.py:246</td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑧ 从 zero 到训出模型的完整命令序列（可复制）</h2>
+
+<p>下面是<strong>三种典型场景</strong>的完整命令序列，照搬即可。所有路径假设你已 <code>cd /home/cheche/Workspaces/Learning/nanochat</code>。</p>
+
+<h3>8.1 场景 A：MacBook / CPU 教学（最便宜，~30 分钟）</h3>
+<div class="cmd">
+<pre>cd /home/cheche/Workspaces/Learning/nanochat
+bash runs/runcpu.sh
+# 跑完后对话：
+source .venv/bin/activate
+python -m scripts.chat_cli -p "What is the capital of France?"</pre>
+</div>
+<p>等效手动序列（<code>runs/runcpu.sh</code> 拆开）：</p>
+<div class="cmd">
+<pre>export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat" && mkdir -p $NANOCHAT_BASE_DIR
+command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
+[ -d ".venv" ] || uv venv
+uv sync --extra cpu
+source .venv/bin/activate
+
+python -m nanochat.dataset -n 8
+python -m scripts.tok_train --max-chars=2000000000
+python -m scripts.tok_eval
+
+python -m scripts.base_train \
+    --depth=6 --head-dim=64 --window-pattern=L --max-seq-len=512 \
+    --device-batch-size=32 --total-batch-size=16384 \
+    --eval-every=100 --eval-tokens=524288 --core-metric-every=-1 \
+    --sample-every=100 --num-iterations=5000 --run=dummy
+
+python -m scripts.base_eval --device-batch-size=1 --split-tokens=16384 --max-per-task=16
+
+python -m scripts.chat_sft \
+    --eval-every=200 --eval-tokens=524288 --num-iterations=1500 --run=dummy
+
+python -m scripts.chat_cli -p "What is the capital of France?"</pre>
+</div>
+
+<h3>8.2 场景 B：单卡 GPU（A100/4090，自动梯度累积，慢 8 倍）</h3>
+<div class="cmd">
+<pre>export NANOCHAT_BASE_DIR="$HOME/.cache/nanochat" && mkdir -p $NANOCHAT_BASE_DIR
+uv sync --extra gpu && source .venv/bin/activate
+
+# 数据 + tokenizer
+python -m nanochat.dataset -n 8
+python -m nanochat.dataset -n 170
+python -m scripts.tok_train
+python -m scripts.tok_eval
+
+# 单卡 pretrain（注意：omit torchrun，自动梯度累积）
+# 显存不够就把 --device-batch-size 降到 16/8/4/2/1
+python -m scripts.base_train -- \
+    --depth=12 --device-batch-size=16 --run=d12
+
+python -m scripts.base_eval --device-batch-size=16
+
+# SFT
+python -m scripts.chat_sft -- --run=d12
+python -m scripts.chat_eval -- -i sft
+
+# 对话
+python -m scripts.chat_cli   # 留掉 -p 进入交互模式</pre>
+</div>
+
+<h3>8.3 场景 C：8xH100 复现 GPT-2（speedrun，~1.5 小时，~$48）</h3>
+<div class="cmd">
+<pre># 在一台干净的 8xH100 机器上
+git clone https://github.com/karpathy/nanochat && cd nanochat
+bash runs/speedrun.sh
+# 跑完后
+source .venv/bin/activate
+python -m scripts.chat_cli   # 和你亲手训的 GPT-2 聊天</pre>
+</div>
+<p><code>speedrun.sh</code> 内部干了什么（对应 §1.2 的 7 站）：装机（uv）→ 数据并行下载（-n 8 同步 + -n 170 后台）→ tok_train/tok_eval → wait → base_train(--depth=24 --target-param-data-ratio=8 --device-batch-size=16 --fp8) → base_eval → chat_sft → chat_eval -i sft → chat_cli（最后被注释掉，需手动）。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">⑨ 学习路径（按顺序读哪些 file）</h2>
+
+<h3>9.1 第一遍：建立项目心智模型（半天）</h3>
+<ol>
+  <li><code>README.md</code> 全文（L1-231）——重点 L6 定位句、L108 单一旋钮、L144-197 文件结构、L201 强基线、L207-208 血统。</li>
+  <li><code>pyproject.toml</code> 全文（70 行）——理解 uv 依赖管理、dual-index torch、9 个运行时依赖。</li>
+  <li><code>runs/speedrun.sh</code> 全文（79 行）——按 L50-79 模块调用顺序画流水线图。</li>
+  <li>对照读 <code>runs/runcpu.sh</code>（58 行）——建立"我本地能跑什么"的因果预期。</li>
+</ol>
+
+<h3>9.2 第二遍：训练循环骨架（1 天）</h3>
+<ol>
+  <li><code>scripts/base_train.py:416-544</code>——先把"一个 step"刻进脑子，这是导航地图。</li>
+  <li><code>scripts/base_train.py:1-160</code>——CLI 参数 + compute_init + model 构建。</li>
+  <li><code>nanochat/gpt.py:28-43</code> GPTConfig + norm/Linear，最基础构件。</li>
+  <li><code>nanochat/gpt.py:144-201</code> Block + GPT.__init__，看模型骨架和 meta device footgun。</li>
+  <li><code>nanochat/gpt.py:459-524</code> GPT.forward 主干，把一个前向走通。</li>
+  <li><code>nanochat/gpt.py:67-128</code> CausalSelfAttention，attention 全细节。</li>
+  <li><code>nanochat/gpt.py:419-457</code> setup_optimizer，看参数怎么分组喂给 Muon/AdamW。</li>
+</ol>
+
+<h3>9.3 第三遍：优化器与 scaling laws（1 天）</h3>
+<ol>
+  <li><code>nanochat/optim.py:184-259</code> MuonAdamW docstring，先读设计文档再读代码。</li>
+  <li><code>nanochat/optim.py:111-180</code> muon_step_fused，Muon 的四个微创新。</li>
+  <li><code>nanochat/optim.py:274-459</code> _reduce/_compute/_finish 三阶段 + step 调度。</li>
+  <li><code>scripts/base_train.py:248-386</code> scaling laws 自动算超参 + 三套 schedule。</li>
+</ol>
+
+<h3>9.4 第四遍：数据 + tokenizer + SFT + RL（1-2 天）</h3>
+<ol>
+  <li><code>nanochat/tokenizer.py</code> 全文——重点 9-26（SPECIAL_TOKENS）、42-68（train）、140-259（render_conversation/render_for_completion）。</li>
+  <li><code>nanochat/dataset.py:23-160</code>——ClimbMix 下载 + parquet 流式。</li>
+  <li><code>nanochat/dataloader.py</code> 整章——预训练 packing + buffer 预分配 + state_dict。</li>
+  <li><code>tasks/common.py:85-161</code> Task/TaskMixture + <code>tasks/gsm8k.py:51-84</code> tool call 数据结构。</li>
+  <li><code>scripts/chat_sft.py:96-298</code> SFT 数据混合 + best-fit-PAD packing + mask 对齐（最易出 bug 处）。</li>
+  <li><code>nanochat/engine.py:176-299</code> generate_batch + 内部 mask 状态机。</li>
+  <li><code>scripts/chat_rl.py:85-146, 262-273</code> RL rollout + policy gradient loss。</li>
+</ol>
+
+<h3>9.5 第五遍：评测 + 工程（半天）</h3>
+<ol>
+  <li><code>nanochat/loss_eval.py:8-65</code> bpb 评估。</li>
+  <li><code>nanochat/core_eval.py:144-241</code> forward_model + evaluate_example。</li>
+  <li><code>scripts/base_eval.py</code> + <code>scripts/chat_eval.py</code>。</li>
+  <li><code>nanochat/checkpoint_manager.py:41-114</code> save/load + patch 兼容。</li>
+  <li><code>nanochat/common.py:137-209</code> DDP 启动 + compute_init。</li>
+  <li>（可选）<code>dev/LOG.md</code> 前若干条 + <code>dev/LEADERBOARD.md</code>——看 Karpathy 的实验日志风格。</li>
+</ol>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">⑩ 关键设计 rationale + 反事实</h2>
+
+<table>
+<thead><tr><th>决策</th><th>Rationale（为何如此）</th><th>反事实（不这么做的崩塌路径）</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td>单一复杂度旋钮 --depth</td><td>少暴露耦合超参，读者能审计每一行 scaling laws 推导</td><td>每个超参独立旋钮 → 配置对象淹没读者 → 无法审计 → 改不动</td><td><code>README.md:108</code>, <code>base_train.py:260-304</code></td></tr>
+<tr><td>不用 DDP，同步塞进 optimizer</td><td>精细控制通信-计算 overlap + ZeRO-2 分片省显存</td><td>用 DDP → 每卡存全量 optimizer state → 8 卡 d20 OOM</td><td><code>optim.py:184-259</code></td></tr>
+<tr><td>Muon + AdamW 混合</td><td>Muon 对 2D 矩阵收敛快 30-50%；AdamW 兜底非 2D 参数</td><td>纯 AdamW → 大模型矩阵参数收敛慢</td><td><code>optim.py:111-180</code>, <code>gpt.py:419-457</code></td></tr>
+<tr><td>BOS-aligned best-fit packing（裁 35%）</td><td>每个 token 都能 attend 回 BOS，上下文质量高</td><td>旧式拼接硬裁 → 一行多文档，第 2-6 个文档看不到 BOS → bpb 变差</td><td><code>dataloader.py:1-17, 122-152</code></td></tr>
+<tr><td>SFT 用 best-fit + PAD（绝不裁）</td><td>裁了对话 loss mask 错位，监督信号全乱</td><td>SFT 也裁 → GSM8K 答案数字可能被裁掉 → 学不到"答 10"</td><td><code>chat_sft.py:280-296</code></td></tr>
+<tr><td>python_output 段 mask=0</td><td>解释器输出是确定性的，不该用自回归 loss 监督模型"生成"</td><td>mask=1 → 强迫模型去生成确定性的计算结果 → 错误梯度</td><td><code>tokenizer.py:186-219</code></td></tr>
+<tr><td>bpb 而不是 mean loss</td><td>词表无关，跨 tokenizer 可比</td><td>只看 mean loss → 扩词表 loss 机械性下降 → 误判模型变好</td><td><code>loss_eval.py:9-65</code>, <code>README.md:24</code></td></tr>
+<tr><td>base 模型 CORE 用 logits 不采样</td><td>base 模型还没 SFT，生成字母格式遵循差；loss 不依赖格式</td><td>用采样生成字母 → 模型输出废话 → 评不准</td><td><code>core_eval.py:232-237</code></td></tr>
+<tr><td>SFT warm-start 只继承 momentum 不继承 LR</td><td>pretrain warmdown 已把 LR 压到 ~0，直接继承学不动</td><td>继承全部 state 含 LR → SFT 前 100 步 loss 不动</td><td><code>chat_sft.py:139-149</code></td></tr>
+<tr><td>RL 简化成 REINFORCE（不 z-score）</td><td>on-policy 不需要 trust region；不除 σ 避免 batch 全对/全错时梯度爆炸</td><td>用 z-score advantage → σ→0 → 梯度爆炸</td><td><code>chat_rl.py:1-17, 117-146</code></td></tr>
+<tr><td>最后一个 parquet 永远是 val</td><td>物理切分靠文件排序，无需手动维护 val split</td><td>随机 split → 每次改数据集都要维护 val 文件 → 工程脆弱</td><td><code>dataset.py:75</code></td></tr>
+<tr><td>uv dual-index torch 路由</td><td>--extra gpu 精准切到 cu128 wheel</td><td>忘带 --extra gpu → 装 CPU torch → cuda.is_available()=False</td><td><code>pyproject.toml:36-69</code></td></tr>
+</tbody>
+</table>
+
+<!-- ====================================================== -->
+<h2 id="sec-11">延伸阅读</h2>
+<ul>
+  <li><strong>Karpathy nn-zero-to-hero</strong>（教材 G）：本教材的前置。nanochat 假设你已懂 micrograd / makemore / nanoGPT。</li>
+  <li><strong>Chinchilla scaling laws</strong>（Hoffmann et al. 2022）：tokens:params ≈ 20:1 是 compute-optimal。nanochat 默认 ratio=12 略欠训换更快收敛。</li>
+  <li><strong>Power Lines paper</strong>（arxiv 2505.13738）：Bopt ∝ D^0.383 给最优 batch size 外推公式。</li>
+  <li><strong>T_epoch framework</strong>（arxiv 2405.13698）：T_epoch = B/(η·λ·D) 恒定 → weight decay 缩放公式。</li>
+  <li><strong>muP / modded-nanoGPT</strong>：小模型调超参迁移到大模型；nanochat 的 d12 参考基准即此思路。</li>
+  <li><strong>Muon optimizer</strong>（KellerJordan）：2D 矩阵参数的动量+正交化优化器。</li>
+  <li><strong>DCLM CORE benchmark</strong>：base 模型综合能力评测，GPT-2 CORE=0.256525。</li>
+  <li><strong>Flash Attention 3</strong>（varunneal kernel for Hopper，kernels-community for Ada/Ampere）：长上下文 attention 的内存优化。</li>
+  <li><strong>uv 官方文档</strong>（docs.astral.sh/uv）：替代 pip+venv+requirements.txt 的极快包管理器。</li>
+  <li><strong>nanochat 仓库 dev/LOG.md + dev/LEADERBOARD.md</strong>：Karpathy 的实验日志和 speedrun 排行榜，研究 repo 而非纯教学 repo 的二次定位。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 nanochat 仓库的代码与文档整理。所有 <code>file:line</code> 证据均可在仓库内 grep 验证。读者按 §9 学习路径依次精读，配合 §8 命令序列在本地跑通，即可完成从 zero-to-hero 毕业到"亲手训出一个能聊天的模型"的闭环。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
