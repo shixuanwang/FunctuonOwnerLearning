@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Engineering 深潜（L8 / Kun Chen / Firstmate / 对抗审查 / 技术决策 + 实操）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:310px; min-width:310px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:13.5px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:31px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:22px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:17.5px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px 0; max-width:100%;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; white-space:pre; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此 · 反事实｜"; font-weight:600; color:var(--accent); }
+  blockquote.cf {
+    border-left:3px solid var(--danger); background:#fdecea;
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.cf::before { content:"反事实｜"; font-weight:600; color:var(--danger); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--border); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.warn { background:#fff8e1; color:#8a6a00; border:1px solid #d4a017; }
+  .src { font-size:12.5px; color:var(--evidence); }
+  .src a { color:var(--evidence); text-decoration:underline; text-decoration-style:dotted; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .checklist { list-style:none; padding-left:0; }
+  .checklist li::before { content:"▸ "; color:var(--accent); font-weight:700; }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · L 教材</h2>
+<ol>
+  <li><a href="#sec-0">① 定位：Agentic Engineering 是什么 / 为什么</a></li>
+  <li><a href="#sec-1">② L8 Principles 与 "always-on team 经理" 哲学</a></li>
+  <li><a href="#sec-2">③ Kun Chen 深度画像 + agentic stack + GitHub 开源</a>
+    <div class="sub">
+      <a href="#s2-1">画像与口径</a> · <a href="#s2-2">5 层 stack</a> ·<br>
+      <a href="#s2-3">6 个 pinned 仓</a> · <a href="#s2-4">40 PR/day 真相</a> · <a href="#s2-5">token 经济</a>
+    </div>
+  </li>
+  <li><a href="#sec-3">④ Firstmate（及 Hermes 误传）：解决什么 / 怎么上手</a>
+    <div class="sub">
+      <a href="#s3-1">distro 不是工具</a> · <a href="#s3-2">三大痛点</a> ·<br>
+      <a href="#s3-3">5 层栈</a> · <a href="#s3-4">上手</a> · <a href="#s3-5">何时不该上</a>
+    </div>
+  </li>
+  <li><a href="#sec-4">⑤ 对抗性审查 + 自动验证：让 AI 自证代码正确</a>
+    <div class="sub">
+      <a href="#s4-1">Maker-Checker</a> · <a href="#s4-2">fresh context</a> ·<br>
+      <a href="#s4-3">跨家族</a> · <a href="#s4-4">E2E 证据</a> · <a href="#s4-5">blast-radius</a> ·<br>
+      <a href="#s4-6">三角色</a> · <a href="#s4-7">修复解耦</a> · <a href="#s4-8">渐进门禁</a>
+    </div>
+  </li>
+  <li><a href="#sec-5">⑥ 用 agent 做复杂技术决策（judge panel / debate / ADR）</a>
+    <div class="sub">
+      <a href="#s5-1">拍板不委派</a> · <a href="#s5-2">MAV 学术</a> ·<br>
+      <a href="#s5-3">评估 ≠ 架构拍板</a> · <a href="#s5-4">ADR 自动化</a> · <br>
+      <a href="#s5-5">AGENTS.md = 可执行 ADR</a> · <a href="#s5-6">分层问责</a>
+    </div>
+  </li>
+  <li><a href="#sec-6">⑦ 实操落地（读者环境）</a>
+    <div class="sub">
+      <a href="#s6-0">第 0 步：诊断 gap</a> · <a href="#s6-1">观摩 firstmate</a> ·<br>
+      <a href="#s6-2">装 treehouse</a> · <a href="#s6-3">改 AGENTS.md</a> ·<br>
+      <a href="#s6-4">最小 merge gate</a> · <a href="#s6-5">完整 ship loop</a> ·<br>
+      <a href="#s6-6">AXI token 实验</a> · <a href="#s6-7">no-mistakes 评估</a>
+    </div>
+  </li>
+  <li><a href="#sec-7">⑧ 对照 J 诊断的改进清单 + 学习路线</a></li>
+  <li><a href="#sec-8">⑨ 关键 rationale + 反事实</a></li>
+  <li><a href="#sec-9">延伸阅读（URL）</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>Agentic Engineering 深潜</h1>
+<p class="lede">一份写给"判断力领先、目标 Function Owner、已经会写 AGENTS.md + worktree 但缺 <strong>独立验证 gate 与并行 crew 编排</strong>"读者的单文件教材。覆盖 L8 标杆（Kun Chen / Firstmate / no-mistakes）、对抗性审查（Maker-Checker / fresh context / 跨家族）、用 agent 拍技术决策的边界，最后落到读者自己的 Claude Code + Codex + ~/.codex/AGENTS.md 上。</p>
+<p class="meta">读者路径：<code>/home/cheche/Workspaces/Learning/FunctuonOwnerLearning</code> · 教材 J 已诊断 gap（声明原则缺 deterministic 兑现层 / 独立验证 gate 缺失 / 委托下沉不克制）· 编写日期：2026-07-26 · 风格复用 B 教材</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 定位：Agentic Engineering 是什么 / 为什么</h2>
+
+<p>把这一节当锚。后面所有名词（Firstmate / no-mistakes / Captain-Crew / Validator）都是同一句话的不同投影。</p>
+
+<blockquote class="why"><strong>一句话定义。</strong>Agentic Engineering = 工程师从"写代码 + 逐行 review"迁移到"<strong>规划（plan）+ 自动化验证（validate）</strong>"，把实现层（implement）整体交给可被指令驱动、可被监督、可被门禁拦截的 agent 集群。瓶颈从"<strong>生成速度</strong>"上移到"<strong>决定做什么 + 讲清楚 + 把关质量</strong>"。</blockquote>
+
+<p>这里有三层认知必须先拆开，否则后面会糊在一起：</p>
+
+<table>
+<tr><th>层</th><th>是什么</th><th>谁负责</th><th>读者当前状态</th></tr>
+<tr><td><strong>Generation（生成）</strong></td><td>把意图变成 diff。已规模化，token 越来越便宜。</td><td>agent（Claude Code / Codex 等）</td><td>已掌握（教材 J 36 次 AGENTS.md）</td></tr>
+<tr><td><strong>Review（评审）</strong></td><td>判断 diff 是否真解决了问题。<span class="danger">generation scaled, review did not</span>——这是当前全行业的真瓶颈。</td><td>独立 fresh-context 只读 reviewer（异构模型优先）</td><td><span class="danger">缺失（J 中 adversarial 仅出现 1 次）</span></td></tr>
+<tr><td><strong>Decision（拍板）</strong></td><td>对模糊、影响产品方向、没有客观最优的判断负责。</td><td>人类（不可委派）</td><td>判断力领先但缺 deterministic 兑现层</td></tr>
+</table>
+
+<aside class="note"><strong>manager-vs-implementer 边界</strong>。Kun Chen 把自己从 coder 改写成 "engineering manager directing a team of agents"——决定 build 什么 + 判断 good 与否。读者作为 PM 的"判断力领先"在此刻被工程化：你不再是"读 diff 的 reviewer"，而是"决定哪个 escalate 该进我脑子、哪个该自动修"的 EM。这条边界一旦模糊（自己上手实现、自己 review 自己的 session），agentic 的全部杠杆归零。<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a></aside>
+
+<h3>为什么现在必须吃透</h3>
+<ul>
+  <li><strong>generation 已不是瓶颈</strong>：主流模型 diff 通量远超单人 review 速度。一条详细 plan 可以让 agent 自治几小时<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a>。</li>
+  <li><strong>review 通量才是真瓶颈</strong>：人类阅读速度天花板 ≈ 800 行/人·日<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。没有自动化 gate，并行 agent 只是在加速制造待 review 的债务。</li>
+  <li><strong>判断力领先的人反而更需要 gate</strong>：你的判断力越强，越容易被"clear logical convincing LLM output"麻痹（可信度陷阱<a class="src" href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">[Equal Experts]</a>）。Function Owner 的核心风险不是不会写代码，而是"<strong>声明了原则却没 deterministic gate 兑现</strong>"——这正是教材 J 对你的诊断。</li>
+</ul>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② L8 Principles 与 "always-on team 经理" 哲学</h2>
+
+<p>L8 = Meta 职级标尺中的 Principal 级 IC（Staff 级最高一档）。<strong>注意口径</strong>：L8 身份是 Kun Chen GitHub bio 的<strong>自述</strong>（"Former L8 engineer at Meta, Microsoft, Atlassian"<a class="src" href="https://github.com/kunchenguid">[GitHub]</a>），Atlassian 2026 Atlas Camp / Dev Day 活动页仍以 "Lead Principal Engineer at Atlassian, leads the development of Rovo Dev" 列他<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。引用此标签时写"嘉宾自述 L8"而非既成事实，权威锚点应放在可核实的开源项目上（firstmate / no-mistakes / axi）。</p>
+
+<h3>2.1 核心隐喻：永不下班的团队的经理</h3>
+
+<blockquote style="border-left:3px solid #888; background:#fafafa; padding:10px 16px; margin:14px 0; font-size:14.5px;">"I have now stopped writing most of the code myself and started acting like an engineering manager directing a team of agents... I stay at the level of deciding <strong>what to build and whether it's good</strong>."<br><span class="src">— Kun Chen，转引自 <a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo</a></span></blockquote>
+
+<blockquote style="border-left:3px solid #888; background:#fafafa; padding:10px 16px; margin:14px 0; font-size:14.5px;">"You talk to a single agent – the first mate – and it runs the crew for you. <strong>You stay on decisions; the fleet stays on work.</strong>"<br><span class="src">— <a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll</a></span></blockquote>
+
+<p>关键认知：把 agent 当<strong>直系下属（direct reports）</strong>，而不是工具。Kun 明确指出"委托给 agent 与委托给人的失败模式相同"——<strong>要 outcome 而非 action、讲清楚 why、出错不要接管回控制权而是更新 memory 文件</strong><a class="src" href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">[Creator Economy]</a>。</p>
+
+<h3>2.2 L8 九条原则（核实版）</h3>
+
+<table>
+<tr><th>#</th><th>原则</th><th>一句话兑现</th><th>读者缺口</th></tr>
+<tr><td>1</td><td><strong>角色上移到 plan、下沉到 validate 系统</strong></td><td>实现层全交 agent；人做 EM of always-on team</td><td>已部分掌握，缺 validate 系统</td></tr>
+<tr><td>2</td><td><strong>Validator ≠ Reviewer</strong></td><td>reviewer fresh-context；validator 强制 E2E 证据；只升级 product-changing 决策给人</td><td><span class="danger">核心缺口</span></td></tr>
+<tr><td>3</td><td><strong>Plan 是最重要的阶段</strong></td><td>一行 prompt = 几分钟自治；详细 plan = 几小时自治；HTML &gt; markdown</td><td>plan 够好，缺 gate 兑现</td></tr>
+<tr><td>4</td><td><strong>Captain/Crew 单一入口</strong></td><td>只对 first-mate 说话；crewmate 走隔离 worktree</td><td>已用 worktree，缺 captain 抽象</td></tr>
+<tr><td>5</td><td><strong>Firstmate 是 distro 不是 harness</strong></td><td>可跑在任意 harness 之上（Claude Code / Codex / Hermes）</td><td>harness 已选（Claude Code），缺编排层</td></tr>
+<tr><td>6</td><td><strong>Token 经济是接口设计问题</strong></td><td>protocol choice matters less than interface ergonomics；AXI 79K vs MCP 185K</td><td>未评估 MCP token 成本</td></tr>
+<tr><td>7</td><td><strong>Agent-agnostic 防锁定</strong></td><td>沉淀 AGENTS.md/skills/scripts，别依赖厂商专属 memory</td><td>已有 superpowers skills，对齐</td></tr>
+<tr><td>8</td><td><strong>高产出 = 并行 + 输入 + 续命三腿</strong></td><td>worktree 池 + voice + Tailscale；"40 PRs/day" 是峰值营销数</td><td>worktree 已用，缺并行编排</td></tr>
+<tr><td>9</td><td><strong>David Ondrej 是放大器不是 L8 本身</strong></td><td>L8 是嘉宾；"just copy him" 是分发话术</td><td>—</td></tr>
+</table>
+
+<aside class="note"><strong>"validator 独立性" 的真意</strong>。Validator 不是"更严格的 reviewer"——它和 reviewer 在<strong>认知结构上不同</strong>。Reviewer 答"diff 有 bug 吗"；Validator 答"产品真的跑通了吗"。Reviewer 可以基于 diff 推理；Validator 必须驱动真实 app 出证据（截图、日志、真实 DB 查询）。Unit test 全绿而产品有 bug 是常态——这就是为什么你的 <code>live-smoke-test-before-done</code> skill 必须是 final gate，而不是可选步骤。<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a></aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ Kun Chen 深度画像 + agentic stack + GitHub 开源</h2>
+
+<h3 id="s2-1">2.1 画像与口径分歧（核实）</h3>
+<ul>
+  <li><strong>身份</strong>：GitHub 个人页自述 "Former L8 engineer at Meta, Microsoft, Atlassian"，居住 Bellevue WA，3.6k followers，68 个公开仓库，GitHub Pro<a class="src" href="https://github.com/kunchenguid">[GitHub]</a>。</li>
+  <li><strong>当前归属</strong>：Atlassian 2026 Atlas Camp（Amsterdam）/ FY26 Dev Day（Bellevue）演讲者页标题为 "Lead Principal Engineer at Atlassian, leads the development of Rovo Dev"——即 Atlassian 全 SDLC agentic AI 产品 Rovo Dev 的主导者<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。注意：GitHub 写 "Former"，但 Atlassian 2026 活动页仍列他——存在口径差异。</li>
+  <li><strong>SSHHIP</strong>：仅在他 X 简介（@kunchenguid）出现，GitHub 主页未列出，<strong>无法独立核实</strong>，不要当既成事实写进对外材料。</li>
+  <li><strong>David Ondrej 系列</strong>：那期播客（"L8 Principal's Agentic Engineering Setup (just copy him)"，2026-07-17，61m50s，CodeRabbit 赞助）是 David 一系列 "X's Agentic Engineering Workflow (just copy him)" 式内容的 L8 篇——同系列还有 Matt Pocock、Top 1% Agentic Engineers 等<a class="src" href="https://www.youtube.com/watch?v=8ZgpAXe5V5w">[YouTube]</a>。David 是<strong>分发平台 + 权威 hook + 可复制 setup</strong>三件套的运营者，他自己不是 L8。</li>
+</ul>
+
+<blockquote class="cf">如果你只听播客并照搬"just copy him"——你抄到的是<strong>分发话术</strong>不是工程原则。要看结构化的工程原则，读 <a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll</a>（口径最严谨、含反例）+ <a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo</a>（结构化总览）+ 嘉宾自己的 GitHub README。</blockquote>
+
+<h3 id="s2-2">2.2 五层 agentic stack（SudoAll 整理）</h3>
+
+<div class="mermaid">
+flowchart TB
+  subgraph L1[L1 · Shell]
+    W[WezTerm 单无边框窗口]
+  end
+  subgraph L2[L2 · Session backend]
+    T[tmux 默认 / Herdr 语义状态 / zellij / cmux / Orca]
+  end
+  subgraph L3[L3 · Captain]
+    F[Firstmate<br/>AGENTS.md + skills + scripts]
+  end
+  subgraph L4[L4 · Crewmates]
+    TH[treehouse worktree 池<br/>每个 crewmate 独立隔离]
+  end
+  subgraph L5[L5 · Quality Gate]
+    NM[no-mistakes 本地 git 代理<br/>intent→rebase→review→test→doc→lint→PR→CI]
+  end
+  L1 --> L2 --> L3 --> L4 --> L5
+  F -.delegate.-> TH
+  TH -.merge gate.-> NM
+  H[Harness:<br/>Claude Code / Codex / OpenCode] -.寄生.-> F
+  classDef layer fill:#eaf1f8,stroke:#0b5394,color:#1a1a1a;
+  class W,T,F,TH,NM,H layer;
+</div>
+
+<p class="src">来源：<a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll · Firstmate Agentic Stack</a> · <a href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">Creator Economy</a></p>
+
+<p>两条贯穿性哲学：</p>
+<ol>
+  <li><strong>Escalation policy &gt; agent count</strong>——有趣的设计不是"更多 agent"而是"<strong>何时打断人类</strong>"。一个会正确 escalate 的系统比一堆并行 agent 更值钱<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。</li>
+  <li><strong>确定性步骤留在 bash，零 reasoning token</strong>——已知序列脚本化，agent 只在"打破预期"时介入。Bash watcher 睡着等事件，需要动作时才唤醒 first mate<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。</li>
+</ol>
+
+<h3 id="s2-3">2.3 GitHub 开源 6 仓（verified 2026-07-25）</h3>
+
+<table>
+<tr><th>仓</th><th>定位</th><th>语言 · star</th><th>用途</th></tr>
+<tr><td><code>no-mistakes</code></td><td><code>git push no-mistakes</code> 本地 git 代理 + 对抗式 review 管线</td><td>Go · 7.1k★ / 559 fork</td><td>做 review 自动化（最成熟，推荐先读）</td></tr>
+<tr><td><code>gnhf</code></td><td>"good night, have fun"——长任务跨多 context window 编排器</td><td>TypeScript · 3.4k★ / 247 fork</td><td>隔夜长跑编排</td></tr>
+<tr><td><code>firstmate</code></td><td>Talk to one agent. Ship with a crew.</td><td>Shell · 1.9k★ / 612 fork</td><td>captain+crew 协调层（fork 最多）</td></tr>
+<tr><td><code>lavish-axi</code></td><td>HTML is the new markdown，HTML artifact 编辑器</td><td>JavaScript · 2.2k★ / 188 fork</td><td>交互式 plan</td></tr>
+<tr><td><code>axi</code></td><td>Design principles for agent ergonomics，agent token 高效 CLI</td><td>TypeScript · 1.6k★ / 112 fork</td><td>token 优化接口</td></tr>
+<tr><td><code>treehouse</code></td><td>Manage worktrees without managing worktrees</td><td>Go · 1.1k★ / 113 fork</td><td>worktree 池</td></tr>
+</table>
+
+<p class="src">来源：<a href="https://github.com/kunchenguid">github.com/kunchenguid</a> pinned repos</p>
+
+<h3 id="s2-4">2.4 "40 PRs/day" 真相（口径校正）</h3>
+
+<table>
+<tr><th>来源</th><th>数字</th><th>口径</th></tr>
+<tr><td>Creator Economy 标题</td><td>40 PRs/day</td><td>峰值 / 营销数字</td></tr>
+<tr><td>SudoAll 实算</td><td>~11 changes/day</td><td>3 个月内、59 个 repo、~1000 次变更，平均约 11 changes/day</td></tr>
+<tr><td>实际常态</td><td>5–10 并发任务</td><td>"Most of them go straight to a clean PR with no involvement from me"</td></tr>
+</table>
+
+<aside class="note"><strong>把"40 PRs/day"当营销标题</strong>，把"<strong>11 changes/day × 3 月、人工 review 上限 800 行</strong>"当真实基准。瓶颈不在写代码，而在"<strong>决定做什么 + 讲清楚</strong>"（planning）和"<strong>自动化验证</strong>"（gate）。<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a></aside>
+
+<h3 id="s2-5">2.5 高产出三腿（并行 + 输入 + 续命）</h3>
+<ul>
+  <li><strong>并行</strong>：tmux 窗口 + tab title 显示每个 agent 状态（running/done/needs input）；treehouse 管 worktree 池（复用已装好依赖的空闲 worktree、自动 sync 最新 main）；同时管 5–10 任务<a class="src" href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">[Creator Economy]</a>。</li>
+  <li><strong>输入</strong>：OpenSuperWhisper（本地 Whisper large）做 voice primary input——"You talk a lot faster than you type"；WezTerm + Neovim + tmux 终端中心化<a class="src" href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">[Creator Economy]</a>。</li>
+  <li><strong>续命</strong>：Tailscale + SSH + mosh 让手机直达 Mac 上同一 tmux session——"perfect continuity across phone, laptop, and PC"<a class="src" href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">[Creator Economy]</a>。</li>
+</ul>
+
+<h4>token 经济：接口设计是系统工程，不是协议选择</h4>
+<p>SudoAll 引用 AXI 项目实测：<strong>"MCP conditions average 185K tokens per task vs. 79K for AXI"</strong>——agent-first 紧凑 CLI 输出远胜 schema-heavy 的 MCP wrapper。原则：<em>"protocol choice matters less than interface ergonomics"</em><a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。更深的判断："A lot of SaaS from the last twenty years is a human UI glued to a database"——agent 要的是<strong>headless、stable、token-cheap control surface</strong>。</p>
+
+<p>这对你直接相关：你走 bigmodel 网关按 token 计费，省 token = 省 context 长度 = 更深教材生成。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">④ Firstmate（及 Hermes 误传）：解决什么 / 怎么上手</h2>
+
+<h3 id="s3-1">3.1 它是 distro，不是工具</h3>
+<p>Firstmate slogan：<em>"Talk to one agent. Ship with a crew."</em>。它<strong>既不是模型、不是 MCP server、不是 CLI wrapper、也不是 SaaS</strong>——它是一个被克隆下来的目录（<code>AGENTS.md + skills + scripts + 状态约定</code>），让通用 coding agent（Claude Code / Codex / Pi / Grok / OpenCode）一启动就变成"<strong>船长 + 船员</strong>"协调器<a class="src" href="https://github.com/kunchenguid/firstmate">[GitHub]</a>。</p>
+
+<aside class="note"><strong>关键修正：'Hermes' 是误传</strong>。在 Kun Chen 的 stack 里<strong>没有 Hermes</strong>。<br>① Firstmate README 全文无 "Hermes" 字样；<br>② 它的 session backend 叫 <code>Herdr</code>（agent-aware multiplexer，给 tmux/zellij 加语义状态：working/idle/blocked-on-human）；<br>③ "Hermes" 实际指 <a href="https://hermes-agent.org">Nous Research 的 Hermes Agent</a>——一个独立的、自改进的开源 agent，与 Firstmate <strong>完全无关</strong>。<br>David Ondrej 那期视频标题把 "firstmate compare to hermes" 当 hook，但该页 email gating，原始 transcript 未能核实。<strong>真正的对比维度是 Herdr vs tmux</strong>（语义状态 vs 哑会话后端）。<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a></aside>
+
+<h3 id="s3-2">3.2 三大痛点（何时该上）</h3>
+
+<h4>痛点 1：上下文管理——tab-juggler 天花板</h4>
+<p>核心失败模式：人类维护 20–30 个并行 agent session 会耗尽 working memory，每次切换都要完整重载 intent——<em>"Every context switch costs a full reload of intent. Agents keep running. Your attention does not."</em><a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a></p>
+
+<p><strong>硬指标</strong>：你同时在跟几个 agent tab？&gt;3 个且经常忘记哪个 tab 在跑失败测试 = 该上 Firstmate。</p>
+
+<h4>痛点 2：委托——可中断的 captain 才是好 captain</h4>
+<p>first mate 必须保持 interruptible。如果它自己吸收任务，就变成新瓶颈。<strong>crewmate 存在的唯一理由就是让 first mate 保持空闲接收新指令</strong>。委托遵循 durable preference rules（model / harness / reasoning effort 按 task class 预设，不临时选）。每个 crewmate 经 treehouse 拿独立 git worktree，杜绝并行 agent 撞同一 working tree<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。</p>
+
+<h4>痛点 3：验证——no-mistakes 本地 git 代理是硬闸</h4>
+<p><em>"Generation scales, review does not."</em> 若人类必须逐行 review 才能 merge，吞吐天花板就是人类阅读速度。no-mistakes 是本地 git proxy：从产出 agent 的 session 重构 intent → 跑对抗 review（常换不同 model family）→ 自动修机械 bug → 把触碰产品语义的变更 escalate 给人类 → 跑 tests / docs / lint 才放行<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a>。</p>
+
+<h3 id="s3-3">3.3 Firstmate 在栈中的位置</h3>
+
+<div class="mermaid">
+flowchart LR
+  You[你 · Captain] -->|"dump intent 一次"| FM[First Mate<br/>单一对话接口]
+  FM -->|"scoped task + escalation rules"| C1[crewmate 1<br/>treehouse worktree A]
+  FM -->|"scoped task"| C2[crewmate 2<br/>treehouse worktree B]
+  FM -->|"scoped task"| C3[crewmate 3<br/>treehouse worktree C]
+  C1 --> NM[no-mistakes<br/>本地 git 代理]
+  C2 --> NM
+  C3 --> NM
+  NM -->|"intent recovery<br/>adversarial review<br/>test/doc/lint"| PR[clean PR]
+  NM -.->|"ambiguous<br/>product-changing"| You
+  PR --> CI[CI green]
+  style FM fill:#eaf1f8,stroke:#0b5394,stroke-width:2px;
+  style NM fill:#fff8e1,stroke:#d4a017,stroke-width:2px;
+  style You fill:#fdecea,stroke:#b3261e,stroke-width:2px;
+</div>
+
+<p class="src">来源：<a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll · Firstmate Agentic Stack</a> + <a href="https://github.com/kunchenguid/firstmate/blob/main/AGENTS.md">firstmate AGENTS.md</a></p>
+
+<h4>七条 Firstmate 原则</h4>
+<ol>
+  <li><strong>One liaison, many workers</strong>——永远不要自己同时管 N 个 pane。</li>
+  <li><strong>Delegate by default</strong>——船长保持可中断靠"不亲自跑长任务"。</li>
+  <li><strong>Isolate parallel writes</strong>——永不两个 agent 同一 worktree。</li>
+  <li><strong>Gate the merge, not your eyeballs</strong>——无 gate 的生成 = scales slop（放大垃圾）。</li>
+  <li><strong>Route by task complexity</strong>——贵模型做设计、便宜路径做杂活。</li>
+  <li><strong>Invent tools only from real friction</strong>——避免 setup theatre。</li>
+  <li><strong>Protocol choice matters less than interface ergonomics</strong>——MCP/CLI/code-mode 都只是 transport。</li>
+</ol>
+
+<h3 id="s3-4">3.4 怎么上手</h3>
+
+<p><strong>最小路径不需要全栈</strong>。三步先上：①选 1 个 captain surface → ②隔离并行工作（worktree）→ ③装最小 merge gate。三者先上，再考虑 full Firstmate。</p>
+
+<p>完整安装三行：</p>
+<pre><code>gh auth login
+git clone https://github.com/kunchenguid/firstmate
+cd firstmate && claude   # 或 grok --trust / pi / codex</code></pre>
+
+<p>三个项目模式：①<code>no-mistakes</code>（对抗审查兜底，推荐生产用）②<code>direct-PR</code>（信任 first mate 判断）③<code>local-only</code>（原型/实验）。可选 <code>+yolo</code> 自治标志（慎用，只在 throwaway 任务上）。</p>
+
+<h4>五个内置 skill（"状态不丢"的命脉）</h4>
+<table>
+<tr><th>Skill</th><th>用途</th></tr>
+<tr><td><code>/afk</code></td><td>离开态批量摘要等你回来</td></tr>
+<tr><td><code>/ahoy</code></td><td>回顾上次 session 未决项</td></tr>
+<tr><td><code>/bearings</code></td><td>生成当前状态报告</td></tr>
+<tr><td><code>/stow</code></td><td>reset/kill session 前把未捕获知识落盘</td></tr>
+<tr><td><code>/updatefirstmate</code></td><td>自更新</td></tr>
+</table>
+
+<h3 id="s3-5">3.5 何时不该上（反 setup theatre）</h3>
+<p>SudoAll 明确警告四种不该上的情况<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>：</p>
+<ol>
+  <li><strong>单一聚焦产品 + 一个 agent</strong>，review 量可控——Firstmate 是负担。</li>
+  <li><strong>周末 demo / 一次性脚本</strong>——重管线不值。</li>
+  <li><strong>legacy monorepo</strong>——agent 帮但抹不掉协调债。</li>
+  <li><strong>已有健康人工 review 流程</strong>——别用 shell 脚本替代。</li>
+</ol>
+
+<blockquote class="why"><em>"If your setup cannot point at a PR, a release, or a customer outcome this week, you are starring in setup theatre."</em><br><strong>反事实</strong>：你装了 firstmate + treehouse + no-mistakes + lavish + axi 全套，但本周没有 PR 落地——你只是在大规模制造元工作（meta-work）。</blockquote>
+
+<p class="src"><a href="https://www.linkedin.com/posts/theaiengineering_talk-to-one-agent-and-ship-with-a-crew-activity-7482043082570612736-MBOc">社区硬风险（LinkedIn 评论区）</a>：多 crewmate 撞同一共享模块时，合并冲突是<strong>语义级</strong>而非文本级，no-mistakes 的对抗 review 能否兜住是开放问题。给 first mate 设计任务划分时<strong>优先按模块边界切</strong>。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">⑤ 对抗性审查 + 自动验证：让 AI 自证代码正确</h2>
+
+<p class="lede">这是教材 J 对你的核心诊断——"<strong>独立验证 gate 缺失</strong>"。下面这一节是补洞的核心。</p>
+
+<h3 id="s4-1">4.1 Maker-Checker 分离：写代码的 agent 永不签字</h3>
+
+<p>Augment 官方指南原话：<em>"the agent that writes a change never certifies it."</em><a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>。五维控制表：</p>
+
+<table>
+<tr><th>维度</th><th>Maker（生成者）</th><th>Checker（检查者）</th></tr>
+<tr><td>Context</td><td>完整历史</td><td>只 diff + criteria</td></tr>
+<tr><td>System prompt</td><td>实现导向</td><td>怀疑式 checklist</td></tr>
+<tr><td>Model</td><td>任意</td><td><strong>显式 pin，最好跨家族</strong></td></tr>
+<tr><td>Tools</td><td>全工具</td><td><strong>只读 Read / Grep / Glob</strong>（不给 Write / Edit / Bash）</td></tr>
+<tr><td>Output</td><td>自由形态</td><td>结构化 verdict</td></tr>
+</table>
+
+<p class="src"><a href="https://www.augmentcode.com/guides/adversarial-code-review">Augment · Adversarial Code Review: Why the Maker Shouldn't Grade</a></p>
+
+<h3 id="s4-2">4.2 Fresh-context 子代理：审查必须在独立 context 跑</h3>
+
+<blockquote style="border-left:3px solid #888; background:#fafafa; padding:10px 16px; margin:14px 0; font-size:14.5px;">"a fresh context improves code review because Claude avoids bias toward code it just wrote."<br><span class="src">— Anthropic 官方，转引自 <a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo</a></span></blockquote>
+
+<p>同会话自审 = <strong>让人查自己刚交的作业</strong>，必然偏向"我刚写的肯定对"。Augment Cosmos 实现：a Deep Code Review agent runs in a fresh Session, isolated from the Session that produced the diff<a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>。</p>
+
+<p><strong>你已有的武器</strong>：Claude Code 的 <code>/code-review</code> 就是 fresh-context 子代理——它是 "bundled skill that runs as a forked subagent"<a class="src" href="https://code.claude.com/docs/en/skills">[Claude Code Skills]</a>。<strong>缺的不是能力，是强制调用的规则</strong>。</p>
+
+<h3 id="s4-3">4.3 跨家族审查暴露同家族盲区</h3>
+
+<p>Augment 引用 libfuse 战例：<em>"a Codex agent found bugs that Claude-family review missed."</em><a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>。同家族模型 <em>"share correlated blind spots and often end up confidently agreeing in the same places"</em>。</p>
+
+<p>MindStudio Verifier Pattern 三条<a class="src" href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">[Creator Economy 旁证]</a>：</p>
+<ol>
+  <li><strong>独立 context</strong>——验证者只拿原始需求 + 产物。</li>
+  <li><strong>跨模型家族</strong>——GPT-4o 生成、Claude 验证。</li>
+  <li><strong>检测 generator-specific blind spots</strong>——模型错误是系统性聚类而非随机分布。</li>
+</ol>
+
+<h3 id="s4-4">4.4 强制端到端证据（拒绝"单测过了"）</h3>
+
+<blockquote style="border-left:3px solid #888; background:#fafafa; padding:10px 16px; margin:14px 0; font-size:14.5px;">"I can often watch it test its own work in real time by driving the real app."<br>"every unit test passes, and the product is still buggy."<br><span class="src">— Kun Chen，<a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo</a></span></blockquote>
+
+<p>Claude Code 内置三件套（<a href="https://code.claude.com/docs/en/skills">官方 Skills 文档</a>）：</p>
+<ul>
+  <li><code>/run</code>——真启动 app。</li>
+  <li><code>/verify</code>——<em>"Build and run your app to confirm a code change does what it should, <strong>without falling back to tests or type checks</strong>"</em>。</li>
+  <li><code>/run-skill-generator</code>——一次性记录"干净环境如何启动 app"（install/env/launch）存成 <code>.claude/skills/run-&lt;name&gt;/</code>。</li>
+</ul>
+
+<p><strong>v2.1.215 起 <code>/verify</code> 和 <code>/code-review</code> 只在用户主动调用时跑</strong>——所以必须把"显式触发"写进 AGENTS.md，否则会被 agent 跳过。</p>
+
+<aside class="note"><strong>对照你已有的 <code>live-smoke-test-before-done</code> skill</strong>。它的本意正是这条原则的实例：mock 单测抓不到别名/列碰撞、IN 过滤错配、缺表前缀、类型不匹配。把它和 <code>/verify</code> 串成 <strong>final gate</strong>，配合 fresh-context reviewer，就是 <strong>validator</strong>（不是 reviewer）的工程化身。</aside>
+
+<h3 id="s4-5">4.5 按 blast-radius 路由审查预算</h3>
+
+<p>Augment：<em>"Authentication, authorization, secrets handling, and payment paths deserve verifier attention before broad refactors do."</em><em>"A small permission change can be more dangerous than a large low-risk refactor."</em><a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>。OpenAI 也只对 critical findings 设 merge gate，其余 advisory<a class="src" href="https://alignment.openai.com/scaling-code-verification/">[OpenAI Alignment]</a>。</p>
+
+<h3 id="s4-6">4.6 三角色对抗：Primary + Challenger + Arbiter</h3>
+
+<p>Augment 把单 reviewer 扩成三方对抗<a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>：</p>
+<ul>
+  <li><strong>Primary reviewer</strong>——提发现。</li>
+  <li><strong>Challenger</strong>——试图推翻发现并寻找遗漏。</li>
+  <li><strong>Arbiter</strong>——裁决哪些阻断 merge。</li>
+</ul>
+
+<p>OpenAI 用 <em>"parallel reviewer agents score each issue for confidence"</em>，只浮出高于阈值的发现<a class="src" href="https://alignment.openai.com/scaling-code-verification/">[OpenAI]</a>。</p>
+
+<h3 id="s4-7">4.7 修复与审查解耦</h3>
+
+<p>Augment fixer loop：<em>"A separate fixer agent applies corrections"</em> → <em>"A new reviewer takes another pass"</em> → 循环 → escalate 人。绝不让 reviewer 自己改——<em>"A reviewer with merge authority breaks the checker boundary."</em><a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a></p>
+
+<h3 id="s4-8">4.8 渐进式门禁上线</h3>
+
+<p>Augment rollout 序列<a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>：</p>
+<ol>
+  <li><strong>Advisory calibration</strong>——评论不阻断，先校准信任度/误报。</li>
+  <li><strong>Critical-findings gate</strong>——只对 critical 阻断 merge。</li>
+  <li><strong>Human-in-the-loop policy</strong>——<em>"requires human approval before agents continue"</em>。</li>
+  <li><strong>Permission-level scope</strong>——reviewer 不给 merge 权。</li>
+  <li><strong>Auditable session</strong>——<em>"one replayable checker run per session"</em>。</li>
+</ol>
+
+<h3>4.9 三个数据点（口径都要标）</h3>
+<table>
+<tr><th>数字</th><th>来源</th><th>口径</th></tr>
+<tr><td>~68% 推送的改动 no-mistakes 抓到 bug</td><td>Kun 自述（ByteByteGo / Creator Economy 引用）</td><td><strong>一人经验，非普适常数</strong></td></tr>
+<tr><td>~63% on ~1000 changes / 59 repos</td><td>SudoAll 实算</td><td><strong>同上</strong></td></tr>
+<tr><td>OpenAI reviewer：52.7% comment 导致改代码；36% Codex PR 收到 comment</td><td>OpenAI Alignment（截至 2025-10，100k+ PR/天）</td><td>大规模工业数据</td></tr>
+</table>
+
+<p class="src"><a href="https://alignment.openai.com/scaling-code-verification/">OpenAI · A Practical Approach to Verifying Code at Scale</a></p>
+
+<aside class="note"><strong>可信度陷阱（Equal Experts）</strong>。<em>"clear logical convincing LLM output"</em> 会让人放松审查。任何 agent 产出（代码 / ADR / alternatives）在人类拍板前，<strong>必须经独立 verifier 或 judge prompt 批判，且引用/事实逐一核查</strong>。这条原则对判断力领先的读者尤其关键——你越聪明，越容易被"听起来对"麻痹。<a class="src" href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">[Equal Experts]</a></aside>
+
+<h3>4.10 对抗审查闭环（verifier）</h3>
+
+<div class="mermaid">
+flowchart TB
+  Start([变更完成]) --> IR[intent recovery<br/>重建原 agent 想做什么]
+  IR --> R1{diff 是否<br/>真实现 intent?}
+  R1 -->|否| Esc1[升级人]
+  R1 -->|是| RV[fresh-context reviewer<br/>异构家族 / 只读工具]
+  RV --> R2{有 finding?}
+  R2 -->|机械 bug| AF[auto-fix by<br/>独立 fixer agent]
+  R2 -->|产品语义变更| Esc2[升级人]
+  R2 -->|clean| E2E
+  AF --> NR[新 fresh-context reviewer 复审]
+  NR --> R2
+  E2E[/verify + live-smoke-test<br/>强制真实 app / DB 证据/]
+  E2E --> R3{产品真跑通?}
+  R3 -->|否| Esc3[升级人]
+  R3 -->|是| Gate[merge gate 全绿]
+  Gate --> Origin([push to origin])
+  style IR fill:#fff8e1,stroke:#d4a017,stroke-width:2px;
+  style RV fill:#eaf1f8,stroke:#0b5394,stroke-width:2px;
+  style E2E fill:#fdecea,stroke:#b3261e,stroke-width:2px;
+</div>
+
+<p class="src">综合 <a href="https://www.augmentcode.com/guides/adversarial-code-review">Augment</a> · <a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo (Kun Chen)</a> · <a href="https://alignment.openai.com/scaling-code-verification/">OpenAI Alignment</a> · <a href="https://code.claude.com/docs/en/skills">Claude Code Skills</a></p>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑥ 用 agent 做复杂技术决策（judge panel / debate / ADR）</h2>
+
+<p class="lede">这是对你"<strong>判断力领先但缺 deterministic 兑现层</strong>"诊断的另一面——<strong>判断力领先的是拆解不是拍板</strong>。这一节讲清：什么能委派给 agent、什么不能。</p>
+
+<h3 id="s5-1">5.1 关键反差：Kun / Firstmate 刻意不用 judge panel / debate</h3>
+
+<p>核实 ByteByteGo 与 SudoAll 两篇一手报道后确认：<strong>Kun 的决策模型里没有多 agent 独立设计 + 投票、没有 debate、没有正式权衡矩阵、没有 ADR 自动化</strong>。他的范式是<strong>分层问责</strong><a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a><a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>：</p>
+<ol>
+  <li><strong>确定性步骤脚本化</strong>（bash / axi，零 reasoning token）；</li>
+  <li><strong>代码质量用独立 context 的 reviewer agent 做 adversarial review</strong>，且刻意用不同模型家族；</li>
+  <li><strong>模糊的、影响产品方向的决策明确升级人类</strong>——<em>"Escalate ambiguous, product-changing decisions to the human"</em>。</li>
+</ol>
+
+<p>他自定位为 <em>"engineering manager directing a team of agents"</em>——决定 build 什么、是否够好。no-mistakes 管道是<strong>线性</strong>的（intent recovery → rebase → adversarial review → tests → docs → lint → PR → CI babysit），不是并行多方案竞争。</p>
+
+<blockquote class="why"><strong>对读者最重要的校准</strong>：行业最前沿的实战派恰恰在"拍板"环节退回到人类，把 agent 限定在"拆解 + 执行 + 自检"。<strong>agent 越强，人类的拍板责任越被聚焦到少数高模糊决策上，而非被稀释</strong>——这正呼应"判断力领先的是拆解不是拍板"。<br><strong>反事实</strong>：如果你试图用 judge panel/debate 投票决定"用 ClickHouse 还是 Druid 做数仓"——你把没有客观最优的架构权衡塞进了为客观参照设计的评估范式。结果只会得到"模型家族共识"，不是"上下文最优决策"。</blockquote>
+
+<h3 id="s5-2">5.2 Multi-Agent Verification（MAV）：学术范式</h3>
+<p>Lifshitz et al. 2025《Multi-Agent Verification》（<a href="https://arxiv.org/html/2502.20379v1">arXiv 2502.20379</a>）提出 test-time 组合多个 verifier 提升正确率，并给出"如何挑选要组合的 verifier"的方法。工程化最小形态<strong>不需要 debate 或 judge panel</strong>——主力模型生成 + 另一家族模型 fresh-context review 即可。</p>
+
+<h3 id="s5-3">5.3 Judge panel / debate 的真主战场是"评估"而非"架构拍板"</h3>
+<p>2025 年 judge panel / debate 研究集中在 <strong>LLM-as-a-Judge 评估场景</strong><a class="src" href="https://openreview.net/forum?id=Vusd1Hw2D9">[NeurIPS 2025]</a>：翻译质量、事实核查、对齐。这些系统的 judge/debate 用于"<strong>评估产出质量</strong>"，而不是用于"<strong>在两个架构方案里选一个并负责</strong>"。<strong>架构拍板的责任归属在这些论文里基本不讨论</strong>。</p>
+
+<table>
+<tr><th>范式</th><th>适合</th><th>不适合</th></tr>
+<tr><td>Judge panel / debate</td><td><strong>评估</strong>（对错有客观参照：翻译、事实、规范一致性）</td><td>架构权衡（无客观最优，只有上下文最优）</td></tr>
+<tr><td>Adversarial review (Maker-Checker)</td><td>代码正确性验证</td><td>—（这就是正确用法）</td></tr>
+<tr><td>ADR 自动化 + judge prompt 批判</td><td>草拟决策文档</td><td>不替代人类对 alternatives 的事实核查</td></tr>
+</table>
+
+<h3 id="s5-4">5.4 ADR 自动化：成熟范式，但人类始终在治理闭环里</h3>
+<p>Equal Experts 给出 metaprompting 方法<a class="src" href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">[Equal Experts]</a>：从一个 <em>"decision kernel"</em>（一句话决策核心）出发，让 LLM 扩展出 Background / Alternatives / Decision / Consequences，Alternatives 部分 prompt 要求 <em>"think HARD"</em> 并搜网获取最新替代方案。</p>
+
+<p><strong>四个陷阱</strong>：</p>
+<ol>
+  <li><strong>幻觉</strong>——编造 API / 链接 / 产品功能。</li>
+  <li><strong>理由错配</strong>——decision 与 alternatives 不对齐。</li>
+  <li><strong>可信度陷阱</strong>——<em>"clear logical convincing output"</em> 让人放松审查。</li>
+  <li><strong>瓶颈转移</strong>——文档快了但 stakeholder 协调变瓶颈。</li>
+</ol>
+
+<p>Equal Experts 的解法：用另一个 <em>"judge"</em> prompt 批判生成的 ADR、加 guardrail（<em>"References MUST exist"</em>）、人工事实核查是核心环节。</p>
+
+<h3 id="s5-5">5.5 AGENTS.md 作为"可执行 ADR"</h3>
+<p>SudoAll 报道 Firstmate 栈用 preference files（AGENTS.md）编码规则，captain agent 据此路由决策（<em>"Route by preference files"</em>）<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>。</p>
+
+<p>社区论点 <em>"AGENTS.md is the new ADR"</em> 主张：传统 ADR 是给人类读的<strong>叙事文档</strong>，AGENTS.md 是给 agent 读的<strong>可执行约束</strong>——把"我们不用 X 框架""所有 SQL 必须带表前缀"这类决策编码为机器可读规则，agent 在生成代码时被迫遵守。这把<strong>"架构决策"从"事后记录"前移为"事前约束"</strong>。</p>
+
+<aside class="note"><strong>advisory vs enforceable 的分界</strong>。ADR 是 <em>advisory</em>（建议性，靠人脑遵守）；AGENTS.md 在 hook / subagent / pre-push gate 联动时变成 <em>enforceable</em>（强制执行）。你的核心缺口不是"没写原则"，而是"写了原则但没有 deterministic 层去兑现它"——这正是把 AGENTS.md 从 advisory 升级为 enforceable 的过程：写一条 → 配一个 gate 验证它 → 违反时 gate 拦下。无 gate 的 AGENTS.md 仍是声明。</aside>
+
+<h3 id="s5-6">5.6 "拍板并负责" 的 agentic 模式</h3>
+<p>综合 Kun / Verifier Pattern / Equal Experts，可负责的 agentic 决策是<strong>三段式</strong>：</p>
+
+<ol>
+  <li><strong>分层问责</strong>——脚本对确定性负责、对抗审查对代码质量负责、人类对产品方向负责。三层各有 owner，不混淆。</li>
+  <li><strong>模糊性上交</strong>——Kun 明确 <em>"escalate ambiguous product-changing decisions"</em>，captain <em>"delegate by default"</em> 保持可中断，只在 ambiguous decisions 上花时间。</li>
+  <li><strong>反馈进约束</strong>——每次人类拍板的决策，沉淀回 AGENTS.md / preference files，使下次同类决策不再需要人类。<strong>拍板次数随系统成熟度递减，因为决策被前置编码为约束</strong>。</li>
+</ol>
+
+<h4>用 agent 做技术决策（正确的姿势）</h4>
+
+<div class="mermaid">
+flowchart TB
+  Q[技术决策问题] --> Cls{类型分类}
+  Cls -->|可机械验证<br/>代码 bug / 规范一致 / 事实核查| AR[Adversarial Review<br/>fresh-context reviewer]
+  Cls -->|需要权衡<br/>架构 / 数据契约 / 分片策略| SC[scout 模式<br/>agent 只产 report 不动代码]
+  Cls -->|高模糊 / 产品方向| H[人类拍板<br/>不可委派]
+  AR --> Verdict[结构化 verdict<br/>severity/confidence/file:line]
+  SC --> RPT[report.md<br/>pros/cons/推荐/引用]
+  RPT --> Fac[人类事实核查<br/>references 真实存在?]
+  Fac --> Dec[人类决策]
+  Dec --> W[写回 AGENTS.md<br/>作为下次的约束]
+  H --> W
+  Verdict --> W
+  style H fill:#fdecea,stroke:#b3261e,stroke-width:2px;
+  style W fill:#fff8e1,stroke:#d4a017,stroke-width:2px;
+</div>
+
+<p class="src">综合 <a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll Firstmate</a> · <a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo</a> · <a href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">Equal Experts ADR</a></p>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑦ 实操落地（读者环境）</h2>
+
+<p class="lede">这一节是教材 L 的核心——<strong>命令级 / 配置级</strong>地把 L8 / Firstmate / 对抗审查装进你的 Claude Code + Codex + ~/.codex/AGENTS.md。迁移顺序按 SudoAll 给的杠杆排序<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a>：<strong>先 merge gate &gt; 再 worktree 隔离 &gt; 再 token 替换 &gt; 最后才上全套 firstmate 编排</strong>。<span class="danger">不要跳级</span>。</p>
+
+<h3 id="s6-0">第 0 步 · 诊断 gap（零改动）</h3>
+
+<p>先跑确认：</p>
+<pre><code>grep -ioE '(firstmate|no-mistakes|treehouse|lavish|axi|gh-axi|gnhf|herdr)' \
+  /home/cheche/Workspaces/Learning/FunctuonOwnerLearning/textbooks/J-aicoding-collaboration-audit.html \
+  | sort | uniq -c</code></pre>
+
+<p><strong>本教材编写时实测输出</strong>（2026-07-26）：全部 0 命中；<code>AGENTS.md</code> 出现 36 次；<code>adversarial</code> 仅 1 次。这就是教材 L 要补的洞：<strong>J 教了"写 AGENTS.md 指令"，L 教"把指令装进 gate 和并行编排"</strong>。</p>
+
+<h3 id="s6-1">第 1 步 · 观摩 firstmate distro（只读，不要进日常 harness）</h3>
+
+<pre><code>cd /home/cheche/Workspaces/Learning
+git clone https://github.com/kunchenguid/firstmate firstmate-ref  # 只读观摩
+cat firstmate-ref/AGENTS.md</code></pre>
+
+<p>重点抄三段：</p>
+<ul>
+  <li><strong>Escalation and Captain Etiquette</strong>——何时自动修、何时问、何时绝不做。</li>
+  <li><strong>Task Lifecycle（ship vs scout）</strong>——ship 产出 PR；scout 只产 <code>data/&lt;id&gt;/report.md</code> 不动代码；scout 审完用 <code>bin/fm-promote.sh</code> 升级。</li>
+  <li><strong>Self-Update</strong>——状态落盘、kill/重启可 reconcile。</li>
+</ul>
+
+<blockquote class="cf"><strong>反事实</strong>：在 <code>HilPerformancePlatform</code> 目录里 clone firstmate——它的 hook 默认会装 <code>.claude/.codex/hooks</code>，可能改写你现有 setup。<strong>只在 sandbox 目录 clone 观摩</strong>，要抽约定就抽进自己的 <code>~/.codex/AGENTS.md</code>。</blockquote>
+
+<h3 id="s6-2">第 2 步 · 装 treehouse（独立、无副作用、立即可用）</h3>
+
+<pre><code>curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh
+cd /home/cheche/Workspaces/Learning/HilPerformancePlatform
+treehouse          # 进入 ~/.treehouse/HilPerformancePlatform-&lt;hash&gt;/ 子 shell
+# ... 在隔离 worktree 里干活 ...
+exit               # 归还池子</code></pre>
+
+<p>核心机制：池化复用——get 时 <code>git fetch origin</code>，找"未租/未脏/未占用"的 worktree，detached HEAD reset 到默认分支最新，<strong>保留依赖与 build cache</strong>；无则新建。durable lease 用 <code>treehouse get --lease</code> 只打印路径，<code>treehouse return [path]</code> 归还<a class="src" href="https://github.com/kunchenguid/treehouse">[treehouse README]</a>。</p>
+
+<p><strong>立即收益</strong>：让你拥有"并行 crew 的物理基础"，且不碰现有 git 状态。先跑单 worktree 熟悉池语义，再在教材 L 里 demo 一次"同 repo 两 crew 并行"（一个改 <code>warehouse/dq</code>、一个改 <code>flink-jobs</code>）验证无冲突。</p>
+
+<h3 id="s6-3">第 3 步 · 改造 ~/.codex/AGENTS.md（核心、低风险）</h3>
+
+<p>这是教材 L 最重要的实操——<strong>把你的"声明原则"升级为"deterministic 兑现层"</strong>。在现有 'Personal Codex working defaults' 末尾追加三段：</p>
+
+<h4>(A) 任务分类</h4>
+<pre><code>## Task classification
+
+- **scout** = 只产 report，零代码改动。
+  适用：数仓分片键 / TTL / 排序键 / 新表 schema 这类"建什么"不确定的探查。
+  产物：data/&lt;task-id&gt;/report.md（含 pros/cons/推荐/引用）。
+  升级：reader 审 report 后用 `bin/fm-promote.sh` 或人工 promote 成 ship。
+
+- **ship** = 产出可 land 的变更（PR-ready）。
+  适用：明确"改什么"的实现任务。</code></pre>
+
+<aside class="note"><strong>这一条直接回应"委托下沉不克制"</strong>。你的诊断之一是"声明原则缺 deterministic 兑现层"——把"建什么 vs 改什么"明确分类，<strong>把不确定的探查强制走 scout（零代码改动）</strong>，能砍掉一半返工。委派给 agent 的不该是"改 DDL"，而应是"先调研三种分片方案的读写代价，产出 report"。</aside>
+
+<h4>(B) Escalation 三级策略（搬自 firstmate AGENTS.md）</h4>
+
+<pre><code>## Escalation policy
+
+按权威分三级（不可越级）：
+
+- **auto-fix（agent 自治）**：拼写 / lint / 格式化 / 类型 / 测试补全 / 缺失 import。
+  原则：机械、可逆、不触及产品语义。
+
+- **ask（必须问 reader）**：DDL 变更 / 数据契约 / 分片键 / 排序键 / TTL /
+  触 `warehouse/` 或 `warehouse/dq` 或 `warehouse/contracts` 的任何修改 /
+  新增外部依赖 / CI 凭证变更。
+  原则：影响产品行为或不可逆。
+
+- **never（硬规则，永不静默执行）**：删数仓表 / 改生产凭据 /
+  force push master / 删 MEMORY.md / 关掉 pre-push gate / 改 AGENTS.md 自身。
+  原则：破坏性或治理边界。</code></pre>
+
+<p>firstmate 的原始硬规则优先级（搬用参考）<a class="src" href="https://github.com/kunchenguid/firstmate/blob/main/AGENTS.md">[firstmate AGENTS.md]</a>：<em>never write to projects / never merge without captain explicit word / never tear down unlanded work / crewmates never address captain directly / report faithfully including failure</em>。</p>
+
+<h4>(C) 对抗审查硬规则（兑现"独立验证 gate"）</h4>
+
+<pre><code>## Adversarial review gate (enforceable)
+
+完成前 final gate（不可跳过）：
+
+1. **intent recovery**：spawn fresh Task agent，
+   prompt 第一段不是"找 bug"而是"重建声称完成的任务 → 列验收点 →
+   逐条对照 diff 判断是否真实现"。结构化输出 verdict。
+
+2. **fresh-context code review**：diff &gt; 50 行 或 触 `warehouse/` / `flink-jobs/` /
+   `warehouse/contracts/` 的变更，强制 spawn 另一个 fresh Task agent 跑
+   superpowers code-review skill。结论带 文件:行号 回来前 **禁止 git push**。
+
+3. **E2E evidence**：任何数据访问功能（ClickHouse/SQL/REST/GraphQL）
+   完成前必须对 live DB 跑真实查询（配合 live-smoke-test-before-done skill）。
+   mock 单测不算完成。/verify 不允许退回单测/类型检查。
+
+4. **fixer 解耦**：reviewer 只输出 verdict（severity/confidence/file:line/evidence），
+   修 bug 由另一个带写权限的 agent 或人执行，修完 spawn 新 fresh-context reviewer 复审。
+
+5. **blast-radius 路由**：
+   - auth / 支付 / secret / 权限 / 数据迁移 → 三角色（Primary+Challenger+Arbiter）
+   - 纯格式化 / 低风险 refactor → 单 reviewer + 置信度阈值过滤</code></pre>
+
+<aside class="note"><strong>advisory vs enforceable 的兑现</strong>。仅写"应该 review"是 advisory——agent 可跳过。把它和 pre-push hook + fresh Task agent 联动，就变成 enforceable。这条规则把教材 J 的诊断"<strong>独立验证 gate 缺失</strong>"从声明变成机制。</aside>
+
+<h3 id="s6-4">第 4 步 · 加最小 merge gate（不依赖 no-mistakes）</h3>
+
+<p>在 <code>HilPerformancePlatform/.git/hooks/pre-push</code> 加：</p>
+
+<pre><code>#!/usr/bin/env bash
+# 最小 merge gate：复刻 no-mistakes 的拦截语义，0 外部依赖
+set -euo pipefail
+
+# 读本次 push 涉及的 diff
+range="$1...$2"  # ref1 ref2 from git
+# 实际用 origin/master...HEAD 更稳：
+range="origin/master...HEAD"
+
+diffstat=$(git diff --stat "$range" 2>/dev/null | tail -1)
+lines=$(git diff "$range" 2>/dev/null | wc -l)
+touches_warehouse=$(git diff --name-only "$range" 2>/dev/null | grep -E '^(warehouse/|flink-jobs/|warehouse/contracts/)' | head -1)
+
+if [[ "$lines" -gt 50 || -n "$touches_warehouse" ]]; then
+  echo "─────────────────────────────────────────────"
+  echo "BLOCK: 触发 fresh-context review"
+  echo "  diff 行数: $lines"
+  echo "  触敏感路径: ${touches_warehouse:-no}"
+  echo "请在 Claude Code 里执行："
+  echo "  1. /code-review   (fresh-context adversarial review)"
+  echo "  2. /verify        (实跑 app，不允许退回单测)"
+  echo "  3. 触 warehouse/ 的：跑 live-smoke-test-before-done skill"
+  echo "─────────────────────────────────────────────"
+  echo "确认完成后再 push。强制绕过: git push --no-verify (留有意识绕过的口子)"
+  exit 1
+fi
+
+exit 0</code></pre>
+
+<pre><code>chmod +x /home/cheche/Workspaces/Learning/HilPerformancePlatform/.git/hooks/pre-push
+# 留有意识绕过的口子（不删）
+git config alias.pushreview 'push --no-verify'</code></pre>
+
+<blockquote class="why">这条 hook 用 0 外部依赖复刻 no-mistakes 的 gate 语义。<strong>反事实</strong>：如果不加这个 gate，你的 AGENTS.md 里写的"必须 review"只是建议——agent 会在没有 review 的情况下直接 push，你的"独立验证 gate"诊断永不愈合。</blockquote>
+
+<h3 id="s6-5">第 5 步 · 跑通一次完整 ship loop 做证据</h3>
+
+<p>选一个真实小任务，例如：<strong>给 <code>warehouse/dq</code> 加一条列名一致性检查</strong>。</p>
+
+<ol>
+  <li>Claude Code 里 <code>/brainstorming</code> 出 plan（plan 阶段，HTML / markdown 都行，关键是 confident state）。</li>
+  <li><code>treehouse</code> 开隔离 worktree。</li>
+  <li>实现 + 自检。</li>
+  <li><code>git push origin</code> 触发 <code>pre-push</code> hook → 被拦下。</li>
+  <li>spawn fresh Task agent 跑 <code>/code-review</code>。</li>
+  <li>review 通过 + 跑 <code>/verify</code> + 跑 <code>live-smoke-test-before-done</code>。</li>
+  <li>全绿后才真正 push。</li>
+</ol>
+
+<p><strong>把这次的全过程</strong>（含 hook 拦截日志、review finding、修复 diff）作为教材 L 的"实操流水线"证据，对应 ByteByteGo 的 plan→implement→validate 三段。</p>
+
+<h4>读者环境的完整 ship loop</h4>
+
+<div class="mermaid">
+sequenceDiagram
+  participant R as 读者 (Captain)
+  participant CC as Claude Code (first mate)
+  participant TH as treehouse worktree
+  participant H as pre-push hook
+  participant RV as fresh reviewer agent
+  participant V as /verify + live-smoke
+  participant O as origin
+
+  R->>CC: /brainstorming plan
+  CC-->>R: confident plan
+  R->>TH: treehouse (隔离 worktree)
+  TH-->>CC: clean worktree
+  CC->>CC: implement + self-check
+  CC->>H: git push origin
+  H-->>CC: BLOCK (diff>50 / 触 warehouse/)
+  CC->>RV: spawn fresh Task (intent recovery + adversarial review)
+  RV-->>CC: verdict (file:line)
+  CC->>CC: fixer agent 修 bug (解耦)
+  CC->>RV: 复审 (新 fresh context)
+  RV-->>CC: clean
+  CC->>V: /verify + live-smoke-test
+  V-->>CC: E2E 证据 (真实 DB 查询)
+  CC->>O: git push origin ✓
+  O-->>CC: CI green
+</div>
+
+<h3 id="s6-6">第 6 步 · token 经济实验（可选、有收益）</h3>
+
+<pre><code>npm i -g gh-axi</code></pre>
+
+<p>在 <code>FunctuonOwnerLearning</code> 同步仓做对照：分别用 gh MCP 和 gh-axi 列一次 PR，记录 token 消耗与 turn 数。</p>
+
+<p>AXI 基准（SudoAll 引用）<a class="src" href="https://github.com/kunchenguid/axi">[axi]</a>：<strong>gh-axi 100% 成功 $0.050/task vs GitHub MCP 87% 成功 $0.148/task</strong>（约 3x 便宜且更准），MCP 还需 ~2x turns。在 AGENTS.md 里写 <code>Use gh-axi for GitHub</code>。</p>
+
+<aside class="note"><strong>对读者的特殊价值</strong>：你走 bigmodel 网关按 token 计费，token 经济直接 = 省钱 = 更长上下文 = 更深教材生成。<strong>不要按"功能丰富度"选工具，要按 token/turn 选</strong>。</aside>
+
+<h3 id="s6-7">第 7 步 · 评估是否上 no-mistakes（谨慎、需先验证网关兼容）</h3>
+
+<p><strong>只在你觉得 pre-push hook + 手动 /code-review 不够自动化时</strong>再考虑。两档：</p>
+
+<table>
+<tr><th>档</th><th>动作</th><th>适用</th></tr>
+<tr><td><strong>A 档（推荐先做）</strong></td><td>不装 no-mistakes，用本地 hook + superpowers code-review skill 模拟 gate</td><td>已能解决"独立验证 gate 缺失"</td></tr>
+<tr><td><strong>B 档（验证兼容后）</strong></td><td><code>curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh</code></td><td>需要更自动化的 commit→rebase→review→test→doc→lint→push→PR 全链</td></tr>
+</table>
+
+<p><strong>B 档前必做</strong>：在一个 throwaway repo 跑 <code>no-mistakes init</code> + <code>no-mistakes -y</code>，确认它起的 reviewer 子进程走的是 <code>ANTHROPIC_BASE_URL=https://open.bigmodel.cn</code>（你的环境）而不是 <code>anthropic.com</code>（会另计费）。<strong>验证前不要在任何 JD 内部 repo 上 init</strong>。</p>
+
+<h3 id="s6-8">第 8 步 · 沉淀进教材与 memory</h3>
+
+<p>把第 1–6 步产出的 AGENTS.md diff、pre-push hook 脚本、treehouse 验证日志、ship loop 证据写进 <code>L-*.html</code>。同时在 <code>~/.claude/projects/-home-cheche-Workspaces-Learning/memory/</code> 加一条 MEMORY 指向"数仓变更 gate 已落地"，让后续会话知道 setup 已升级。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑧ 对照 J 诊断的改进清单 + 学习路线</h2>
+
+<h3>7.1 J 教材对你的三条诊断 → L 教材的对应处方</h3>
+
+<table>
+<tr><th>J 诊断</th><th>L 处方</th><th>对应章节</th><th>落地步骤</th></tr>
+<tr><td><strong>声明原则缺 deterministic 兑现层</strong></td><td>AGENTS.md advisory → enforceable（联动 hook + subagent）</td><td><a href="#s6-3">§6.3 (C)</a> + <a href="#s6-4">§6.4</a></td><td>写硬规则 + 加 pre-push hook</td></tr>
+<tr><td><strong>独立验证 gate 缺失</strong></td><td>fresh-context adversarial reviewer + E2E validator</td><td><a href="#sec-4">§4</a> + <a href="#s6-3">§6.3 (C)</a></td><td>强制 /code-review + /verify + live-smoke</td></tr>
+<tr><td><strong>委托下沉不克制</strong></td><td>scout vs ship 任务分类；escalation 三级</td><td><a href="#s6-3">§6.3 (A)(B)</a> + <a href="#sec-5">§5</a></td><td>不确定的探查强制走 scout</td></tr>
+</table>
+
+<h3>7.2 学习路线（按杠杆排序）</h3>
+
+<div class="mermaid">
+flowchart LR
+  A[第 0 步<br/>诊断 gap] --> B[第 1 步<br/>观摩 firstmate distro]
+  B --> C[第 2 步<br/>装 treehouse]
+  C --> D[第 3 步<br/>改 AGENTS.md<br/>task 分类 + escalation + gate]
+  D --> E[第 4 步<br/>pre-push hook<br/>最小 merge gate]
+  E --> F[第 5 步<br/>跑通 ship loop<br/>收集证据]
+  F --> G{是否<br/>tab&gt;3 管不过来?}
+  G -->|否| H[停在这里<br/>每周自检 PR 落地]
+  G -->|是| I[第 6 步<br/>gh-axi 替换 MCP]
+  I --> J[第 7 步<br/>评估 no-mistakes<br/>先验证网关]
+  J --> K[第 8 步<br/>上 firstmate 全套]
+  style D fill:#eaf1f8,stroke:#0b5394,stroke-width:2px;
+  style E fill:#fff8e1,stroke:#d4a017,stroke-width:2px;
+  style H fill:#fdecea,stroke:#b3261e,stroke-width:2px;
+</div>
+
+<p class="src">迁移顺序：<a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll · Firstmate Agentic Stack</a></p>
+
+<h3>7.3 AGENTS.md + hook + subagent 集成视图</h3>
+
+<div class="mermaid">
+flowchart TB
+  subgraph AG[~/.codex/AGENTS.md · 唯一权威源]
+    TC[Task classification<br/>scout / ship]
+    ES[Escalation policy<br/>auto-fix / ask / never]
+    RG[Adversarial review gate<br/>5 条硬规则]
+  end
+  subgraph HOOK[.git/hooks/pre-push]
+    BL[blast check<br/>diff>50 / 触 warehouse/]
+  end
+  subgraph CC[Claude Code runtime]
+    T1[Task agent: scout<br/>产 report.md]
+    T2[Task agent: ship<br/>实现 + 自检]
+    RV[Task agent: reviewer<br/>fresh context / 只读 / 异构家族]
+    FX[Task agent: fixer<br/>带写权限 / 解耦]
+    VR[/verify + live-smoke/]
+  end
+  AG -.读.-> CC
+  HOOK -.拦.-> T2
+  HOOK -.触发.-> RV
+  RV -.verdict.-> FX
+  FX -.复审.-> RV
+  RV -.clean.-> VR
+  VR -.push.-> Origin[(origin)]
+  style AG fill:#eaf1f8,stroke:#0b5394,stroke-width:2px;
+  style HOOK fill:#fff8e1,stroke:#d4a017,stroke-width:2px;
+</div>
+
+<h3>7.4 自检清单（每周）</h3>
+<ul class="checklist">
+  <li>本周能指着一个 PR / release / 客户结果吗？（不能 = setup theatre）</li>
+  <li>我做的决策数 vs 我自己上手的代码数——后者应持续下降。</li>
+  <li>pre-push hook 被触发了几次？每次都 spawn fresh reviewer 了吗？</li>
+  <li>有多少 bug 是 fresh reviewer 抓到的？（校准 63–68% 量级）</li>
+  <li>有多少 finding 是 auto-fix 的 vs escalation 给我的？（校准 escalation 边界）</li>
+  <li>本季度做一次"换 harness 还能跑吗"的 dry-run（agent-agnostic 自检）。</li>
+</ul>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑨ 关键 rationale + 反事实</h2>
+
+<h3>9.1 为什么"validator ≠ reviewer"</h3>
+<blockquote class="why">Reviewer 答"diff 有 bug 吗"，可基于 diff 推理；Validator 答"产品真的跑通了吗"，必须驱动真实 app 出证据。Unit test 全绿而产品有 bug 是常态——OpenAI 的 reviewer 给<strong>仓库读取 + 代码执行权限</strong>（不只看 diff）就是这个原因<a class="src" href="https://alignment.openai.com/scaling-code-verification/">[OpenAI]</a>。<br><strong>反事实</strong>：如果你只装 reviewer（基于 diff 推理），SQL 别名碰撞、缺表前缀、IN 过滤错配、类型不匹配这些 bug 全部会过——它们只在真实 DB 上跑才暴露。Validator 必须独立于 reviewer 存在。</blockquote>
+
+<h3>9.2 为什么 review 必须 fresh-context 且跨家族</h3>
+<blockquote class="why">Anthropic 原话："a fresh context improves code review because Claude avoids bias toward code it just wrote"<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a>。同家族模型 share correlated blind spots——会"自信地在同样地方同意"<a class="src" href="https://www.augmentcode.com/guides/adversarial-code-review">[Augment]</a>。libfuse 战例：Codex 抓到了 Claude-family review 漏掉的 bug。<br><strong>反事实</strong>：你用 Claude 写、Claude 在同一 session 自审——等于让学生批改自己的作业。即使新开 session 但仍用同一家族，盲点是相关的，发现不了同一类问题。</blockquote>
+
+<h3>9.3 为什么 "拍板" 不能委派给 agent</h3>
+<blockquote class="why">Judge panel / debate 范式为<strong>有客观参照</strong>的评估设计（翻译质量、事实对错）。架构决策<strong>没有客观最优，只有上下文最优</strong>——责任归属在这些论文里基本不讨论。Kun 在最模糊的决策上退回人类，正是对这条边界的尊重<a class="src" href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">[ByteByteGo]</a>。<br><strong>反事实</strong>：用 judge panel 投票"ClickHouse vs Druid"——你得到的是"模型家族共识"，不是"上下文最优"。三个月后真实查询模式暴露的权衡，模型投票时根本没考虑过。<strong>agent 越强，拍板责任越被聚焦，而非被稀释</strong>。</blockquote>
+
+<h3>9.4 为什么 AGENTS.md 必须联动 hook 才算 enforceable</h3>
+<blockquote class="why">仅写"应该 review"是 advisory——agent 可跳过。把它和 pre-push hook + fresh Task agent 联动，就变成 enforceable：违反时 gate 物理拦下。<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a> 把确定性步骤留在 bash（零 reasoning token），agent 只在"打破预期"时介入——hook 是 bash、reviewer 是 agent，正好分工。<br><strong>反事实</strong>：你的 AGENTS.md 写了 39 次"应该"但没有 gate——agent 在 95% 的情况下会跳过，因为"完成任务"的奖励信号压过"遵守原则"。Function Owner 的核心风险不是不会写原则，而是<strong>没有 deterministic 层兑现原则</strong>。</blockquote>
+
+<h3>9.5 为什么 reader 应在第 3 档停下（不要跳级上 firstmate 全套）</h3>
+<blockquote class="why">SudoAll 给的迁移顺序：① captain surface → ② worktree 隔离 → ③ merge gate → ④ token 替换 → ⑤ tab 管不过来才上 firstmate 全套 → ⑥ 显式 escalation 规则。你当前在 (1) 已定 Claude Code、(2) 已用 worktree，正卡在 (3) merge gate 缺失。<a class="src" href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">[SudoAll]</a><br><strong>反事实</strong>：跳级上 firstmate 全套——你装了 captain+crew 编排但没有 gate。结果是<strong>并行地、加速地制造 slop</strong>。"Gate the merge, not your eyeballs" 不是口号：无 gate 的并行 = scales slop。</blockquote>
+
+<h3>9.6 为什么"反馈进约束"是 agentic 决策可负责的根</h3>
+<blockquote class="why">每次人类拍板的决策应沉淀回 preference files，使同类决策下次不再需要人类——拍板次数随系统成熟度递减。Equal Experts 的"judge prompt 批判 ADR" + Kun 的"no-mistakes adversarial review"都是同一原则：在人类拍板前，先用独立 agent 把可机械验证的部分剥离掉<a class="src" href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">[Equal Experts]</a>。<br><strong>反事实</strong>：你每次拍板后只改代码不改 AGENTS.md——下次同类问题还会 escalate 给你，拍板数量不收敛。三个月后你仍在为同一类问题拍板，agent 没有变得"更懂你的判断"。</blockquote>
+
+<h3>9.7 为什么"可信度陷阱"对判断力领先的人更危险</h3>
+<blockquote class="why">Equal Experts：clear logical convincing LLM output 会让人放松审查<a class="src" href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">[Equal Experts]</a>。<strong>读者作为判断力领先的 PM，越容易被"听起来对"麻痹</strong>——你能更快看懂 LLM 的论证，但"看懂"不等于"核查"。<br><strong>反事实</strong>：你读 agent 写的 ADR，alternatives 三条都很合理，decision 逻辑通顺——你拍板。三个月后发现 alternatives 漏掉了"用 Iceberg + Trino"这个真实存在过的选项（幻觉），decision 基于不全的权衡。<strong>judge prompt 批判 + references MUST exist guardrail + 人工事实核查</strong>是抗这个陷阱的三道防线。</blockquote>
+
+<aside class="note"><strong>分层的本质</strong>。读者作为 Function Owner 的核心能力，不是"写更聪明的 AGENTS.md"，而是<strong>分清哪一层该谁负责</strong>：脚本对确定性负责、对抗审查对代码质量负责、人类对产品方向负责。三层 owner 不混淆，是 agentic 决策可负责的前提。这一节 7 条 rationale 都是这条原则的不同投影——validator≠reviewer 是层（认知结构）、fresh-context 是层（context 隔离）、拍板不委派是层（责任归属）、AGENTS.md 联动 hook 是层（advisory→enforceable）、停在第 3 档是层（杠杆排序）、反馈进约束是层（决策收敛）、可信度陷阱是层（信任校准）。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">延伸阅读（URL）</h2>
+
+<h3>核心一手（按优先级）</h3>
+<ul>
+  <li><a href="https://sudoall.com/talk-to-one-agent-first-mate-agentic-stack/">SudoAll · Talk to One Agent, Ship with a Crew — Firstmate Agentic Stack</a>——口径最严谨，含 5 层架构 + 7 原则 + 反例"when NOT to adopt"。</li>
+  <li><a href="https://blog.bytebytego.com/p/an-ex-meta-l8s-agentic-engineering">ByteByteGo · An Ex-Meta L8's Agentic Engineering</a>——结构化总览，含 Plan→Implement→Validate 三段。</li>
+  <li><a href="https://creatoreconomy.so/p/how-this-ex-meta-l8-engineer-ships-40-prs-a-day-with-ai-kun-chen">Creator Economy · How This Ex-Meta L8 Engineer Ships 40 PRs a Day with AI</a>——stack 组件 + 3 阶段工作流 + 3 条 review 铁律（部分付费墙）。</li>
+</ul>
+
+<h3>对抗性审查 / 自动验证</h3>
+<ul>
+  <li><a href="https://www.augmentcode.com/guides/adversarial-code-review">Augment · Adversarial Code Review: Why the Maker Shouldn't Grade</a>——Maker-Checker 五维表、三角色、fixer 解耦、渐进门禁。</li>
+  <li><a href="https://alignment.openai.com/scaling-code-verification/">OpenAI Alignment · A Practical Approach to Verifying Code at Scale</a>——验证比生成便宜、精度优先于召回、reviewer 给仓库+执行权限。</li>
+  <li><a href="https://code.claude.com/docs/en/skills">Claude Code · Skills 文档</a>——/run / /verify / /code-review / /run-skill-generator 的官方说明。</li>
+  <li><a href="https://arxiv.org/html/2502.20379v1">arXiv 2502.20379 · Multi-Agent Verification (Lifshitz et al. 2025)</a>——MAV 学术范式。</li>
+  <li><a href="https://www.anthropic.com/engineering/multi-agent-research-system">Anthropic · How we built our multi-agent research system</a>——subagent + interleaved thinking 的反思回路。</li>
+</ul>
+
+<h3>GitHub 开源（Kun Chen 6 仓）</h3>
+<ul>
+  <li><a href="https://github.com/kunchenguid">github.com/kunchenguid</a>（个人页）</li>
+  <li><a href="https://github.com/kunchenguid/firstmate">firstmate</a>（1.9k★，captain+crew 协调）</li>
+  <li><a href="https://github.com/kunchenguid/no-mistakes">no-mistakes</a>（7.1k★，本地 git 代理 + 对抗式 review，最成熟）</li>
+  <li><a href="https://github.com/kunchenguid/treehouse">treehouse</a>（1.1k★，worktree 池）</li>
+  <li><a href="https://github.com/kunchenguid/axi">axi</a>（1.6k★，agent token 高效 CLI）</li>
+  <li><a href="https://github.com/kunchenguid/gnhf">gnhf</a>（3.4k★，长任务跨 context window 编排）</li>
+  <li><a href="https://github.com/kunchenguid/lavish-axi">lavish-axi</a>（2.2k★，HTML 当 markdown 用）</li>
+  <li><a href="https://github.com/kunchenguid/firstmate/blob/main/AGENTS.md">firstmate/AGENTS.md</a>——escalation 三级语义的权威模板。</li>
+</ul>
+
+<h3>技术决策 / ADR 自动化</h3>
+<ul>
+  <li><a href="https://www.equalexperts.com/blog/our-thinking/accelerating-architectural-decision-records-adrs-with-generative-ai/">Equal Experts · Accelerating ADRs with GenAI</a>——decision kernel → B/A/D/C，judge prompt 批判，References MUST exist guardrail。</li>
+  <li><a href="https://openreview.net/forum?id=Vusd1Hw2D9">NeurIPS 2025 · Multi-Agent Debate for LLM Judges with Adaptive Stability Detection</a></li>
+</ul>
+
+<h3>分发与口径（要警惕的话术）</h3>
+<ul>
+  <li><a href="https://www.youtube.com/watch?v=8ZgpAXe5V5w">YouTube · L8 Principal's Agentic Engineering Setup (just copy him)</a>——David Ondrej 分发视频，注意"just copy him"是营销话术。</li>
+  <li><a href="https://www.linkedin.com/posts/theaiengineering_talk-to-one-agent-and-ship-with-a-crew-activity-7482043082570612736-MBOc">LinkedIn 评论区（Michał Piszczek）</a>——社区点名的硬风险：语义级合并冲突。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 6 份 facet 调研整理。所有论断带 source/URL，关键数据点（68% / 63% / 40 PRs/day / 185K vs 79K token / 800 行 review 上限）均注明口径（一人经验 vs 大规模工业数据 vs 营销数字）。读者按 §7.2 学习路线依次落地即可。J 诊断的三条 gap（声明原则缺 deterministic 兑现层 / 独立验证 gate 缺失 / 委托下沉不克制）分别在 §6.3 / §6.3(C)+§6.4 / §6.3(A) 兑现。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>

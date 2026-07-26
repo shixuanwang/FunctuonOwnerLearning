@@ -33,6 +33,7 @@
 | [K·Onboard PRD 初版(审核前)](textbooks/K-onboard-prd-v1.html) | 无人车性能全生命周期+五闭环 PRD v1（审核前） | — |
 | [K·Onboard PRD 终版](textbooks/K-onboard-prd-final.html) | 经 3 专家+首席+6 persona 审核修订的终版 PRD（130KB，11 mermaid，20 处修订） | — |
 | [K·代码/架构质量报告](textbooks/K-onboard-quality-report.html) | 代码+架构+选型质量评审+系统优化方案+launch-review Q&A 汇编（126KB） | — |
+| [教材L·Agentic Engineering](textbooks/L-agentic-engineering.html) | David Ondrej L8/Kun Chen/Firstmate/对抗审查/技术决策+实操落地（单 HTML+mermaid） | — |
 | [Z·双 agent 终审报告](textbooks/Z-final-review-report.html) | 教育家+架构师 max-effort 审全部 A–K：评级+每本优化点+跨教材主题+优先行动 | — |
 
 ## ⚠️ 机密提醒
