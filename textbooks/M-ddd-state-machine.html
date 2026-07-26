@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDD + 状态机：产品架构 × aicoding（主动加白 vs 事后加黑）</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg:#1a1a1a; --fg-soft:#4a4a4a; --bg:#ffffff; --bg-soft:#f7f7f5;
+    --border:#e2e2de; --accent:#0b5394; --accent-soft:#eaf1f8;
+    --code-bg:#f5f5f3; --code-fg:#222; --note-bg:#fff8e1; --note-border:#d4a017;
+    --evidence:#5f6368; --danger:#b3261e; --white:#0a7a45; --white-soft:#e7f4ec;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased; }
+  body { display:flex; min-height:100vh; }
+  nav.toc {
+    position:sticky; top:0; align-self:flex-start;
+    width:300px; min-width:300px; max-height:100vh; overflow-y:auto;
+    padding:24px 18px; background:var(--bg-soft); border-right:1px solid var(--border);
+    font-size:14px; flex-shrink:0;
+  }
+  nav.toc h2 { font-size:15px; margin:0 0 12px; color:var(--fg); }
+  nav.toc ol { margin:0; padding-left:18px; }
+  nav.toc li { margin:6px 0; }
+  nav.toc a { color:var(--fg-soft); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); }
+  nav.toc .sub { font-size:12.5px; color:var(--evidence); padding-left:12px; }
+  main { flex:1; min-width:0; padding:48px 56px 120px; max-width:980px; margin:0 auto; }
+  @media (max-width: 900px) {
+    body { display:block; }
+    nav.toc { position:relative; width:auto; max-height:none; border-right:none; border-bottom:1px solid var(--border); }
+    main { padding:24px 18px 80px; }
+  }
+  h1 { font-size:32px; line-height:1.3; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:23px; margin:56px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:-0.005em; }
+  h3 { font-size:18px; margin:32px 0 10px; color:var(--fg); }
+  h4 { font-size:15.5px; margin:20px 0 8px; color:var(--accent); font-weight:600; }
+  p { margin:10px 0; }
+  .lede { font-size:17px; color:var(--fg-soft); margin:14px 0 0; }
+  .meta { color:var(--evidence); font-size:13.5px; margin:4px 0 24px; }
+  ul, ol { padding-left:24px; }
+  li { margin:5px 0; }
+  code {
+    font-family: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    background:var(--code-bg); color:var(--code-fg); padding:1px 6px; border-radius:4px;
+    font-size:13.5px; word-break:break-all;
+  }
+  pre {
+    background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow-x:auto;
+    border:1px solid var(--border); margin:18px auto; max-width:fit-content;
+  }
+  pre code { background:transparent; padding:0; font-size:13px; }
+  pre.mermaid {
+    background:#fff; border:1px solid var(--border); padding:18px;
+    text-align:center; max-width:100%;
+  }
+  aside.note {
+    display:block; background:var(--note-bg); border-left:3px solid var(--note-border);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#5b4500;
+  }
+  aside.note::before { content:"难点注解｜"; font-weight:600; color:#8a6a00; }
+  aside.warn {
+    display:block; background:#fdecea; border-left:3px solid var(--danger);
+    padding:12px 16px; margin:16px 0; border-radius:0 6px 6px 0; font-size:14.5px; color:#6e1a14;
+  }
+  aside.warn::before { content:"反事实｜"; font-weight:600; color:var(--danger); }
+  blockquote.why {
+    border-left:3px solid var(--accent); background:var(--accent-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.why::before { content:"为何如此｜"; font-weight:600; color:var(--accent); }
+  blockquote.white {
+    border-left:3px solid var(--white); background:var(--white-soft);
+    padding:10px 16px; margin:14px 0; border-radius:0 6px 6px 0; font-size:14.5px;
+  }
+  blockquote.white::before { content:"加白模式｜"; font-weight:600; color:var(--white); }
+  .danger { color:var(--danger); font-weight:600; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; font-size:14px; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--bg-soft); font-weight:600; }
+  .tag {
+    display:inline-block; background:var(--accent); color:#fff; font-size:12px;
+    padding:2px 8px; border-radius:10px; margin-right:6px; vertical-align:middle;
+  }
+  .tag.soft { background:var(--bg-soft); color:var(--accent); border:1px solid var(--border); }
+  .tag.white { background:var(--white); }
+  .tag.black { background:#333; }
+  hr { border:0; border-top:1px dashed var(--border); margin:40px 0; }
+  a { color:var(--accent); }
+  .ev { font-size:12.5px; color:var(--evidence); display:block; margin:6px 0 12px; font-family: "SF Mono", Menlo, monospace; }
+  .level { font-size:11.5px; padding:1px 6px; border-radius:3px; border:1px solid var(--border); color:var(--evidence); margin-left:4px; }
+  .level.intro { background:#fff3e0; color:#8a4a00; border-color:#d4a017; }
+  .level.prac { background:#e3f2fd; color:#0b5394; border-color:#0b5394; }
+  .level.decide { background:var(--white-soft); color:var(--white); border-color:var(--white); }
+</style>
+</head>
+<body>
+
+<nav class="toc">
+<h2>目录 · DDD × 状态机</h2>
+<ol>
+  <li><a href="#sec-0">① 定位：为什么是产品架构 + aicoding 的杠杆</a></li>
+  <li><a href="#sec-1">② DDD 第一性原理</a>
+    <div class="sub">
+      <a href="#s1-1">统一语言</a> · <a href="#s1-2">限界上下文</a> ·<br>
+      <a href="#s1-3">子域分级</a> · <a href="#s1-4">战略 vs 战术</a> ·<br>
+      <a href="#s1-5">实体/值对象/聚合/事件</a> · <a href="#s1-6">ACL</a>
+    </div>
+  </li>
+  <li><a href="#sec-2">③ 状态机：state/transition/guard/effect</a>
+    <div class="sub">
+      <a href="#s2-1">五要素因果链</a> · <a href="#s2-2">不变量编码</a> ·<br>
+      <a href="#s2-3">State 模式</a> · <a href="#s2-4">ES 即状态机</a> ·<br>
+      <a href="#s2-5">Saga 协调</a> · <a href="#s2-6">层级与并行</a>
+    </div>
+  </li>
+  <li><a href="#sec-3">④ 组合在产品架构（JoyDrive 实证）</a></li>
+  <li><a href="#sec-4">⑤ 避免贫血模型</a></li>
+  <li><a href="#sec-5">⑥ 核心论点：主动加白 vs 事后加黑</a></li>
+  <li><a href="#sec-6">⑦ 在 aicoding 里省设计/开发/调研成本</a></li>
+  <li><a href="#sec-7">⑧ 行业顶级实践与工具</a></li>
+  <li><a href="#sec-8">⑨ 读者应用水平映射（practiced → can-decide）</a></li>
+  <li><a href="#sec-9">⑩ 关键 rationale + 反事实</a></li>
+  <li><a href="#sec-10">延伸阅读</a></li>
+</ol>
+</nav>
+
+<main>
+
+<h1>DDD + 状态机：产品架构 × aicoding 的杠杆</h1>
+<p class="lede">一份写给"4 年数据闭环 PM、判断力领先、目标 Function Owner"读者的单文件教材。核心论点：<strong>主动加白</strong>（design-time 把合法状态/转移/边界/契约先设计好，约束 AI 只在合法路径上生成）vs <strong>事后加黑</strong>（post-hoc 让 AI 自由膨胀再 review/blocklist 收敛）。前者把"防住所有坏情况"换成"只放行已知好情况"。</p>
+<p class="meta">读者：cheche · 状态机 <span class="level prac">practiced</span>（doc02 状态清单） · 治理结构（变更单/契约/审计）<span class="level intro">introduced</span>（最关键短板） · 工程化 PRD <span class="level prac">practiced</span>（doc17 单点爆发未模板化） · 编写日期：2026-07-26 · 认知契约：模型先行/先因果后术语/两遍法</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-0">① 定位：为什么 DDD + 状态机是产品架构 × aicoding 的杠杆</h2>
+
+<p>产品架构最痛的不是写不出功能，而是<strong>"隐性规则被绕过"</strong>——已归档项目还被改配额、已停用用户还能审批、已废弃数据集还参与训练、状态机的某个不变式被某段 service 代码偷偷绕过。把规则写在 README 或 PM 脑子里，等于没写。</p>
+
+<p>本教材的因果骨架是三句话：</p>
+<ol>
+  <li><strong>结构问题用结构解法</strong>。AI 生成的代码"看起来合理、只在碰巧对齐训练分布时才正确"（<a href="https://www.codecentric.de/en/knowledge-hub/blog/five-principles-for-ai-assisted-ddd-keeping-the-human-at-the-center">plausible by construction, correct only where aligned with training distribution</a>）——这是<strong>结构性问题，不是 prompt engineering 问题</strong>，code review 抓不到。解法是把信任预算花在确定性层：限界上下文（圈 scope）+ 状态机（显式合法转移）+ 聚合边界（局部化变更）+ 契约（验证 gate）。</li>
+  <li><strong>主动加白把默认值翻成 DENY</strong>。黑名单默认 ALLOW（只能拦已知坏、对零日威胁慢半拍）；白名单默认 DENY（问"这是不是已知好"而非"是不是已知坏"）。加白把不可能的"防住所有坏情况"换成可能且可验证的"只放行已知好情况"。</li>
+  <li><strong>治理结构（变更单/契约/审计）就是加白的工程化产物</strong>。读者最缺的治理结构，恰好就是 aicoding 时代让 AI 不漂移的结构性护栏——契约是状态机的对外承诺，变更单是穿过唯一入口的放行记录，审计是执行日志。</li>
+</ol>
+
+<blockquote class="why">读者作为 PM 已有"状态清单 + 工程化 PRD 单点爆发"的判断力，缺的是把它们形式化成<strong>"边界句 + 状态机 + 变更单 + 契约 + 审计"</strong>五位一体治理制品的纪律。这教材把 doc02/doc17 的判断力固化成可被开发直接落地的规格，让你从"能说概念"跨到"能决定代价/故障模式/验收信号"。</blockquote>
+
+<aside class="note">为什么 DDD 和状态机必须配对讲：DDD 给"边界与一致性"（限界上下文、聚合、不变量、事件），状态机给"在边界内让规则可执行"（合法转移表、guard、effect）。只讲 DDD 容易停在哲学，只讲状态机容易切碎边界。两者结合才能回答"AI 生成的代码改了这个对象的这个字段，会不会违反业务规则"。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-1">② DDD 第一性原理</h2>
+
+<h3 id="s1-1">2.1 统一语言（Ubiquitous Language）：把业务词汇焊进代码，不是停留在文档</h3>
+<p>先讲因果再讲术语。<strong>软件项目失败的根因常常不是技术选型，而是开发者与业务专家对同一个词有不同隐含模型</strong>。Lehtinen et al.（Information and Software Technology 2014，被引 292 次）把"stakeholder 之间缺乏沟通"列为软件项目失败主因之一；多个援引 Standish CHAOS 的二手来源一致：约 50% 失败源于需求/对齐问题，约 7% 才是编码错误。Eric Evans 在《DDD》第 2 章"Communication and the Use of Language"用"<strong>conceptual translation map</strong>"描述两套模型间的翻译，并明确写"<strong>loss of shared language will reduce communication</strong>"——把翻译和共享语言流失当作失败机制本身。</p>
+<p>Evans 创造的术语 Ubiquitous Language 指：开发者和领域专家共同建设、持续演进、并以代码里的领域模型为锚点的一套严格词汇。三件事已被权威逐字确证：</p>
+<ul>
+  <li><strong>(1) Pervasively 贯穿对话/图/文档/代码</strong>：Fowler 引用 Evans 原话"using the model-based language <em>pervasively</em> and not being satisfied until it flows"（<a href="https://martinfowler.com/bliki/UbiquitousLanguage.html">Fowler bliki</a>）。Agile Alliance 词条补充"applying it consistently across all communications, code, and documentation"。<span class="ev">注：Fowler 页面未逐字说"类名/方法名 = 业务名词/动词"，这是 Evans《DDD》第 2 章 / DDD Reference PDF 的标准推论，溯源应回到 Evans 而非挂在 Fowler 名下。</span></li>
+  <li><strong>(2) 对话是模型的测试机制</strong>：Fowler 原文"using the ubiquitous language in conversations with domain experts is an important part of testing it"；Evans 原话"Domain experts should object to terms or structures that are awkward"+"developers should watch for ambiguity or inconsistency"。</li>
+  <li><strong>(3) 活的、随理解演进</strong>：Fowler 原文"the language (and model) should evolve as the team's understanding of the domain grows"。</li>
+</ul>
+<p><strong>代价视角</strong>：没有统一语言，每次需求评审 / PR review 都在重新翻译，翻译损耗随系统规模显著放大（VMware Tanzu 博文"Translation and context sharing has a cost that should not be ignored"——<span class="ev">注意：权威资料只说"不可忽略"，未给出 O(n) 的定量结论，"线性放大"是修辞，不是已证的复杂度量级</span>）。Yuri Melo（Substack）反面提醒：维护不当会引入官僚开销，即代价不是单调收益。</p>
+
+<aside class="warn"><strong>独立验证修正（重要）</strong>：调研初稿把"贫血模型"归因为"统一语言失配的代价"，这条因果链在权威文献里找不到直接依据，已被收窄。Fowler《AnemicDomainModel》原文把贫血模型的病因归为"(a) 过程式编程习惯 / 数据背景思维；(b) 框架诱导（如早期 J2EE Entity Beans）"，Evans 关注的也是"行为没落到合适的对象上"。<strong>正确表述</strong>：对齐失败带来翻译税 + 隐性 bug；过程式思维带来贫血模型；两者常共生但来源不同，不是单向因果。教材第 ⑤ 节会按这个修正版本展开。</aside>
+
+<blockquote class="why">契约 = 用统一语言固化下来。读者治理短板（变更单/契约/审计 introduced）的技术对偶就在这里：契约/Schema/变更单本质是把跨团队共享词汇固化可执行，与统一语言"消除翻译层"的目标同构。这是 introduced → practiced 的逻辑入口。</blockquote>
+
+<h3 id="s1-2">2.2 限界上下文（Bounded Context）：按"语言在哪里分叉"切边界，不是按页面</h3>
+<p>因果链：系统越大，单一统一模型越不可能且越不划算（里手都为同一词吵不完）。Evans 经典论述——Fowler 引用："<strong>total unification of the domain model for a large system will not be feasible or cost-effective</strong>"（<a href="https://martinfowler.com/bliki/BoundedContext.html">Fowler bliki</a>）。Bounded Context 是 DDD 战略设计的中心模式：给一个"在这个边界内模型与语言必须内部一致（no contradictions）"的明确范围。<strong>边界常由人类文化/语言切换决定</strong>——Fowler 原文"Usually the dominant one is human culture, since models act as Ubiquitous Language, you need a different model when the language changes"。</p>
+
+<p>同一词在不同上下文里有不同定义，就该是两个上下文。强行统一 = 制造半成品字段。<strong>JoyDrive 真实样本</strong>（一手实证，<code>doc/organization-prd.md</code>）：边界句"组织管人、项目、角色权限、GPU 总配额和授权关系；资源管资源对象和调度策略；监控管运行状态和告警诊断"——一句话把"项目"在三个上下文的不同定义钉死。</p>
+<ul>
+  <li><strong>"项目"</strong>在组织域 = 授权关系 + 配额；在资源域 = 可调度资源；在监控域 = 告警对象。三义分叉属实。</li>
+  <li><strong>"配额"</strong>在组织域 = 总量授权（只暴露剩余量）；在资源域 = 实时扣减（D2 划归业务/资源域，组织 PRD 只暴露剩余量）。</li>
+  <li>D5 把 NamespaceBinding 的 Error 态归资源域写入、组织页只读展示——跨上下文<strong>事实归属</strong>的精确切分。</li>
+</ul>
+<span class="ev">证据：file:///home/cheche/Workspaces/Learning/JoyDrive-Infra/doc/organization-prd.md L84-85（边界句）、L43-46（D2）、L54（D5）、L78-81（非目标逐条逐出）</span>
+
+<aside class="note">"语言在哪里分叉"是判断边界的第一性原理。看到任何一个写操作先问"这个词在另一个域里有不同定义吗"——如果答"是"，就该切出独立上下文。读者做 doc12"数据闭环场景矩阵 + 7 共性能力"已经识别了能力，缺的是把能力映射到限界上下文边界 + 上下文映射（谁是上游下游、谁是 ACL、谁是共享内核）。</aside>
+
+<h3 id="s1-3">2.3 Core / Supporting / Generic 子域：把最贵的工程注意力投向唯一不可替代的部分</h3>
+<p>三分类决定资源投向（读者作为 PM → Function Owner 最该懂的战略杠杆）：</p>
+<ul>
+  <li><strong>Core Domain（核心域）</strong> = 业务之所以能赢、不可替代、必须用最优秀的人自研放最大投入（例：推荐排序、定价引擎、自动驾驶数据闭环）。</li>
+  <li><strong>Supporting Subdomain（支撑域）</strong> = 重要但非差异化、可定制可外包（例：订单履转、数据标注工具）。</li>
+  <li><strong>Generic Subdomain（通用域）</strong> = 所有人做法相同、直接买/SaaS（认证、日志、推送、看板）。</li>
+</ul>
+<p>Vlad Khononov 指出："<a href="https://vladikk.com/2018/01/26/revisiting-the-basics-of-ddd/">In the Blue Book (Evans), the terms domain and subdomain are used interchangeably</a>"。Vernon 红皮书将三类（核心/支撑/通用）细化为核心战略投资框架。这是 introduced → can-decide 的判断题：<strong>把哪些算 core 直接决定团队生死投入分配</strong>。最常见资源浪费：把通用域（认证、看板）当核心域自研。</p>
+
+<aside class="note">对应读者场景：数据闭环里的"<strong>采集 → 上传 → 解算 → 落仓 → 标注 → 训练 → 评测 → 交付</strong>"链路，"数据资产血缘账本""可复现实验冻结"是核心域（自研重投入），"数据标注工具链""告警看板"是支撑/通用域（可定制或买 SaaS）。读者做资源决策时按这个分类排优先级。</aside>
+
+<h3 id="s1-4">2.4 战略 DDD vs 战术 DDD：先画地图，再盖房子（顺序错了全盘皆输）</h3>
+<p><strong>战略（strategic）</strong>决定"系统边界与业务对齐"——bounded context、上下文映射、子域划分，是地图/蓝图。<strong>战术（tactical）</strong>决定"在某个 context 内如何建模"——entity / value object / aggregate / domain event / repository / factory / domain service，是砌砖。Fowler 明说战略设计处理大模型大团队问题；微软文档明说"<a href="https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-domain-driven-design">design a microservice to be no smaller than an aggregate and no larger than a bounded context</a>"。</p>
+
+<p>读者校准：判断力领先但治理是短板——战略层（boundary、context map、契约面）正是最该补的那一层，战术层已在 doc02 状态机里 practiced（状态转移 = 实体行为）。<strong>常见误区：跳过战略直接玩战术模式，结果聚合边界划错、微服务切碎——这正是 Function Owner 必须拦下的架构债。</strong></p>
+
+<pre class="mermaid">
+flowchart TD
+  STRAT["战略 DDD（先做）"] --> TAC["战术 DDD（后做）"]
+  STRAT --- S1["限界上下文 BoundedContext<br/>按语言分叉切"]
+  STRAT --- S2["上下文映射 ContextMap<br/>ACL / Conformist / Customer-Supplier"]
+  STRAT --- S3["子域分级<br/>Core / Supporting / Generic"]
+  TAC --- T1["实体 Entity vs 值对象 ValueObject"]
+  TAC --- T2["聚合根 Aggregate Root<br/>一致性边界 + 不变量"]
+  TAC --- T3["领域事件 Domain Event<br/>跨聚合最终一致"]
+  TAC --- T4["Repository / Factory / Domain Service"]
+  S1 -.->|"切错边界的根因<br/>= 跳过战略"| T2
+</pre>
+
+<blockquote class="why">为什么"先战略后战术"是默认值：战略层的错误会扩散到整个系统（边界切错 → 微服务切错 → 聚合边界错 → 领域事件设计错 → 测试覆盖漏）。战术层的错误局限在一个 context 内，重写成本可控。读者判断"先做哪一块"的口诀：先画 context map（1 天），再建聚合（1 周），最后写战术模式代码（1 月）。</blockquote>
+
+<h3 id="s1-5">2.5 实体 / 值对象 / 聚合根 / 领域事件：四个战术原语</h3>
+
+<h4>实体 vs 值对象：身份决定一切建模默认值</h4>
+<p>因果问题："这个概念要不要被跟踪身份？" <strong>Entity</strong> 有唯一身份、跨时间延续，两个同 ID 实例即使属性变了也是同一个东西（如账户、客户）。<strong>Value Object</strong> 无身份、只由属性值定义、不可变、可互换（如地址、金额、坐标）。微软文档的默认值："<a href="https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-domain-driven-design">Prefer value objects as your default modeling choice. Only promote a concept to an entity when you need to track its identity over time</a>"。示例：Address 通常值对象，但若需审计跟踪某地址记录历史则升为实体。</p>
+<p>这条规则对抗"万物皆实体 + 一堆 getter/setter"的本能，是技术层面避免贫血模型的第一道闸。</p>
+
+<h4>聚合根：事务一致性边界（不是数据容器）</h4>
+<p>因果链：真实世界关系复杂（订单含商品、商品有供应商），但跨多个对象改数据时要保持一致性（invariants）。分布式系统里数据库事务跨不了边界，于是 DDD 用<strong>聚合</strong>把"必须在单个事务内一致"的对象圈起来。Vernon《Effective Aggregate Design》核心原则——一个设计良好的限界上下文"<strong>modifies only one aggregate instance per transaction in all cases</strong>"（<a href="https://www.dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf">Vernon 2011</a>）。</p>
+<p>三条设计规则：</p>
+<ol>
+  <li><strong>设计小聚合</strong>，只圈必须在单事务一致的数据；</li>
+  <li><strong>跨聚合只引用 ID 不引用对象</strong>（reference other aggregates by identity）；</li>
+  <li><strong>跨聚合用最终一致性 + 领域事件</strong>。</li>
+</ol>
+<p>"聚合可以只含一个实体"——使它成为聚合的是事务边界，不是大小。聚合根是"一致性守卫（consistency guardian）"：外部不能直接改内部实体，所有变更必须穿过根的方法，根在里面重算/校验/确认集群仍然一致才放行。<strong>不变量（invariant）是"对象存活期间必须永远为真的业务规则"</strong>（如"一个 order 的 total 必须等于所有 line item 之和"）。</p>
+
+<aside class="note"><strong>聚合 vs 实体</strong>是 DDD 最反直觉的区分。每个聚合根是实体，但不是每个实体都是聚合根。聚合根的判据：它是<strong>外部访问内部对象的唯一入口</strong>。JoyDrive 的 DataArtifact（<code>doc/data-artifact-registry-design.md</code> L29-61）就是聚合根——artifact_id 是聚合根、total_packages / total_frames 是聚合根内的不变量计数、Package 是聚合内实体（由聚合根管控）、Location / Event 是独立聚合。</aside>
+
+<h4>领域事件：跨聚合 / 跨上下文的解耦主轴</h4>
+<p>因果：聚合内部用事务保一致性，但业务流程常跨多个聚合（下单 → 扣库存 → 生成账单）。在聚合外不能锁事务，于是用领域事件——聚合改完状态后 raise 一个"领域内有意义的变更"（如 <code>DeliveryCompleted</code> 而非"inserted a row"），其他聚合 / 上下文异步反应。区分两类：<strong>内部领域事件</strong>留在一个 bounded context 内；<strong>集成事件（integration event）</strong>在源事务提交后经消息中间件跨微服务异步发布。</p>
+
+<h3 id="s1-6">2.6 Context Mapping 与 ACL：上下文之间的关系契约（直击读者治理短板）</h3>
+<p>Context Mapping 是战略 DDD 里画"多个 bounded context 之间关系"的活动——这正是治理结构的技术本体。常见关系模式（Vernon 红皮书 ch.13 / dddcommunity 体系）：</p>
+<table>
+<thead><tr><th>关系</th><th>语义</th><th>何时用</th></tr></thead>
+<tbody>
+<tr><td>Shared Kernel（共享内核）</td><td>两边共担一小块代码/模型</td><td>紧密协作、共担改造成本</td></tr>
+<tr><td>Customer-Supplier（客户-供方）</td><td>下游客户、上游供方，谈判</td><td>两团队都有话语权</td></tr>
+<tr><td>Conformist（顺从）</td><td>下游完全顺从上游模型</td><td>上游不可控且强势</td></tr>
+<tr><td><strong>ACL / Anticorruption Layer（反腐层）</strong></td><td>下游建翻译层自我保护</td><td>上游模型污染不可控</td></tr>
+<tr><td>Open Host Service + Published Language</td><td>对外开放标准协议</td><td>对多个下游提供标准接口</td></tr>
+<tr><td>Partnership（对等合作）</td><td>两团队同步演化</td><td>短期紧密协作</td></tr>
+</tbody>
+</table>
+<p><strong>ACL 是其中最关键的一个</strong>：当下游不得不消费一个你不可控的（遗留 / 外部）模型时，你在边界上建一层翻译 / 适配层，把外部模型翻译成你自己 context 内的干净模型，使外部模型的污染（pollution）进不来（<a href="https://www.oreilly.com/library/view/implementing-domain-driven-design/9780133039900/ch13lev2sec4.html">Vernon 红皮书 ch.13</a>）。Vernon 演示下游 context 用 ACL 把上游 IAM 的 JSON 翻译成自己的模型。</p>
+
+<blockquote class="white">ACL 就是软件版的"变更单 + 审计隔离"——它定义了"我的契约边界在哪、外部变更如何被审校后才允许穿透"。这是读者治理结构（introduced）短板要补的那一跳：从"能说 ACL 是什么"到"能决定哪个集成面必须上 ACL、代价（翻译层维护成本）vs 收益（隔离外部变化）"。</blockquote>
+
+<pre class="mermaid">
+flowchart LR
+  subgraph 上游上下文 A["上游 BoundedContext A<br/>（遗留/外部/不可控）"]
+    UP["上游模型<br/>booking=收入信号"]
+  end
+  subgraph 下游上下文 B["下游 BoundedContext B<br/>（你的核心域）"]
+    ACL["ACL 翻译层<br/>反腐"]
+    DOWN["下游干净模型<br/>booking=负债信号"]
+    ACL --> DOWN
+  end
+  UP -->|"原始模型污染"| ACL
+  ACL -.->|"过滤后干净事件"| DOWN
+  style ACL fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<aside class="note"><strong>何时该上 ACL（判断题）</strong>：(1) 上游模型不可控（外部供应商、遗留系统）；(2) 上游变更频繁且不通知；(3) 上游语义与你核心域冲突（同一词多义）。三者满足任一即应上 ACL。<strong>代价</strong>：翻译层有维护成本、有性能开销。读者做这个决策时按"故障成本 vs 维护成本"权衡——若外部模型变更穿透进来一次的故障成本 &gt; 翻译层全生命周期维护成本，就上 ACL。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-2">③ 状态机：state / transition / guard / effect</h2>
+
+<h3 id="s2-1">2.1 状态机五要素因果链（先因果后术语）</h3>
+<p>先建因果骨架：一个对象某时刻只能处于一个<strong>状态（state）</strong>；外部来了一个<strong>事件（trigger/event）</strong>；系统先问"当前状态 + 这个事件"是否允许转换，允许才走，这个判断就是 <strong>guard</strong>；通过则执行动作并产生对外可见的<strong>副作用（side-effect / effect）</strong>（发消息、写审计、扣额度）；最终对象进入<strong>新状态（target）</strong>。UML 2.x 标准定义一次完整转移必须有四部分：<strong>trigger + guard + effect + target</strong>，缺一就不是状态机。</p>
+
+<p>UML 标准执行顺序（<a href="https://sparxsystems.com/resources/tutorials/uml2/state-diagram.html">Sparx Systems UML 2 Tutorial</a>、<a href="https://www.cs.ucc.ie/~gprovan/CS6406/L6_State_activity_Diagrams.pdf">UCC 课件</a>）：</p>
+<ol>
+  <li>触发事件到达，guard 求值前必须为 true 且<strong>无副作用</strong>（<a href="https://www.uml-diagrams.org/state-machine-diagrams.html">uml-diagrams.org</a>）；</li>
+  <li><strong>Exit action（源状态）</strong>——释放资源、停止计时器（Moore 风格）；</li>
+  <li><strong>Transition effect</strong>——绑事件、绑副作用（Mealy 风格，发消息/扣额度/写审计）；</li>
+  <li><strong>Entry action（目标状态）</strong>——初始化资源、启动计时器（Moore 风格）；</li>
+  <li>对象进入新状态。</li>
+</ol>
+
+<aside class="note"><strong>Mealy vs Moore 不是选择题，是观察视角</strong>。Moore 把输出绑在状态上（进入某状态恒定输出，用于 guaranteed initialization / cleanup）；Mealy 把输出绑在转换上（转换时由事件决定输出）。<strong>领域建模里 Mealy 更常见</strong>，因为业务副作用（发消息 / 扣额度 / 写审计）通常由"事件触发"而非"状态驻留"决定。Kevin Webber 论证："<a href="https://kevinwebber.ca/blog/mealy-machines-and-event-sourcing/">the Mealy model is the one to keep in mind for event-driven systems</a>"。<strong>注意</strong>：UML state machine 是 Mealy + Moore 混合体——entry/exit 是 Moore 面、transition effect 是 Mealy 面。不要把 entry/exit action 当 Mealy。</aside>
+
+<pre class="mermaid">
+flowchart LR
+  E["触发事件 trigger"] --> G{"guard<br/>当前状态+事件<br/>是否允许?<br/>求值前无副作用"}
+  G -->|否| REJ["拒绝/无视"]
+  G -->|是| EX["1. Exit action<br/>(源状态)<br/>Moore"]
+  EX --> EF["2. Transition effect<br/>副作用<br/>(发消息/扣额度/写审计)<br/>Mealy"]
+  EF --> EN["3. Entry action<br/>(目标状态)<br/>Moore"]
+  EN --> NS["新状态 target"]
+</pre>
+
+<blockquote class="why">读者 doc02 校准：约 25 个状态名 + 每状态挂埋点字段，但<strong>缺三件</strong>：(1) 没有 from→to 的状态转移矩阵；(2) 没有 side-effect 契约（进入某状态除埋点还要发什么事件、扣什么额度、通知谁）；(3) 文档第 54 行写"完整状态机定义 / 平台待完善项：黄子晋(Rickroll)"——你把状态机定义权让渡给了平台方。这就是 practiced 但未到 can-decide 的精确边界：你能列状态 + 埋点，但没产出转移规则表，恢复路径只能"列项"不能"闭环"。</blockquote>
+
+<h3 id="s2-2">2.2 状态机的核心价值：用"唯一状态"消灭非法组合（不变量编码载体）</h3>
+<p>不用状态机时业务常靠一堆 bool 标志位（isPending / isApproved / isExecuting）描述对象，但 n 个 bool 会组合出 2^n 个具体状态，其中只有少数在业务上合法。若用<strong>平铺的 bool 字段</strong>（而非判别联合）建模，类型系统阻止不了写出非法组合，bug 藏在"非法组合被某段代码处理了"的地方。</p>
+<p>状态机用单一 status 字段 + 受控转换路径，在结构上保证"同一时刻只有一个状态"，非法组合直接不存在。这是状态机作为"不变量编码工具"的根本机理：把"哪些状态合法、谁能跳到谁"从散落 if/else 提升为一张可审查的表。</p>
+
+<aside class="warn"><strong>独立验证修正（重要精度提示）</strong>：调研初稿说"编译器/类型系统阻止不了写出这种组合"——这是<strong>错误泛化</strong>。bool 字段确实阻止不了，但<strong>类型系统（判别联合 / sum type / discriminated union）恰恰可以在编译期让非法组合不可表示</strong>（F# for Fun and Profit "Designing with Types"）。问题出在用错类型（bool），而非类型系统本身无能为力。同样，"单一 status 字段"是状态机的<strong>最低限度形式</strong>，只保证状态名互斥，并不保证状态特定附带数据的合法性（如 status=APPROVED 时 approvedAt 是否填、status=PENDING 时是否误填执行结果）。<strong>状态机作为不变量编码工具的最强形态是"状态 + 转换表 + 每状态类型化数据"</strong>（State 模式，下一节）。</aside>
+
+<p><strong>make illegal states unrepresentable</strong>——这是 Yaron Minsky（Jane Street，2010《Effective ML》）的经典口号，源头是 OCaml（不是 elm；Kent C. Dodds 的"make impossible states impossible"是后端传播变体）。"<a href="https://blog.janestreet.com/effective-ml/">Making illegal states unrepresentable is all about statically proving that all runtime values (without exception) correspond to valid objects in the business domain</a>"。对比 Transaction Script 的致命缺陷：'<a href="https://khalilstemmler.com/articles/typescript-domain-driven-design/make-illegal-states-unrepresentable/">What is stopping a new developer from just doing new User({...})?</a> nothing'——校验只在一个方法里，绕过它直接 new 一个对象就失效了。加白做法是<strong>私有构造 + 静态工厂方法</strong>：让"创建对象的唯一路径"必须经过校验，编译器替你强制。</p>
+
+<h3 id="s2-3">2.3 State 模式：把每个状态的"行为 + 数据"封装成一个对象</h3>
+<p>当某状态需携带专属数据（如"蹲下"状态才有 chargeTime，"审批中"才有 approverID + deadline），堆在主对象上会造成"这个字段何时有意义"的混乱。<strong>State 模式（GoF 设计模式）</strong>给每个状态一个类，状态专属数据跟着状态类走；主对象只持 state_ 指针，"改变状态"= 指针指向新状态对象（<a href="https://gameprogrammingpatterns.com/state.html">Game Programming Patterns</a>）。新增状态 = 加一个类，不动其他状态代码。</p>
+
+<p>SSENSE 用 TypeScript 实现 Ready / Locked / Abandoned 三态，每个状态类携带 back-reference 到 domain model（<a href="https://medium.com/ssense-tech/building-a-finite-state-machine-from-scratch-using-domain-driven-design-dc10e921968">SSENSE Tech</a>）。<strong>把状态机五要素直接映射成 API</strong> 的最干净对照是 Stateless（C#）：</p>
+<table>
+<thead><tr><th>Stateless 方法</th><th>状态机五要素</th><th>用途</th></tr></thead>
+<tbody>
+<tr><td><code>Configure(State)</code></td><td>state</td><td>声明某状态</td></tr>
+<tr><td><code>Permit(trigger, target)</code></td><td>trigger + target</td><td>无条件转换</td></tr>
+<tr><td><code>PermitIf(trigger, target, guard)</code></td><td>trigger + target + guard</td><td>带 guard 的条件转换；README 要求同一 trigger 的多个 guard 必须互斥</td></tr>
+<tr><td><code>OnEntry / OnExit</code></td><td>action</td><td>注册入口/出口动作</td></tr>
+<tr><td><code>SubstateOf</code></td><td>层级</td><td>建父子状态</td></tr>
+<tr><td><code>PermitReentry</code></td><td>重入</td><td>回到当前状态</td></tr>
+<tr><td>构造函数传读写函数</td><td>外部状态存储</td><td>状态可存 DB</td></tr>
+<tr><td><code>MermaidGraph.Format()</code></td><td>可视化</td><td>直接导出 mermaid 图</td></tr>
+</tbody>
+</table>
+<span class="ev">证据：<a href="https://github.com/dotnet-state-machine/stateless">dotnet-state-machine/stateless README</a></span>
+
+<blockquote class="why">Stateless API 给了一张"状态机必须回答哪些问题"的检查清单：每个状态——能被哪些 trigger 触发？每个 trigger 在什么 guard 下跳到哪（且同一 trigger 的多个 guard 是否互斥）？进入/离开时做什么 action？有没有父子层级？答不全 = 转移表没写完。读者把 doc02 升级时按这四栏逐格填：from / to / trigger / guard。</blockquote>
+
+<h3 id="s2-4">2.4 Event Sourcing 里聚合本质就是状态机</h3>
+<p>ES 因果链：事件流是对象所有变化的有序记录；回放事件重建当前状态。所以 ES 中实体天然是状态机——状态 = 回放事件栈后的快照，转换 = 追加新事件。Oskar Dudycz 实践："<a href="https://event-driven.io/en/my_journey_from_aggregates/">They're usually state machines. Each state is actually a different aggregate</a>"。酒店预订例：'there is a distinct set of operations you can do on the initiated, confirmed and completed reservation'。</p>
+<p>更深一层：同一实体在不同状态下可做的操作和应有数据结构都不同（initiated 能 confirm、confirmed 能 complete、completed 只读），故<strong>"每个状态其实是不同的聚合"</strong>。Dudycz 用"数据 + 函数"（Decider 模式）组合，而非单一 OOP 类硬塞所有状态方法，因为'用一套方法覆盖所有状态反而增加认知负担'。这把状态机、聚合、不变量钉死在同一机制上：<strong>不变量在每个状态的函数内自然成立</strong>（不可变数据创建时已验证、每个状态只暴露允许操作）。</p>
+
+<h3 id="s2-5">2.5 跨聚合不变量：不能用强一致，要用 Saga / 状态机协调最终一致</h3>
+<p>当一个不变量跨多个聚合边界（如"转账两端金额必须对等"），强一致方案 = 嵌套锁多个聚合，结果是死锁和低吞吐。<a href="https://www.zilverline.com/blog/event-sourcing-invariants-spanning-multiple-aggregates">Zilverline 实测</a>：嵌套锁死锁后吞吐仅 <strong>1.24 req/s</strong>，改 Saga 后 <strong>48 req/s</strong>（高并发达 90）。</p>
+<p>解法是 Saga 模式：把跨聚合操作拆成 reserve → deposit → commit/cancel 三步，每步只锁一个聚合，用 reference UUID 贯穿，<strong>协调流程本身就是一个状态机</strong>（reserved → deposited → committed / cancelled）。状态机让系统在任何中断点都能审查预留状态判断事务进展，从而支持补偿操作。这是"状态机治理长流程"的典型落地：用状态序列 + 事件记录替代分布式锁。</p>
+
+<aside class="note">读者场景对应：若要做"同一批数据不能同时被两个训练任务独占"这类跨聚合不变量，<strong>警惕强一致陷阱</strong>。参考 Zilverline 的 Saga：把跨聚合操作拆成 reserve→commit/cancel 三步，用状态机协调，不要用嵌套锁。这对应数仓血源 / 版本化场景里"跨表 / 跨任务一致性"的盲区。</aside>
+
+<h3 id="s2-6">2.6 层级（hierarchical）与并行（parallel）：把"状态机"变"状态图"</h3>
+<p>当状态数变多、出现正交关注点（如订单"支付状态"和"物流状态"可独立演进），扁平状态机会状态爆炸（状态数 = 各维度笛卡尔积）。Harel 状态图引入两层：</p>
+<ul>
+  <li><strong>层级</strong>——子状态嵌套在父状态内，继承父状态转换，"退出父状态"自动退出所有子状态；</li>
+  <li><strong>并行</strong>——多个 region 同时活跃，事件广播到所有 region，各 region 独立消费。</li>
+</ul>
+<p>W3C SCXML 把 Harel 状态图标准化为 XML（<a href="https://www.w3.org/TR/scxml/">W3C SCXML</a>），并有 run-to-completion（RTC）语义：一个事件的处理不被打断。判断标准：<strong>状态数 &gt; 8 或存在正交维度就该考虑层级 / 并行，否则扁平机就够</strong>。HN 社区共识："A statechart without hierarchy is just a state machine. It is the composition and hierarchy that turns a state machine into a statechart."</p>
+
+<aside class="note"><strong>何时上状态机框架的阈值</strong>：状态少且转换简单 → 手写 enum + switch 或 Go 类型校验即可（如 JoyDrive <code>internal/platform/state.go</code>）；状态多 / 需可视化 / 需跨语言共享 → 上 Stateless / XState / Akka FSM。框架的价值是 PermitIf / guard 互斥校验、Mermaid 导出、外部状态存储这些工程化能力。读者领域（数据闭环 ~25 状态、有并行管线如公有 / 私有 pipeline、有正交维度如采集状态 vs 处理状态）已超过扁平机的舒适区（&gt; 8 状态）。考虑用层级状态把"采集/回传/上传"和"解算/落仓/应用"分成两个 region，避免状态爆炸。<strong>但不要一上来就上 XState/SCXML 重框架</strong>——先用 mermaid stateDiagram-v2 画清楚转移表，验证业务规则对了再考虑代码化。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-3">③ 组合在产品架构（JoyDrive 治理型 PRD 实证）</h2>
+
+<h3>3.1 聚合根 = 确定性状态机：命令先校验不变量才产事件迁状态</h3>
+<p>把 DDD 和状态机焊起来的核心论断：<strong>聚合根是确定性状态机</strong>。命令进来先校验不变量（"执行后是否仍成立"），成立才产事件、才迁移状态。Vernon 红皮书核心原则：聚合设计围绕 true invariants，在单事务内完全一致（<a href="https://www.informit.com/articles/article.aspx?p=2020371&seqNum=2">InformIT</a>）。t-pl.io 用自动机理论把 Command/Behavior/Event 映射到 FST 的 (S,C,E,δ,ω)："FSMs process a stream of Commands, enforcing invariants and changing state"。MS 官方："validation rules = invariants, aggregate main responsibility is enforce invariants across state changes"。</p>
+<p>两个关键边界：</p>
+<ol>
+  <li><strong>不变量校验 ≠ 输入校验</strong>。前者管业务规则（如"order total = Σ line items"），后者管数据健全性（必填、长度、格式）。Enterprise Craftsmanship 明确："DDD says it's the responsibility of the aggregate to protect the invariants"，并区分 input validation（上游）vs invariant validation（聚合内）。</li>
+  <li><strong>状态迁移逻辑只能活在聚合根内部一处</strong>。这是把"哪段代码能改对象状态"显式收敛的设计原则。</li>
+</ol>
+
+<pre class="mermaid">
+flowchart TD
+  CMD["命令 Command<br/>(请求操作)"] --> ROOT["聚合根<br/>确定性状态机"]
+  ROOT --> INV{"不变量校验<br/>(执行后是否仍成立?)<br/>≠ 输入校验"}
+  INV -->|否| REJ["拒绝"]
+  INV -->|是| EVT["产出领域事件"]
+  EVT --> STATE["迁移状态<br/>(仅聚合根内一处)"]
+  EVT --> OUT["对外发布<br/>(跨聚合最终一致)"]
+  style INV fill:#fff8e1,stroke:#d4a017
+</pre>
+
+<blockquote class="why">"状态不是展示标签，它决定按钮、风险提示、可编辑范围和审计要求"（JoyDrive organization-prd.md L243）。<strong>状态字段若不影响任何按钮或拦截，就是装饰，不是状态机</strong>。这是读者从 practiced 推到 can-decide 的判据：能说出"这个状态字段如果不影响任何按钮或拦截，就是装饰"。</blockquote>
+
+<h3 id="s3-2">3.2 JoyDrive 一手样本：状态机编码业务不变量（代码实证）</h3>
+<p>用 JoyDrive-Infra 的代码当模板抄结构，不用抄语言。状态用 Go 类型 + Postgres TEXT 枚举编码：</p>
+<pre><code>// internal/platform/domain.go
+type ExperimentStatus string
+const (
+  ExperimentDraft     ExperimentStatus = "Draft"
+  ExperimentSubmitted ExperimentStatus = "Submitted"
+  ExperimentRunning   ExperimentStatus = "Running"
+  ExperimentSucceeded ExperimentStatus = "Succeeded"
+  ExperimentFailed    ExperimentStatus = "Failed"
+  ExperimentCanceled  ExperimentStatus = "Canceled"
+)
+// ChangeRequestStatus 八态
+const (
+  ChangeRequestDraft           ChangeRequestStatus = "Draft"
+  ChangeRequestPendingApproval ChangeRequestStatus = "PendingApproval"
+  ChangeRequestApproved        ChangeRequestStatus = "Approved"
+  ChangeRequestRejected        ChangeRequestStatus = "Rejected"
+  ChangeRequestExecuting       ChangeRequestStatus = "Executing"
+  ChangeRequestSucceeded       ChangeRequestStatus = "Succeeded"
+  ChangeRequestFailed          ChangeRequestStatus = "Failed"
+  ChangeRequestCancelled       ChangeRequestStatus = "Cancelled"
+)</code></pre>
+<span class="ev">证据：file:///home/cheche/Workspaces/Learning/JoyDrive-Infra/internal/platform/domain.go L79-99（ExperimentStatus 六态、TrainingJobStatus 六态）、L445-456（ChangeRequestStatus 八态枚举）、L24-37（UserStatus / ProjectStatus）</span>
+
+<p>guard 在 Go 方法里强校验（运行期不可绕过）：</p>
+<pre><code>// internal/platform/state.go L458-460
+if cr.Status != ChangeRequestPendingApproval {
+  return ChangeRequest{}, fmt.Errorf("invalid status: %s", cr.Status)
+}
+// 同一守卫在 RejectChangeRequest L488-490 也强校验</code></pre>
+
+<p>不变量校验（"执行后仍成立"）在 <code>executeChangeRequest</code> 里：</p>
+<pre><code>// internal/platform/state.go L561-562
+if req.UserID == project.OwnerUserID {
+  return fmt.Errorf("%w: cannot remove the project owner; transfer ownership first", ErrConflict)
+}
+// L582-585：owner 的 role/permissions 永不低于默认集（防自锁）</code></pre>
+
+<p><strong>状态机最关键的"跨聚合不变量"由流程编排保证</strong>（organization-prd.md L175）：<code>Project.Active → Suspended</code> 时，所有 <code>PendingApproval / Approved / Executing</code> 的 ChangeRequest 自动 Cancelled，Namespace 同步标 Suspended，GPU 配额状态不变（业务/资源域按 status 拒绝扣减）。</p>
+
+<aside class="warn"><strong>独立验证修正（关键定位校正）</strong>：调研初稿说"JoyDrive 实现了教科书式聚合根内嵌状态机"——这是<strong>过度赞美</strong>。实测代码：<code>Platform</code>（<code>state.go</code> L104-109）自注释为"stateless domain facade"，状态迁移逻辑<strong>实际分散在三处</strong>——Platform 守卫 + store 的 <code>ApproveAndExecuteChangeRequest</code> + <code>executeChangeRequest</code>。<strong>JoyDrive 是"事务脚本 + 部分 DDD"，不是纯聚合根封装</strong>。它做对了守卫与不变量，但未做"单一聚合根方法"那一层封装。正确表述：JoyDrive 落地了状态机守卫 + 变更单 + 不变量 + 审计，是治理型 PRD 的真实样本；但<strong>它本身是"为什么应进一步收口到聚合根"的教学起点，而非聚合根的完美示范</strong>。</aside>
+
+<aside class="warn"><strong>另一处独立验证修正</strong>："不可绕过的编译期约束"在 Go / Java / C# 等主流 OO 栈里<strong>不成立</strong>。编译期只在 F# / Rust 这类具备强类型系统（discriminated union / type-state pattern）的语言 / 范式下可得。Go 的状态枚举 + switch guard 只挡运行期。JoyDrive 的 <code>if cr.Status != ChangeRequestPendingApproval</code> 是运行期守卫，写错状态字符串照样编译通过。读者做技术决策时要分清：你选的语言能给你编译期还是只能运行期？这决定了"加白"的上限。</aside>
+
+<h3 id="s3-3">3.3 治理型 PRD 的五要素模板（从 organization-prd.md 提炼）</h3>
+<p>从 organization-prd.md 提炼出可复用的治理型 PRD 结构（读者 doc17 单点爆发未模板化，这是补模板的机会）：</p>
+<ol>
+  <li><strong>§1 边界句</strong>——一句话定义上下文职责切分（"组织管 X、资源管 Y、监控管 Z"）。这是限界上下文的口头化定义。</li>
+  <li><strong>§0.2 模型决策（D1-D6）</strong>——把"要不要 Team"这种结构性争论显式拍板并给理由。如 D6："项目制，无 Team 一等概念，不保留 team 字段，现有 schema 的 team 字段在迁移中删除，<strong>避免半成品标签</strong>。"</li>
+  <li><strong>§6 对象与字段</strong>——含 <code>target_object_type</code> 枚举（定义变更单能作用于谁）。</li>
+  <li><strong>§7 状态与允许动作</strong>——每个对象的状态机 + 不变量约束。ChangeRequest 八态 + 流转表 + "7 天未审批自动 Cancelled" + "Failed 只读，基于此单复制生成新单，retry_parent_id 指向旧单"。</li>
+  <li><strong>§8 关键流程</strong>——前置条件 / 影响范围 / 状态变化 / 审计落点。</li>
+  <li><strong>§8.11 跨页跳转上下文白名单</strong>——URL Query 携带 <code>project_id / from</code> 等。这是<strong>"上下文间契约"的产品化形态</strong>。</li>
+</ol>
+<span class="ev">证据：file:///home/cheche/Workspaces/Learning/JoyDrive-Infra/doc/organization-prd.md L239（target_object_type 枚举）、L408-422（跳转参数白名单表）、L460-467（验收标准：边界验收/闭环验收/状态验收/审计验收）</span>
+
+<pre class="mermaid">
+flowchart TD
+  subgraph 治理型PRD五要素
+    BC["§1 边界句<br/>限界上下文切分"]
+    DEC["§0.2 D 决策<br/>结构性争论显式拍板"]
+    OBJ["§6 对象与字段<br/>target_object_type 枚举"]
+    SM["§7 状态机<br/>每对象状态枚举+不变量"]
+    FLOW["§8 关键流程<br/>前置/影响/状态变化/审计落点"]
+    CT["§8.11 跳转白名单<br/>上下文间契约"]
+    BC --> DEC --> OBJ --> SM --> FLOW --> CT
+  end
+  CT -->|对应加白产物| WHITELIST["合法路径白名单<br/>变更单穿过唯一入口<br/>审计只追加"]
+  style WHITELIST fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<blockquote class="white">这六块构成"可被开发直接落地的治理规格"，而非需求罗列。读者把 PRD 重写成"边界句+状态机+变更单+契约+审计"五位一体，本质上就是把"事后 review 加黑"升级成"事前设计加白"。<strong>这不是新工具，是把已有判断力（doc02/doc17）形式化成可审批可审计的契约层。</strong></blockquote>
+
+<h3 id="s3-4">3.4 事件驱动状态转移：Outbox + workflow-service 编排跨上下文流程</h3>
+<p>因果链：单聚合内的状态迁移用同步事务；跨聚合（如"实验创建"要触发 metadata 写血缘 + cluster 提交训练 + dataset 回写）必须异步、可重试、最终一致。JoyDrive 的做法（<code>doc/architecture-design.html</code>）：</p>
+<ul>
+  <li>业务表与 Outbox 表在<strong>同一事务</strong>提交（保证事件至少产生一次）；</li>
+  <li>PG NOTIFY 唤醒 worker 投递；</li>
+  <li>Reconciler 周期扫描未处理事件兜底；</li>
+  <li>目标服务按 <code>event_id</code> 和 <code>business_key</code> 去重（幂等）；</li>
+  <li>POST 接口要求 <code>idempotency_key</code>。</li>
+</ul>
+<p><strong>状态转移由"事件"驱动而非"直接调用"</strong>，这让多个上下文能独立演进而不耦合。例：cluster-service 收到 <code>ExperimentCreated</code> 事件后调 metadata 血缘回写 + cluster 提交训练 + dataset 回写（<code>state.go</code> L733-741 <code>RequestTraining</code> 注释明确"on receipt of an ExperimentCreated event"）。</p>
+
+<h3 id="s3-5">3.5 CQRS 读写分离 + event sourcing 的轻量化形态：审计即事件日志</h3>
+<p>JoyDrive <strong>没有上重型 event sourcing</strong>（不存全量事件流重建状态），但抓住了 ES 的本质价值——<strong>审计可追溯</strong>。做法：</p>
+<ul>
+  <li>web-service 只做读侧聚合（BFF），不持久化领域对象、不写业务事实（<code>architecture-design.html</code> L459）；写侧落单一权威服务。</li>
+  <li>审计记录（AuditRecord / OpsAuditRecord）<strong>只追加不修改</strong>（L607），<strong>导出动作本身也写审计</strong>——这是"事件溯源"的精神落地，用审计表代替全量事件流，成本可控且满足治理需求。</li>
+</ul>
+<p>这给读者的判断：<strong>是否上完整 ES，取决于"是否需要回放重建任意历史状态"</strong>；治理场景只需要"有据可查 + 不可篡改"，轻量审计足够。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-4">④ 避免贫血模型（富模型 vs 贫血模型的真实代价）</h2>
+
+<h3>4.1 本质区别一句话：行为该放在哪</h3>
+<p>把第 ② 节修正后的版本展开：<strong>贫血模型 = 对象只是 getter/setter 的数据袋，所有业务逻辑住在 Service 层，整体退化成过程式 Transaction Script</strong>。富模型 = 数据和行为同居于同一对象，用 OO 技巧组织复杂规则。Fowler 的判决："<a href="https://martinfowler.com/bliki/AnemicDomainModel.html">incur all of the costs of a domain model, without yielding any of the benefits</a>"——你照样付了 O/R 映射层、照样建了对象、照样维护模型，但因为它"contrary to the basic idea of object-oriented design"，你拿不到 OO 该给的封装 / 多态 / 规则内聚收益。</p>
+
+<h3>4.2 代价拆解（不是翻译税，是行为外溢）</h3>
+<ol>
+  <li><strong>业务规则散落在 N 个 service 里</strong>，改一处规则要追多个文件；</li>
+  <li><strong>实体可被任意外部 service 改坏状态</strong>（无封装保护），状态机不变式被绕过；</li>
+  <li><strong>测试只能测 service 不能测领域规则的内聚性</strong>。</li>
+</ol>
+<p><strong>关键诊断信号（Fowler 原话）</strong>："the more behavior you find in the services, the more likely you are to be robbing yourself of the benefits of a domain model." Application Service 厚 = 贫血信号。</p>
+
+<aside class="warn"><strong>再次强调独立验证修正</strong>：调研初稿把贫血模型归因为"统一语言失配的代价"已被收窄。<strong>贫血模型的病因</strong>：(1) 过程式编程习惯（许多人没真正用过 domain model，尤其是数据背景出身的开发者）；(2) 框架诱导（如早期 J2EE Entity Beans）；(3) 团队对 OO 设计放弃太早——Evans 关注的正是"giving up too easily on fitting the behavior into an appropriate object, gradually slipping toward procedural programming"。<strong>不是术语对齐失败导致贫血</strong>。两者常同现（一个团队语言失配，往往模型也贫血），但是相关而非因果。</aside>
+
+<blockquote class="why">读者 doc02 状态机（practiced）的镜像：状态机要真正有效就必须住进实体里（富），否则一旦规则外泄到 service，状态不变式就是个纸面约定。读者做一次贫血模型体检：在练习仓里 grep 出所有只有 getter/setter 的实体类，统计它们的业务规则被分散在多少个 service 文件里——把规则收回实体（状态机住进 Delivery/Order 实体）作为一次可量化的重构实验，对比改动半径。</blockquote>
+
+<h3>4.3 富模型 vs 贫血模型对比图</h3>
+<pre class="mermaid">
+flowchart TB
+  subgraph ANEMIC["贫血模型（Transaction Script）"]
+    direction TB
+    A1["Order 实体<br/>只有 getter/setter"]
+    A2["OrderService.placeOrder()<br/>所有业务规则在这"]
+    A3["OrderService.cancelOrder()<br/>状态校验也在这"]
+    A4["OrderService.updateItem()<br/>不变量也在这"]
+    A1 --> A2
+    A1 --> A3
+    A1 --> A4
+    A2 -.->|"绕过 A3 直接改 status"| A1
+  end
+  subgraph RICH["富模型（聚合根内嵌状态机）"]
+    direction TB
+    R1["Order 聚合根<br/>状态+行为同居"]
+    R2["Order.placeOrder()<br/>内部校验不变量"]
+    R3["Order.cancelOrder()<br/>guard 在实体内"]
+    R4["外部只能调 Order 公开方法"]
+    R1 --> R2
+    R1 --> R3
+    R4 -->|"唯一入口"| R1
+  end
+  style ANEMIC fill:#fdecea,stroke:#b3261e
+  style RICH fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<!-- ====================================================== -->
+<h2 id="sec-5">⑤ 核心论点：主动加白 vs 事后加黑</h2>
+
+<h3 id="s5-1">5.1 第一性原理：默认值翻转是核心杠杆</h3>
+<p><strong>白名单 / 黑名单的本质区别不在"列什么"，而在"默认值"</strong>。</p>
+<ul>
+  <li><strong>黑名单默认 ALLOW</strong>：未在表中出现的就放行。所以它只能拦住"已知的坏"，对新出现的、零日威胁永远慢半拍，必须"constant updates to address emerging threats"。</li>
+  <li><strong>白名单默认 DENY</strong>：未在表中出现的一律拒绝。所以它不依赖穷举坏样本，问的不是"这是不是已知坏"而是"<strong>这是不是已知好</strong>"。</li>
+</ul>
+<p>多源一致（Packetlabs、Adaptist、BCS365、Huntress）——"<a href="https://www.huntress.com/cybersecurity-101/topic/what-is-default-deny">Default allow opens up your system to vulnerabilities because unclassified activity is assumed safe until proven harmful... With default deny in place, even new and unknown exploits are blocked unless pre-approved</a>"。NIST SP 800-167 是官方背书的应用白名单指南。Cybereason 直引："Every time new malware is discovered, antivirus vendors add its signature to a blacklist"。</p>
+
+<p><strong>这一句就是整本教材的因果锚点</strong>：主动加白 = 把默认值从"放行"翻成"拦截"，于是 AI 生成时不可能走到"没设计过的合法状态"之外。<strong>把"防住所有坏情况"（不可能）换成"只放行已知好情况"（可能且可验证）</strong>。读者要做 Function Owner，最该懂的就是这个默认值翻转的杠杆。</p>
+
+<aside class="warn"><strong>独立验证修正（关键 nuance）</strong>：调研初稿最后一句"AI 生成时不可能走到没设计过的合法状态之外"<strong>过强</strong>，混淆了两个层次：
+<ul>
+<li><strong>句法 / 结构层</strong>：确实"不可能"。Constrained decoding 通过 token masking 让非法 token literally 不可采样——"<a href="https://www.aidancooper.co.uk/constrained-decoding/">manipulates a generative model's token generation process to constrain its next-token predictions to only tokens that do not violate the required output structure</a>"。</li>
+<li><strong>语义层</strong>：<strong>不"不可能"</strong>，且是白名单的真正失败模式。Cooper 用案例证明：regex 约束下模型可输出"Donald Duck"作为美国总统——结构合法、语义全错；小写约束下把 Paris 对到"spain"而非"France"。原文结论："constrained decoding eliminates structural errors but cannot prevent semantically wrong, unhelpful, or harmful content that happens to fit the required schema"。</li>
+</ul>
+<strong>正确表述</strong>：加白把默认值从放行翻成拦截后，AI 生成时不可能走到"语法/结构/schema 层面没设计过的合法状态"之外——非法 token 在解码时被 mask 掉、literal 不可采样。但"语义层面"仍可能出问题：合规 JSON / 合规工具签名 / 合规 SQL 形状的输出，仍可能是错误答案、越权动作或幻觉。Function Owner 的杠杆：加白封死了"形态错误"，但"语义/业务正确性"必须靠契约的另一翼（可验证的断言、测试、回滚、人在环路）来补。<strong>"好形态" ≠ "好语义"</strong>。</aside>
+
+<h3 id="s5-2">5.2 poka-yoke（防错）：检测 &lt; 修正 &lt; 预防</h3>
+<p>防错的因果链是：<strong>检测 &lt; 修正 &lt; 预防</strong>。New England Lean Consulting《The 3 Levels of Lean Mistake-Proofing》给出三层级：Level 3 Prevention（Cannot Produce，最高）、Level 2（Cannot Process）、Level 1（Cannot Pass）。Quality-One、ASQ《Mistake-Proofing》口径一致。</p>
+<p>把这套直觉搬到软件：两个 boolean（引擎状态 / 飞行状态）会产生隐性非法状态（引擎关但人在空中），<strong>加白做法是折叠成一个枚举 <code>plane_status: taxiing | flying | stopped</code></strong>，让非法组合在类型系统里根本表达不出来（<a href="https://dontbuildsoftware.substack.com/p/do-the-poka-yoke-building-error-proof">dontbuildsoftware Substack</a>）。</p>
+<p><strong>这是"加白 vs 加黑"的人话版定义</strong>：加黑 = 给错误装报警器（检测到错误），加白 = 把错误从物理结构上消除（让错误不可能发生）。状态的非法组合连"写出来"都做不到，AI 自然只能走在合法路径上。</p>
+
+<aside class="warn"><strong>独立验证修正（类比精度）</strong>：调研初稿用了澳洲插头"针脚角度让反向插入不可能"和 Roborock 弹簧片两个物理类比，验证发现两处不精确：
+<ul>
+<li><strong>澳洲插头</strong>：反插"不可能"主要靠"不对称几何 + 接地针更长先接通 + 接地针位置偏移"，而非单凭"针脚角度"。且并非绝对不可能——阿根廷 IRAM 2073 用同款几何但极性相反，说明物理结构只挡得住"上下颠倒"，挡不住接线错误造成的 live/neutral 极性反转。</li>
+<li><strong>Roborock 弹簧片</strong>：仅有 Reddit 用户经验帖 r/Roborock，非官方机械设计文档，且帖里明确说"部分型号不行"。不能当 Roborock 官方工程事实引用。</li>
+</ul>
+<strong>建议</strong>：澳洲插头类比改为"不对称几何 + 接地针更长先接通共同使上下颠倒插入物理不可能，但接线错误仍可导致极性反转"，避免把"结构性不可能"讲过头；Roborock 类比标注"用户经验非官方"，或换一个有官方工程背书的 poka-yoke 案例（如 3.5mm 耳机插头、USB-C 对称可盲插、SIM 卡托缺角防反插）。</li>
+</aside>
+
+<aside class="warn"><strong>伪引文修正</strong>：调研初稿引文 'It is impossible to assign an unexpected state' 多轮精确/模糊搜索均无任何出处匹配。<strong>这是伪引文风险</strong>，应删除引号或改为转述真实口号：Yaron Minsky（Jane Street, 2010《Effective ML》）的"make illegal states unrepresentable"——源头是 OCaml，不是 elm。</aside>
+
+<h3 id="s5-3">5.3 加白的六种物理实现（一张表打通）</h3>
+<table>
+<thead><tr><th>层次</th><th>加白机制</th><th>何时用</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td>类型层</td><td>discriminated union / sum type / type-state pattern / 私有构造+静态工厂</td><td>需要编译期消除非法组合</td><td><a href="https://fsharpforfunandprofit.com/posts/designing-with-types-making-illegal-states-unrepresentable/">F# for Fun and Profit</a>、<a href="https://blog.janestreet.com/effective-ml/">Jane Street Effective ML</a></td></tr>
+<tr><td>领域层</td><td><strong>聚合根 = 一致性守卫</strong>，唯一入口守不变量</td><td>跨实体的业务规则一致性</td><td>Vernon《Effective Aggregate Design》、<a href="https://buildsimple.substack.com/p/gen-5-ddd-aggregates-encapsulating">buildsimple</a></td></tr>
+<tr><td>接口层</td><td><strong>Design by Contract</strong>：前置/后置条件 + 不变式</td><td>方法语义的对外承诺</td><td><a href="https://dontbuildsoftware.substack.com/p/do-the-poka-yoke-building-error-proof">DbC↔poka-yoke 桥接</a>、<a href="https://khalilstemmler.com/articles/typescript-domain-driven-design/make-illegal-states-unrepresentable/">khalilstemmler</a></td></tr>
+<tr><td>状态层</td><td><strong>状态转移表</strong>（合法路径白名单）+ guard 互斥</td><td>对象生命周期管理</td><td>Stateless PermitIf、XState guard、UML 标准</td></tr>
+<tr><td>边界层</td><td><strong>限界上下文 + ACL</strong>（圈定圈内一致、隔离圈外污染）</td><td>跨团队/跨系统集成</td><td>Vernon 红皮书 ch.13、Fowler BoundedContext</td></tr>
+<tr><td>AIGC 层</td><td><strong>Constrained decoding</strong>：token 采样前抹掉非法 token</td><td>LLM 结构化输出</td><td><a href="https://www.aidancooper.co.uk/constrained-decoding/">Aidan Cooper</a></td></tr>
+</tbody>
+</table>
+
+<blockquote class="white"><strong>六个加白层次是同一思想的不同投影</strong>：把"什么合法"显式编码到一个外部不可绕过的层（编译器/运行时/runtime gate/解码器）。读者短板的落点：<strong>变更单 = 穿过唯一入口的放行记录；契约 = 不变式的对外承诺；审计 = 穿过入口变更的日志；状态转移表 = 合法路径白名单本身</strong>。这四件产品形态的东西都是加白在不同维度的工程化产物。</blockquote>
+
+<h3 id="s5-4">5.4 反事实·成本侧：只加黑（验证 + 重试）会怎样</h3>
+<p>用具体算术给读者"只加黑"的反事实兜底。设成功率 98.4%、平均重试 3 次：成功请求 1× token、失败请求 4× token，加权 = 0.98×1 + 0.02×4 = 1.06×，看似只贵 6%。<strong>但这是地板不是天花板</strong>（<a href="https://tianpan.co/blog/2026-04-28-structured-output-retry-loop-hidden-compute-waste">tianpan.co</a>）。真实消耗 12-18% 来自两个放大器：</p>
+<ol>
+  <li>重试 prompt 更长，input token 是原请求的 1.5-2×（wrapper 把坏输出 + 修复指令都塞回去）；</li>
+  <li>失败与难度正相关，难样本让模型输出更长。</li>
+</ol>
+<p><strong>更致命的是"无单调收敛"</strong>：每次重试修一个缺陷却引入另一个（Attempt 2 补了缺字段却把另一个字段挪出父对象，Attempt 3 出了一个合法 enum 的 typo）。wrapper 收下第一个 schema-valid 输出，但"<strong>可能仍然语义错误（一字段修正、另一字段被静默截断）</strong>"。结论：重试是在跟"模型自己的解码分布"对抗。constrained decoding 把失败率压到"in-distribution &lt; 1%"。</p>
+
+<h3 id="s5-5">5.5 反事实·语义侧：加白的设计成本与正确边界（关键 nuance）</h3>
+<p>给加白划"正确用法"。CRANE（<a href="https://arxiv.org/abs/2502.09061">Banerjee et al., arXiv:2502.09061</a>）指出严格约束有时反而"降低推理正确性"（prior works empirically observed strict constraints can hurt correctness）——因为约束太死会切断模型"绕路思考"的能力。但 CRANE 同时证明：<strong>设计得当的约束可以比无约束还好（最高 +10pp）</strong>。</p>
+
+<p><strong>给读者的教益</strong>：加白要加在"结构正确性"（状态 / 转移 / 字段 / 边界）上，而不是"语义最优"上。你加的白名单是"合法状态集合"和"合法转移图"——这层约束是净正收益；但你<strong>不要试图用约束去规定"最优答案"</strong>，那是另一回事。加白的哲学是"<strong>让非法不可能，把合法空间留给模型/AI 自由发挥</strong>"。</p>
+
+<blockquote class="why">这条 nuance 给读者最重要的判断框架：<strong>加白不是无止境做制品，越过"AI 能可靠 draft"的拐点就是成本膨胀而非节省</strong>。codecentric 拐点论："The pivot from the strategic to the tactical level is the moment when the actor playing primary Drafter changes from a human to an AI." 拐点前制品在建，拐点后制品"富到 AI 能可靠 draft"。<strong>拐点即止，否则自身成为 cost-drift 源</strong>。这是读者 doc17 单点爆发但要规模化的关键停损判据。</blockquote>
+
+<!-- ====================================================== -->
+<h2 id="sec-6">⑥ 在 aicoding 里省设计/开发/调研成本</h2>
+
+<p>本节是教材的核心 facet——回答"在 aicoding 时代，DDD + 状态机怎么省设计/开发/调研成本"。读者对外汇报的口径应是这样一句话：<strong>aicoding 省成本的本质 = 把信任预算从 model confidence 转移到 deterministic 结构层</strong>。</p>
+
+<h3 id="s6-1">6.1 避免贫血模型：富领域模型 / 契约给 AI 明确靶子，减少 interpretation drift</h3>
+<p>因果链：AI 输出"<strong>plausible by construction, correct only where aligned with training distribution</strong>"（codecentric）。若不给 AI 一个结构化靶子，它只会回退到训练分布默认值（generic CRUD / boilerplate），这种 drift 最贵——是<strong>返工级失败，不是修 bug 级失败</strong>。机制：在人介入 AI 之前先做富领域制品（Domain Story / Visual Glossary / API Product Canvas / OpenAPI），每个制品都是精度 prompt。</p>
+<p>关键拐点：codecentric 原文"<strong>The pivot from the strategic to the tactical level is the moment when the actor playing primary Drafter changes from a human to an AI</strong>"——拐点前制品在建，拐点后制品"富到 AI 能可靠 draft"。<strong>契约把"创造发现"（creative discovery）转成"结构化输入"（formalized input）</strong>："Hand AI the formalized work and it is a force multiplier. Ask it to originate the creative work and you will be disappointed."</p>
+
+<aside class="warn"><strong>独立验证修正（三处需收窄）</strong>：(A) 跨源拼接冒充单源——codecentric 两篇自身从未用"generic CRUD / boilerplate"描述失败模式，调研初稿把 dev.to / levelup 的 CRUD 回退观察嫁接到 codecentric 的 plausible-by-construction 论证上。方向自洽，但应标注为"综合多家观察的推论"。(B) "最贵的 drift / 返工级 vs bug-fix 级"是修辞级强调而非已证实成本量级——AgileCaddie 与 LinkedIn 帖是断言，<strong>没有返工工时 / 缺陷密度的量化对照</strong>。论点用于成本决策需补量化证据。(C) 单边因果，未承认反证成本：重型 upfront 制品本身有过度工程风险（dev.to "The Over-Engineering Trap"、Heroku）。<strong>净结论</strong>：plausible-by-construction + artifacts-are-prompts + 拐点切换三件事已 confirmed；"CRUD 回退=最贵返工"为 partial（机制存在，成本量级未量化）；并补一条上限：制品富化在拐点即止。</aside>
+
+<h3 id="s6-2">6.2 避免细节膨胀：限界上下文圈定 scope，agent 不 sprawl（含 token 量化证据）</h3>
+<p>因果链：单个 agent 处理跨领域任务时，token 大量耗在"调和无关关注点"上，错误率随歧义上升。机制：<strong>限界上下文 = agent 天然工作单元</strong>，"a bounded context is a natural unit of work for an agent"（<a href="https://www.learninternetgrow.com/domain-driven-design-ai-agents/">LearnInternetGrow</a>），"agents thrive within clear boundaries but hallucinate across incompatible domains"。</p>
+<p><strong>量化案例</strong>：一个"guard agent"同时做 code review + security + testing，每次超过 3000 tokens，多花在调和无关事；按领域切分（quality context / security context）后，<strong>"each agent's complexity dropped from thousands of tokens to hundreds"</strong>——同样工作量，成本降一个数量级。歧义消除案例：Finance context 里 booking = 收入信号，Risk context 里 booking = 负债信号；给每个 agent 自己的 context，"<strong>结构性消除歧义，不是靠改模型</strong>"。</p>
+
+<h3 id="s6-3">6.3 AGENTS.md / CLAUDE.md 即 strategic DDD 给 agent 的载体</h3>
+<p>因果链：agent 每次会话开局自动加载 AGENTS.md / CLAUDE.md，所以这里放的应是"<strong>战略决策</strong>"而非"战术笔记"。把 strategic DDD 决策（限界上下文归属、统一语言、聚合边界、不变量、集成模式）编码进 AGENTS.md，等于把这些决策从"人脑/会议纪要"升级为"<strong>agent 每次必读的可执行指令</strong>"。</p>
+<p>James Croft 把 bounded context 直接映射为 agent ownership boundary：<a href="https://www.jamescroft.co.uk/applying-domain-driven-design-principles-to-multi-agent-ai-systems/">"One or more agents represent a bounded context. This means an agent encapsulates the knowledge and rules of its specific domain."</a> 统一语言也在此固化："Within a bounded context, use consistent terminology that a human domain expert would understand."</p>
+
+<blockquote class="white"><strong>AGENTS.md 模板（每个限界上下文一段）</strong>：(1) 归属 agent / 责任边界；(2) 统一语言 glossary（"a cheap, high-leverage hallucination reducer"）；(3) 聚合边界 + 不变量；(4) 集成模式（ACL / Conformist / Customer-Supplier）。读者用 HilPerformancePlatform 的 onboard + 数仓两个上下文做试点，验证 "each agent's complexity dropped from thousands of tokens to hundreds" 在自己场景是否成立。</blockquote>
+
+<h3 id="s6-4">6.4 避免主线偏移：状态机显式合法转移，AI 不能引入非法流</h3>
+<p>因果链：AI 提议（probabilistic），状态机裁决（deterministic）——<strong>两者必须分离，否则 probabilistic 决策会污染 deterministic 执行</strong>。机制：runtime 硬阻断任何非显式允许的转移。例（<a href="https://www.buildmvpfast.com/blog/ai-agent-state-machines-complex-workflows-finite-state-automata-2026">buildmvpfast</a>）："<strong>If approve_payment is illegal from planning, the runtime should reject it.</strong>" 失败时状态机用"具体确定性原因"拒绝，而不是 prompt loop 的含糊偏离。显式终止条件防 runaway（<a href="https://brightlume.com">Brightlume</a>）：rather than letting the LLM decide when to stop, you define the boundaries—preventing runaway or off-track flows。</p>
+<p><strong>调研箴言</strong>：<strong>先设计 states，再列 tools</strong>（design states before listing tools）。缺失显式 state 会导致 safety drift（arXiv 2607.18366 实证）。Hugging Face Explicit State Loop："<strong>probabilistic decision-making and deterministic execution coexist without corrupting each other</strong>"。</p>
+
+<h3 id="s6-5">6.5 避免成本膨胀：聚合边界把变更局部化（blast radius 控制）</h3>
+<p>因果链：变更越能局部化，rework / 重生成 / 回归测试的 token 与人工成本越小。机制：<strong>聚合 = 一致性边界</strong>，所有不变量在一个聚合内强制、跨聚合只走领域事件 / 最终一致。落到 aicoding：一个 agent 改动若被聚合边界约束，重生成 / 测试只发生在该聚合内，不会级联扩散到无关代码（即"AI 修一个 bug 破坏三个文件"的 context drift 根因之一是无边界）。</p>
+<p>配合"不变量作硬门（hard gate）"（LearnInternetGrow）："Confidence is probabilistic; an invariant is a hard gate"——失败确定性在边界被抓，不到生产。领域模型是双向过滤器："The domain model creates a two-way filter: it shapes context going into the agent and validates results coming out"+"<strong>you catch it deterministically at the boundary, not in production</strong>"。</p>
+
+<h3 id="s6-6">6.6 SDD / spec-as-contract：spec 是 source of truth，drift 被设计性消除（含承诺级别防 sprawl）</h3>
+<p>因果链：当代码从 spec 重生成而非手改时，spec 与 code 始终对齐——<strong>drift 被设计性消除</strong>。但 spec 必须达到"机器可读、边界冻结"（如 OpenAPI）才配当 source of truth；模糊 / in-flux 的 spec 作生成 prompt 会<strong>放大每个缺口</strong>（codecentric："when a spec is ambiguous, incomplete, or in flux, using it as a generation prompt amplifies every gap"）。</p>
+<p>codecentric 给三级承诺度护栏防 sprawl：</p>
+<table>
+<thead><tr><th>承诺度</th><th>含义</th><th>风险</th></tr></thead>
+<tbody>
+<tr><td>spec-first</td><td>一次性探索，可丢</td><td>低（探索性质）</td></tr>
+<tr><td><strong>spec-anchored</strong></td><td>随 code 共同演进，<strong>活契约</strong></td><td>中（需同步维护）</td></tr>
+<tr><td>spec-as-source</td><td>spec 即真理，code 由其生成</td><td><strong>高（须谨慎，spec 必须机器可读且边界冻结）</strong></td></tr>
+</tbody>
+</table>
+<p>验证是 continuous 不是 one-time gate（codecentric）："It is not a one-time gate but a continuous activity." Augment Code："Spec-driven development turns specifications into executable contracts that constrain what AI agents generate."</p>
+
+<aside class="note"><strong>工程化 PRD 模板化（doc17 单点爆发未模板化）的杠杆</strong>：直接套用 codecentric 三级 spec 承诺度作为 PRD 的承诺度字段，强制写明"这份 PRD 是探索 / 活契约 / source-of-truth"，从结构上防"in-flux spec 被当生成 prompt 放大每个缺口"。</aside>
+
+<h3 id="s6-7">6.7 约束 AI 的范式：prose 告诉 AI 想要什么，确定性检查决定它能交付什么</h3>
+<p>bitbytebit 点破读者在 aicoding 时代的核心痛点："<a href="https://bitbytebit.substack.com/p/enforcing-invariants-in-ai-generated">An LLM will produce code that looks correct yet quietly violates a rule you assumed was safe</a>"，因为它对系统依赖的约束没有固有记忆。解决方案不是写更多 prompt，而是把不变量编码到 AI 无法忽略的地方：</p>
+<ul>
+  <li><strong>ADR（Architecture Decision Record）+ scope 文件路径 glob</strong>，Stop hook 检查"被改的文件对应的 ADR 是否被读过，没读过则非零退出"；</li>
+  <li><strong>RFC 2119 关键词</strong>（MUST / SHALL / MUST NOT）+ <strong>Gherkin given/when/then</strong> 把"建议"变"可测规则"。</li>
+</ul>
+<p><strong>"Prose tells an agent what you would like, a check decides what it can ship."</strong> 读者 doc17 的 Hook + 三把锁 + Edge Cases（校准第 25-26 行）本质就是给 AI 立的 guard，但停留在单篇 PRD 没有沉淀成 hook / ADR / 契约。<strong>读者已经会的"状态机+Hook+守卫"配上 ADR+契约+确定性检查，就是从"人盯 AI"到"系统约束 AI"的跃迁。</strong></p>
+
+<aside class="warn"><strong>独立验证修正（重要位置混淆）</strong>：调研初稿用 Newcomb (2025)《Preconditions and Postconditions as Design Constraints for LLM Code Generation》的实测结果背书"治理结构是关键短板"——<strong>这存在位置混淆</strong>。Newcomb 证明的是<strong>设计期把契约写进 prompt 提升生成准确率</strong>（Python pass@1 显著提升 +23.67pp, p=0.0402；<strong>Java 未达显著 p=0.066，C++ 仅 pass@1 显著 p=0.0417, pass@10 不显著</strong>；样本为单一井字棋系统、15 个类、6 模型，结论外推性有限）。但 Wasowski 主张的是<strong>审计期 / 运行期 checkable contract</strong>。读者"治理结构（变更单 + 审计）"在 Newcomb 实证里<strong>无任何数据支撑</strong>。<strong>净结论</strong>：契约部分有 pilot 支持（生成期），但"变更单+审计整套治理结构是关键短板"这一具体断言目前仍是<strong>推断而非已证</strong>。读者做这个判断时用"结构性护栏优于纯 prompt 调优、契约能压住 interpretation drift"的方向表述（有 pilot + 论证 + 直觉支撑），但不要冒充"已被实证大幅提升"。</aside>
+
+<!-- ====================================================== -->
+<h2 id="sec-7">⑦ 行业顶级实践与工具</h2>
+
+<h3>7.1 大厂 DDD 落地路径：事件风暴 → 统一语言 → 限界上下文 → 上下文映射 → 聚合</h3>
+<p>美团技术博客（<a href="https://tech.meituan.com/2017/12/22/ddd-in-practice.html">tech.meituan.com</a>，国内被引用最多的 DDD 实践文）和美团抽奖平台案例给出标准落地流程：(1) 按业务能力划分限界上下文（保持高内聚低耦合）；(2) 上下文内部识别实体 / 值对象；(3) 聚合设计。美团在抽奖平台划分了"<strong>抽奖 / 活动静入 / 风控 / 计数 / 库存</strong>"五个上下文，每个上下文高度内聚。</p>
+<p><strong>映射到读者场景</strong>：读者的数据闭环天然有清晰的限界上下文候选——"采集上下文 / 上传上下文 / 数据资产上下文 / 标注上下文 / 数据集上下文 / 训练上下文 / 评测上下文"。读者 doc12 已经做了"场景矩阵 + 7 共性能力"的前半段（能力识别），缺的是把这些能力映射到限界上下文边界 + 上下文映射（谁是上游下游、谁是反腐层 ACL、谁是共享内核）。</p>
+
+<h3>7.2 事件建模（event-modeling）方法论</h3>
+<p>eventmodeling.org（<a href="https://eventmodeling.org/about/">Adam Dymitruk 基于 Greg Young CQRS/ES</a>）给读者的直接价值：把 doc02 的"理想链路：车端采集-上传入库-清洗筛选-标注-数据集-训练-评估-部署-车端运行-问题反馈-再采集"直接画成<strong>事件流</strong>（business event + 信息流）。这正是读者已经做对一半、缺另一半（把信息流转成可订阅的事件契约）的事。</p>
+
+<h3>7.3 工具速查表</h3>
+<table>
+<thead><tr><th>工具</th><th>语言/平台</th><th>核心能力</th><th>读者何时考虑用</th></tr></thead>
+<tbody>
+<tr><td><strong>Stateless</strong></td><td>C# / .NET</td><td>PermitIf/OnEntry/OnExit/SubstateOf/Mermaid 导出/外部状态存储</td><td>需要 guard 互斥校验、可视化导出</td></tr>
+<tr><td><strong>XState</strong></td><td>JS/TS</td><td>actor model + actions，前端可共享状态定义</td><td>跨前后端共享状态机（state-driven UI）</td></tr>
+<tr><td><strong>Akka Typed FSM</strong></td><td>Scala</td><td>每个状态=返回 Behavior 的方法，超时转换</td><td>长生命周期、可分布、需容错的领域对象</td></tr>
+<tr><td><strong>SCXML</strong></td><td>W3C 标准</td><td>层级 + 并行 + RTC 语义，XML 序列化</td><td>跨语言共享复杂状态图</td></tr>
+<tr><td><strong>Axon Framework</strong></td><td>Java</td><td>CQRS + ES 一体化（70M+ 下载）</td><td>Java 栈重型 CQRS/ES 落地</td></tr>
+<tr><td><strong>EventStoreDB</strong></td><td>专用事件存储</td><td>事件溯源专用 DB</td><td>需要回放重建任意历史状态</td></tr>
+<tr><td><strong>mermaid stateDiagram-v2</strong></td><td>纯文本</td><td>状态转移图可视化，可在 PRD/Markdown 里嵌</td><td><strong>读者起点</strong>：先用它画清楚转移表</td></tr>
+</tbody>
+</table>
+
+<aside class="note"><strong>选型阈值口诀</strong>：你的领域状态少且转换简单 → 手写 enum + switch 即可（如 JoyDrive Go 代码）；状态多 / 需可视化 / 需跨语言共享 → 上框架。读者领域（~25 状态、有并行、有正交维度）已超扁平机舒适区。但<strong>不要一上来就上 XState/SCXML 重框架</strong>——先用 mermaid stateDiagram-v2 画清楚转移表，验证业务规则对了再考虑代码化。mermaid 是零成本起点。</aside>
+
+<h3>7.4 Vernon 红皮书 vs Evans 蓝皮书：两本书的分工（读者阅读路径）</h3>
+<p>Evans《Domain-Driven Design》（蓝皮书, 2003）是开创性理论：定 ubiquitous language、bounded context、aggregates、战略 / 战术框架，偏哲学与建模思想。Vernon《Implementing Domain-Driven Design》（红皮书）是落地工程指南：把蓝皮书的抽象转成可编码的样板（聚合设计规则、Sagas、ACL 实现成 REST client adapter、CQRS、事件源），附大量 Java/Spring 代码。</p>
+<p><strong>两遍法适用</strong>：第一遍读蓝皮书建因果骨架（为什么这么建模），第二遍读红皮书补实现细节（怎么落地）。读者判断力领先于实现熟练度——蓝皮书对齐她的强项（判断 / 建模），红皮书补她的弱项（工程化模板），doc17 工程化 PRD 单点爆发的模板化正好对应红皮书的样板。建议阅读路径：先速读 Evans 蓝皮书第 1/2/14 章建因果骨架，再精读 Vernon 红皮书聚合设计那一章补工程模板；不要一上来啃全部战术模式。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-8">⑧ 读者应用水平映射（practiced → can-decide）</h2>
+
+<h3>8.1 当前水平校准（基于实测 doc02）</h3>
+<p>直接读了读者的 doc02（joyspace-cache/02-jpLBIKqy086mEqQQSVRq.txt）。它有约 25 个状态（初始态 / 数据产生 / 数据邮寄 / 数据上传 / 云端解算 / 解算通过 / 解算失败 / 处理完成 / 处理异常 / 数据资产落仓 / 数据废弃...），每个状态点挂了埋点字段（落盘时间戳、盘号、车辆 id、错误码、ncu 等）——<strong>这部分是 practiced 水准</strong>。但缺三样：</p>
+<ol>
+  <li>没有 from→to 的<strong>状态转移矩阵</strong>（谁能跳到哪、触发条件、guard）；</li>
+  <li>没有 <strong>side-effect 契约</strong>（进入某状态除埋点还要发什么事件、扣什么额度、通知谁）；</li>
+  <li>文档第 54 行自己写着"<strong>完整状态机定义 / 平台待完善项：黄子晋(Rickroll)</strong>"——你把状态机定义权让渡给了平台方。</li>
+</ol>
+<p>这就是"practiced 但未到 can-decide"的精确边界：你能列状态 + 埋点，但没产出转移规则表，恢复路径只能"列项"不能"闭环"。</p>
+
+<h3>8.2 从 practiced 到 can-decide 的具体练习（按周排期）</h3>
+
+<h4>本周最高 ROI 一件事：把 doc02 升级成状态转移表</h4>
+<p>拿 doc02（数据闭环）做一次"状态清单 → 状态机"重写。在现有 25 个状态基础上，强制产出一张状态转移表，列四栏：<strong>from / to / trigger（什么事件触发）/ guard（什么条件下允许）</strong>。先只填主路径（数据产生 → 数据上传 → 云端解算 → 落仓），恢复路径（解算失败 → 重跑 / 废弃）第二遍再填。</p>
+
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> 数据产生: 采集任务启动
+  数据产生 --> 数据邮寄: guard: 盘号已绑定+车辆上电
+  数据邮寄 --> 数据上传: trigger: 盘到货+扫号
+  数据上传 --> 云端解算: trigger: 上传成功+校验通过
+  云端解算 --> 解算通过: guard: 解算结果质检合格
+  云端解算 --> 解算失败: guard: 解算报错或质检不合格
+  解算失败 --> 数据上传: trigger: 重跑(复制新单带 retry_parent_id)
+  解算失败 --> 数据废弃: trigger: 超过3次重试
+  解算通过 --> 数据资产落仓: trigger: 入血缘账本
+  数据资产落仓 --> [*]
+  数据废弃 --> [*]
+</pre>
+
+<h4>本月做（2-3 周）：把 doc02 重写成限界上下文划分</h4>
+<p>把当前的状态列表按聚合边界重组——至少识别出"<strong>采集上下文 / 上传上下文 / 数据资产上下文 / 标注上下文</strong>"四个限界上下文，每个上下文画一个聚合（聚合根 + 不变量 + 聚合内实体）。用 Vernon 三原则自检：一事务一聚合、身份引用、小聚合。对照 JoyDrive <code>data-artifact-registry-design.md</code> L29-61 的 DataArtifact 聚合结构。这解决校准第 74 行"元数据颗粒度自相矛盾（clip vs frame）"——<strong>聚合边界定了就解决了</strong>。</p>
+
+<h4>本月做（并行）：给数据闭环画一张 event-modeling 事件流图</h4>
+<p>把 doc02 第 43 行的"理想链路"每个箭头转成一个领域事件（如 <code>PackageUploaded</code> / <code>ArtifactReady</code> / <code>TaggingCompleted</code>），标注事件的生产聚合和消费聚合。用 eventmodeling.org 的方法（business event + information flow）。这一步直接把读者已会的能力（数据闭环链路）和新学的能力（领域事件）焊在一起，且是 CQRS 读模型设计的前置。</p>
+
+<h4>持续做（贯穿）：把 doc17 抽象成可复用的"治理型 PRD 模板"</h4>
+<p>模板字段：<strong>边界句三段（In / Out / Non-Goals）+ 状态转移表 + 变更单 schema + 审计字段 + SLA 数值 + 失败模式矩阵</strong>。挑一个正在推的设计（建议数据资产管理 doc03/doc10）用模板重写。这解决校准第 77-78 行"工程化水准不一致，最佳实践没沉淀成模板"——你写得出 17 号却让 02 号停留在清单，<strong>缺的是产品化纪律</strong>。</p>
+
+<h3>8.3 验收清单：判断你的状态机是否"够治理化"</h3>
+<table>
+<thead><tr><th>检查项</th><th>不达标表现</th><th>can-decide 标准</th></tr></thead>
+<tbody>
+<tr><td>状态转移表</td><td>只有状态名 + 埋点字段</td><td>每转移都有 from/to/trigger/guard/effect 四栏</td></tr>
+<tr><td>guard 互斥</td><td>同一 trigger 多个条件可能重叠</td><td>能说出"同 trigger 的多 guard 互斥"</td></tr>
+<tr><td>不变量边界</td><td>"状态字段不影响任何按钮"</td><td>每个状态影响哪些按钮/拦截/审计/可编辑范围可枚举</td></tr>
+<tr><td>失败模式</td><td>恢复路径只列项</td><td>每个失败转换都有 retry_parent_id + 补偿动作</td></tr>
+<tr><td>跨聚合一致性</td><td>"同步锁多个表"</td><td>用领域事件+最终一致（参考 Saga）</td></tr>
+<tr><td>跨上下文契约</td><td>"共享同一个 Project 模型"</td><td>用 ACL/Conformist 显式声明集成模式</td></tr>
+</tbody>
+</table>
+
+<h3>8.4 反共识练习：判断"加概念 vs 删概念"</h3>
+<p>审视你当前负责的某个产品，找出一个"<strong>看似天然但其实是半成品标签</strong>"的概念（类比 JoyDrive 的 Team），论证是否该删除而非扩展。把结论写成一条 D 决策（仿 D6 格式：<strong>决策 + 理由 + 迁移动作</strong>）。</p>
+<p>JoyDrive 真实演进痕迹：domain-model.html（旧版）仍写"User、Team、RoleTemplate"（L226, L301），而 organization-prd.md 修订记录（2026-05-21）明确"采用项目制，不再把 Team 作为一等概念，User 表不保留 team 字段（D6）"。这不是矛盾，是模型演进的正常现象——<strong>Team 这个概念在组织上下文里被证明是半成品标签、被显式删除</strong>。这示范了 DDD 的反共识教训："<strong>放弃一个看似天然的概念</strong>比'加一个概念'更需要判断力，且必须落在迁移里"（organization-prd.md L58：现有 schema 的 team 字段在迁移中删除，避免半成品标签）。<strong>对 cheche：判断'加白名单 vs 加黑名单'时，能删的概念往往是更优解</strong>。</p>
+
+<!-- ====================================================== -->
+<h2 id="sec-9">⑨ 关键 rationale + 反事实</h2>
+
+<p>下表把全书最关键的 10 个设计决策的"为什么这么做 + 不这么做会怎样"集中呈现。Function Owner 的判断力 = 能讲清楚这张表。</p>
+<table>
+<thead><tr><th>决策</th><th>Rationale（为何如此）</th><th>反事实（不这么做的崩塌路径）</th><th>证据</th></tr></thead>
+<tbody>
+<tr><td>限界上下文按"语言分叉"切，不按页面切</td><td>同一词在不同域里有不同定义就该是两个上下文</td><td>强行统一 → 制造半成品字段（如 JoyDrive 删 team 字段前的状态）</td><td>organization-prd.md L56-58</td></tr>
+<tr><td>聚合 = 一事务一聚合，跨聚合用领域事件</td><td>聚合是事务一致性边界，不是数据容器</td><td>嵌套锁多聚合 → 死锁，吞吐从 48 req/s 跌到 1.24 req/s</td><td>Zilverline 实测</td></tr>
+<tr><td>聚合根内嵌状态机（命令先校验不变量才产事件）</td><td>不变量校验在聚合内一处，外部不可绕过</td><td>规则散落 service → 任意外部代码可改坏状态，状态机不变式成纸面约定</td><td>Vernon 2011、JoyDrive state.go L458</td></tr>
+<tr><td>默认值用值对象，只有跨时间跟踪身份才升实体</td><td>对抗"万物皆实体 + getter/setter"的本能</td><td>万物皆实体 → 贫血模型，付了模型税拿不到 OO 收益</td><td>MS Tactical DDD</td></tr>
+<tr><td>ChangeRequest 变更单外包状态迁移</td><td>高危不可逆操作必须申请-审批-执行-审计</td><td>直接改库 → 单人误操作毁掉整个项目训练能力</td><td>organization-prd.md §8.4-8.6</td></tr>
+<tr><td>变更单不原单重试，复制为新单 + retry_parent_id</td><td>审计每条记录代表一次确定性执行尝试</td><td>原单重试 → 审计看到同一单多次执行，无法判断哪次成功</td><td>organization-prd.md §8.6</td></tr>
+<tr><td>ACL 在集成面建翻译层</td><td>外部模型污染不可控时隔离变化</td><td>直接消费 → 外部模型一次变更穿透进来，故障成本不可控</td><td>Vernon 红皮书 ch.13</td></tr>
+<tr><td>审计只追加不修改，导出动作也写审计</td><td>审计可信的根基；闭环防导出泄密无据可查</td><td>可改 → 失去证据效力；导出不记 → 批量泄密无据</td><td>architecture-design.html</td></tr>
+<tr><td><strong>主动加白（design-time 把合法路径先设计好）</strong></td><td><strong>把默认值翻成 DENY，问题从"防住所有坏"换成"只放行已知好"</strong></td><td><strong>只加黑 → 2% 失败率吃掉 12-18% 推理预算，无单调收敛，"格式合法但语义错误"</strong></td><td>Huntress、tianpan.co、Cooper</td></tr>
+<tr><td><strong>AGENTS.md 编码 strategic DDD</strong></td><td><strong>把战略决策从人脑升级为 agent 每次必读的可执行指令</strong></td><td><strong>仅靠 prompt → agent 漂移到训练分布默认值，每个 context 复杂度从百级 token 涨到千级</strong></td><td>LearnInternetGrow、Croft</td></tr>
+</tbody>
+</table>
+
+<h3>9.1 加白 vs 加黑对比图（教材核心论点的可视化）</h3>
+<pre class="mermaid">
+flowchart TB
+  subgraph BLACK["事后加黑（post-hoc 收敛）"]
+    direction TB
+    B1["默认 ALLOW"]
+    B2["AI 自由生成"]
+    B3["验证：parse → validate"]
+    B4{"schema 合法?"}
+    B5["接受"]
+    B6["拒绝 → 重试"]
+    B7["代价：2% 失败率<br/>12-18% 推理预算<br/>无单调收敛<br/>格式合法但语义错"]
+    B1 --> B2 --> B3 --> B4
+    B4 -->|是| B5
+    B4 -->|否| B6 --> B2
+    B5 -.-> B7
+  end
+  subgraph WHITE["主动加白（design-time 约束）"]
+    direction TB
+    W1["默认 DENY"]
+    W2["先设计合法状态/转移/边界/契约"]
+    W3["AI 在合法空间内生成<br/>(constrained decoding / guard / invariant)"]
+    W4["结构层错误不可能产生"]
+    W5["语义层仍需契约/测试/人在环路"]
+    W6["代价：design-time 投入<br/>(但拐点即止)"]
+    W1 --> W2 --> W3 --> W4 --> W5
+    W3 -.-> W6
+  end
+  style BLACK fill:#fdecea,stroke:#b3261e
+  style WHITE fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<h3>9.2 aicoding 里 DDD 契约约束 AI 生成（机制图）</h3>
+<pre class="mermaid">
+flowchart LR
+  subgraph 制品层
+    GL["统一语言 glossary<br/>(hallucination reducer)"]
+    BC["限界上下文 + ACL<br/>(圈 scope)"]
+    AGG["聚合边界 + 不变量<br/>(blast radius)"]
+    SM["状态机转移表<br/>(合法路径)"]
+    CT["契约 DbC<br/>(前置/后置/不变式)"]
+    ADR["ADR + RFC2119 + Gherkin<br/>(可测规则)"]
+  end
+  subgraph AI层
+    AGENT["AI agent<br/>(probabilistic 提议)"]
+    GEN["代码生成"]
+  end
+  subgraph 验证层
+    GATE["确定性 gate<br/>(deterministic 裁决)"]
+    HOOK["Stop hook<br/>改 governed 文件前必须读 ADR"]
+    INV["不变量校验<br/>(执行后是否仍成立)"]
+  end
+  GL --> AGENT
+  BC --> AGENT
+  AGG --> AGENT
+  SM --> AGENT
+  CT --> AGENT
+  AGENT --> GEN
+  GEN --> GATE
+  GATE --> HOOK
+  HOOK --> INV
+  INV -->|"pass"| SHIP["可交付"]
+  INV -->|"fail"| REGEN["在边界内重生成<br/>(非全量重试)"]
+  style GATE fill:#fff8e1,stroke:#d4a017
+  style SHIP fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<h3>9.3 读者能力跃迁路线图</h3>
+<pre class="mermaid">
+flowchart LR
+  P1["practiced: doc02<br/>状态清单+埋点<br/>(25 状态)"]
+  P2["practiced: doc17<br/>工程化 PRD 单点爆发<br/>Hook+三把锁"]
+  D1["can-decide:<br/>状态转移表<br/>(from/to/trigger/guard/effect)"]
+  D2["can-decide:<br/>限界上下文划分<br/>(4 context + 聚合)"]
+  D3["can-decide:<br/>治理型 PRD 模板<br/>(五要素+三级承诺度)"]
+  D4["can-decide:<br/>AGENTS.md 编码<br/>strategic DDD"]
+  I1["introduced:<br/>治理结构<br/>(变更单/契约/审计)"]
+  P1 -->|"本周: 状态转移表"| D1
+  P1 -->|"本月: 限界上下文"| D2
+  P2 -->|"持续: 五要素模板"| D3
+  I1 -->|"用变更单 schema 落地"| D3
+  D2 -->|"下月: AGENTS.md"| D4
+  D1 --> D3
+  style I1 fill:#fff3e0,stroke:#d4a017
+  style D4 fill:#e7f4ec,stroke:#0a7a45
+</pre>
+
+<!-- ====================================================== -->
+<h2 id="sec-10">延伸阅读</h2>
+<ul>
+  <li><strong>Eric Evans《Domain-Driven Design》（蓝皮书, 2003）</strong>——开创性理论。读者阅读路径：先速读第 1/2/14 章建因果骨架（统一语言 / bounded context / 战略设计）。</li>
+  <li><strong>Vaughn Vernon《Implementing Domain-Driven Design》（红皮书）</strong>——落地工程指南。读者精读聚合设计那一章补工程模板，ch.13 ACL 实现 REST client adapter。</li>
+  <li><a href="https://martinfowler.com/bliki/BoundedContext.html">Martin Fowler, BoundedContext</a>——限界上下文的入门文章。</li>
+  <li><a href="https://martinfowler.com/bliki/UbiquitousLanguage.html">Martin Fowler, UbiquitousLanguage</a>——统一语言的入门文章（引用 Evans 原话）。</li>
+  <li><a href="https://martinfowler.com/bliki/AnemicDomainModel.html">Martin Fowler, AnemicDomainModel</a>——贫血模型反模式的权威文章。</li>
+  <li><a href="https://vladikk.com/2018/01/26/revisiting-the-basics-of-ddd/">Vlad Khononov, Revisiting the Basics of DDD</a>——子域分类与 bounded context 的关系。</li>
+  <li><a href="https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-domain-driven-design">Microsoft Azure, Tactical DDD</a>——战术模式在微服务的落地。</li>
+  <li><a href="https://www.dddcommunity.org/wp-content/uploads/files/pdf_articles/Vernon_2011_1.pdf">Vernon, Effective Aggregate Design Part I</a>——聚合根设计的奠基文章。</li>
+  <li><a href="https://github.com/dotnet-state-machine/stateless">Stateless（C# 状态机库）</a>——状态机五要素的最干净 API 对照。</li>
+  <li><a href="https://stately.ai/docs/xstate">XState</a>——前端可共享状态机，state-driven UI。</li>
+  <li><a href="https://www.aidancooper.co.uk/constrained-decoding/">Aidan Cooper, Constrained Decoding</a>——加白在 AIGC 层的物理实现。</li>
+  <li><a href="https://www.codecentric.de/en/knowledge-hub/blog/five-principles-for-ai-assisted-ddd-keeping-the-human-at-the-center">codecentric, Five Principles for AI-Assisted DDD</a>——本教材 aicoding facet 的源头文章。</li>
+  <li><a href="https://bitbytebit.substack.com/p/enforcing-invariants-in-ai-generated">bitbytebit, Enforcing Invariants in AI-Generated Code</a>——ADR + Stop hook + RFC2119 的工程实践。</li>
+  <li><a href="https://dontbuildsoftware.substack.com/p/do-the-poka-yoke-building-error-proof">poka-yoke 在软件的落地</a>——加白的物理直觉。</li>
+  <li><a href="https://blog.janestreet.com/effective-ml/">Yaron Minsky, Effective ML（Jane Street）</a>——"make illegal states unrepresentable"的源头。</li>
+  <li><a href="https://eventmodeling.org/about/">eventmodeling.org</a>——事件建模方法论（Adam Dymitruk 基于 Greg Young CQRS/ES）。</li>
+  <li><a href="https://tech.meituan.com/2017/12/22/ddd-in-practice.html">美团技术博客 DDD 实践</a>——国内被引用最多的 DDD 落地文。</li>
+  <li><a href="https://www.zilverline.com/blog/event-sourcing-invariants-spanning-multiple-aggregates">Zilverline, Event Sourcing 跨聚合不变量</a>——Saga 模式实测（1.24 → 48 req/s）。</li>
+  <li><a href="https://event-driven.io/en/my_journey_from_aggregates/">Oskar Dudycz, From Aggregates to Functional Composition</a>——ES 中"每个状态其实是不同的聚合"。</li>
+</ul>
+
+<hr>
+<p style="color:var(--evidence); font-size:13px;">本教材基于 DDD/状态机/aicoding 多源调研 + 独立验证修正（吸收 7 处 correction）+ JoyDrive-Infra 仓库一手样本整理。读者按 §8 练习路径（本周/本月/持续）依次推进，可从 practiced 跃迁到 can-decide。所有论断带 source URL 或 file:line 证据，可在仓库内 grep 验证。</p>
+
+</main>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeVariables: {
+      primaryColor: '#eaf1f8',
+      primaryTextColor: '#1a1a1a',
+      primaryBorderColor: '#0b5394',
+      lineColor: '#5f6368',
+      fontSize: '13px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, actorMargin: 50, boxMargin: 8 },
+    state: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
