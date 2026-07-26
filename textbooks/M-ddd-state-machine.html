@@ -253,10 +253,10 @@ flowchart TD
 
 <pre class="mermaid">
 flowchart LR
-  subgraph 上游上下文 A["上游 BoundedContext A<br/>（遗留/外部/不可控）"]
+  subgraph UPA["上游 BoundedContext A<br/>（遗留/外部/不可控）"]
     UP["上游模型<br/>booking=收入信号"]
   end
-  subgraph 下游上下文 B["下游 BoundedContext B<br/>（你的核心域）"]
+  subgraph DNA["下游 BoundedContext B<br/>（你的核心域）"]
     ACL["ACL 翻译层<br/>反腐"]
     DOWN["下游干净模型<br/>booking=负债信号"]
     ACL --> DOWN
